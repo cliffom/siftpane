@@ -49,6 +49,9 @@ func (m *Model) View() tea.View {
 	if m.quitConfirm {
 		statusText = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
 	}
+	if m.profileCacheErr != "" && !m.quitConfirm {
+		statusText = "Name cache not saved: " + m.profileCacheErr
+	}
 	if m.metadataErr != "" && !m.quitConfirm {
 		statusText = "Metadata cache not saved: " + m.metadataErr
 	}

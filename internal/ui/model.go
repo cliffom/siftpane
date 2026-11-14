@@ -48,6 +48,14 @@ type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
+	profileCacheErr         string
+	profiles                map[string]core.Profile
+	profileAttempted        map[string]bool
+	profileBusy             bool
+	profileCancel           context.CancelFunc
+	profileLookupGeneration uint64
+	profileKey              string
+
 	persistErr       string
 	metadataErr      string
 	metadataBusy     map[string]bool
@@ -124,6 +132,9 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	search.CharLimit = pickerRuneLimit
 	search.SetVirtualCursor(true)
 	m := &Model{
+		profiles:         map[string]core.Profile{},
+		profileAttempted: map[string]bool{},
+
 		service:        s,
 		metadataBusy:   map[string]bool{},
 		metadataFailed: map[string]bool{},
@@ -150,6 +161,13 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	for cid, v := range m.included {
 		if v {
 			m.addContext(cid)
+		}
+	}
+	if svc, ok := s.(profileService); ok {
+		ps := st.Profiles(id)
+		svc.RestoreProfiles(ps)
+		for _, p := range ps {
+			m.profiles[p.ID] = p
 		}
 	}
 	for _, c := range st.Conversations(id) {
@@ -200,6 +218,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateDirectory(v)
 	case historyResult:
 		return m.updateHistory(v)
+	case profileResult:
+		return m.updateProfile(v)
 	case sendResult:
 		return m.updateSend(v)
 	case tickMsg:

@@ -50,7 +50,7 @@ func (m *Model) history(w, h int) []string {
 		if i == m.index {
 			selectedStart = len(rows)
 		}
-		rows = append(rows, messageRows(msg, w, i == m.index)...)
+		rows = append(rows, messageRows(slack.WithProfiles(msg, m.profiles), w, i == m.index)...)
 		if i == m.index {
 			selectedEnd = len(rows)
 		}

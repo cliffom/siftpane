@@ -94,6 +94,7 @@ func isPerson(c core.Conversation) bool {
 }
 
 func (m *Model) saveMetadata() {
+	m.syncProfiles()
 	m.metadataErr = ""
 	if err := m.store.SaveConversations(m.identity, m.selected()); err != nil {
 		m.metadataErr = err.Error()
@@ -101,6 +102,7 @@ func (m *Model) saveMetadata() {
 }
 
 func (m *Model) selectConversation(cid string) tea.Cmd {
+	m.cancelProfileLookup()
 	m.rememberDraft()
 	m.active = cid
 	m.thread = ""
@@ -110,7 +112,7 @@ func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.composer.Blur()
 	m.restoreDraft()
 	m.read(cid)
-	return m.fetch(cid, false)
+	return tea.Batch(m.fetch(cid, false), m.profileCmd())
 }
 
 func (m *Model) read(cid string) {
@@ -126,6 +128,9 @@ func (m *Model) toggle(cid string) {
 		delete(m.included, cid)
 		if f := m.cancels[cid]; f != nil {
 			f()
+		}
+		if profileCID, _ := split(m.profileKey); profileCID == cid {
+			m.cancelProfileLookup()
 		}
 		delete(m.contexts, cid)
 		delete(m.metadataBusy, cid)

@@ -69,7 +69,8 @@ func (m *Model) conversationCmd(cid string) tea.Cmd {
 }
 
 func (m *Model) refresh() tea.Cmd {
-	cmds := []tea.Cmd{m.fetch(m.key(), false)}
+	m.profileAttempted = map[string]bool{}
+	cmds := []tea.Cmd{m.fetch(m.key(), false), m.profileCmd()}
 	for cid := range m.metadataFailed {
 		cmds = append(cmds, m.conversationCmd(cid))
 	}

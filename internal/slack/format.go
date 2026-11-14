@@ -102,3 +102,28 @@ func Body(m core.Message) string {
 
 // A Slack link has a target and an optional label separated by one pipe.
 const linkParts = 2
+
+// MentionIDs extracts explicit user mentions without making network calls.
+func MentionIDs(text string) []string {
+	out := []string{}
+	for _, m := range mentionRE.FindAllString(text, -1) {
+		out = append(out, m[2:len(m)-1])
+	}
+	return out
+}
+
+// WithProfiles decorates a copy for presentation, retaining the raw cached text.
+// Escaping names prevents profile text from being interpreted as Slack markup.
+func WithProfiles(m core.Message, profiles map[string]core.Profile) core.Message {
+	if p := profiles[m.User]; p.Name != "" && m.Author != "You" {
+		m.Author = p.Name
+	}
+	m.Text = mentionRE.ReplaceAllStringFunc(m.Text, func(mention string) string {
+		id := mention[2 : len(mention)-1]
+		if p := profiles[id]; p.Name != "" {
+			return "@" + html.EscapeString(p.Name)
+		}
+		return mention
+	})
+	return m
+}

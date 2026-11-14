@@ -68,17 +68,18 @@ func (err *APIError) DeliveryUncertain() bool { return err.Ambiguous }
 
 // Client is a concurrency-safe, paced Web API client for one user and workspace.
 type Client struct {
-	token string
-	base  string
-	http  *http.Client
-	mu    sync.Mutex
-	next  map[string]time.Time
-	names map[string]userProfile
+	token            string
+	base             string
+	http             *http.Client
+	mu               sync.Mutex
+	next             map[string]time.Time
+	names            map[string]core.Profile
+	profilesInFlight map[string]*profileCall
 }
 
 // New constructs a user-token client without making network requests.
 func New(token string) *Client {
-	return &Client{token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]userProfile{}}
+	return &Client{token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]core.Profile{}, profilesInFlight: map[string]*profileCall{}}
 }
 
 // Pacing is per method and workspace. A 429 blocks that method, including manual calls.
@@ -187,54 +188,6 @@ func (c *Client) Identity(ctx context.Context) (core.Identity, error) {
 	return core.Identity{Workspace: r.TeamID, WorkspaceName: r.Team, User: r.UserID, Username: r.Username}, nil
 }
 
-type userProfile struct{ name, handle string }
-
-func (c *Client) name(ctx context.Context, id string) string {
-	return c.profile(ctx, id).name
-}
-
-func (c *Client) profile(ctx context.Context, id string) userProfile {
-	if id == "" {
-		return userProfile{name: "Slack"}
-	}
-	c.mu.Lock()
-	n := c.names[id]
-	c.mu.Unlock()
-	if n.name != "" {
-		return n
-	}
-	var r struct {
-		User struct {
-			Name    string `json:"name"`
-			Real    string `json:"real_name"`
-			Profile struct {
-				Display string `json:"display_name"`
-			} `json:"profile"`
-		} `json:"user"`
-	}
-	if c.call(ctx, methodUser, url.Values{"user": {id}}, &r) != nil {
-		return userProfile{name: id}
-	}
-	n.name = r.User.Profile.Display
-	n.handle = r.User.Name
-	if n.name == "" {
-		n.name = r.User.Real
-	}
-	if n.name == "" {
-		n.name = r.User.Name
-	}
-	if n.name == "" {
-		n.name = id
-	}
-	c.mu.Lock()
-	if len(c.names) >= authorCacheEntries {
-		c.names = map[string]userProfile{}
-	}
-	c.names[id] = n
-	c.mu.Unlock()
-	return n
-}
-
 // Directory fetches one page of accessible channels, DMs, and group DMs.
 func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPage, error) {
 	var r struct {
@@ -272,15 +225,18 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 		}
 		if v.IM {
 			kind = core.ConversationDM
-			profile := c.profile(ctx, v.User)
-			name, handle = profile.name, profile.handle
+			profile, _ := c.Profile(ctx, v.User)
+			name, handle = profile.Name, profile.Handle
+			if name == "" {
+				name = v.User
+			}
 		}
 		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
 	}
 	return p, nil
 }
 
-// History fetches one bounded history or reply page and resolves its authors.
+// History returns a bounded page immediately, without waiting for author lookups.
 func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 	method := methodHistory
 	v := url.Values{paramChannel: {q.Conversation}, "limit": {strconv.Itoa(historyPageItems)}, "cursor": {q.Cursor}}
@@ -304,13 +260,11 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 	if err := c.call(ctx, method, v, &r); err != nil {
 		return core.Page{}, err
 	}
-	// Resolve only authors and mentions in this page, never a workspace user download.
 	for i := range r.Messages {
 		m := &r.Messages[i]
-		m.Author = c.name(ctx, m.User)
 		m.Link = "slack://channel?id=" + url.QueryEscape(q.Conversation) + "&message=" + url.QueryEscape(m.TS)
-		m.Text = mentionRE.ReplaceAllStringFunc(m.Text, func(s string) string { return "@" + c.name(ctx, strings.TrimSuffix(strings.TrimPrefix(s, "<@"), ">")) })
 	}
+
 	return core.Page{Messages: r.Messages, Next: r.Meta.Next, More: r.More}, nil
 }
 
@@ -366,8 +320,11 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 	}
 	if v.IM {
 		kind = core.ConversationDM
-		profile := c.profile(ctx, v.User)
-		name, handle = profile.name, profile.handle
+		profile, _ := c.Profile(ctx, v.User)
+		name, handle = profile.Name, profile.Handle
+		if name == "" {
+			name = v.User
+		}
 	}
 	return core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members}, nil
 }

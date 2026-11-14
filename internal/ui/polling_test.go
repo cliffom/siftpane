@@ -41,6 +41,7 @@ func pollingFixture(t *testing.T, count int) (*Model, *pollingService) {
 	if count > 0 {
 		m.active = m.directory[0].ID
 		m.focus = focusMessages
+		m.line(m.active).Loaded = true
 		m.line(m.active).Messages = []core.Message{{TS: pollThread}}
 	}
 	return m, svc

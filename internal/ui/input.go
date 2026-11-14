@@ -112,10 +112,11 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyEscape:
 		if m.thread != "" {
 			m.rememberDraft()
+			m.cancelProfileLookup()
 			m.thread = ""
 			m.scroll = 0
 			m.restoreDraft()
-			return m, m.fetch(m.key(), false)
+			return m, tea.Batch(m.fetch(m.key(), false), m.profileCmd())
 		}
 		m.focus = focusChannels
 	case keyNext, keyDown, keyPrevious, keyUp:
@@ -183,11 +184,12 @@ func (m *Model) openThread() tea.Cmd {
 		t := m.line(m.key())
 		if len(t.Messages) > 0 {
 			m.rememberDraft()
+			m.cancelProfileLookup()
 			m.thread = t.Messages[min(m.index, len(t.Messages)-1)].TS
 			m.scroll = 0
 			m.index = 0
 			m.restoreDraft()
-			return m.fetch(m.key(), false)
+			return tea.Batch(m.fetch(m.key(), false), m.profileCmd())
 		}
 	}
 	return nil
@@ -197,7 +199,7 @@ func (m *Model) copyMessage() tea.Cmd {
 	t := m.line(m.key())
 	if len(t.Messages) > 0 {
 		m.status = "Copied message via OSC52 (terminal support required)"
-		return tea.SetClipboard(slack.Body(t.Messages[min(m.index, len(t.Messages)-1)]))
+		return tea.SetClipboard(slack.Body(slack.WithProfiles(t.Messages[min(m.index, len(t.Messages)-1)], m.profiles)))
 	}
 	return nil
 }

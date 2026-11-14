@@ -34,9 +34,13 @@ type metadataFile struct {
 }
 
 func (s *Store) metadataPath(id core.Identity) string {
+	return s.cachePath(id, "metadata")
+}
+
+func (s *Store) cachePath(id core.Identity, kind string) string {
 	// Separate accounts in the same workspace as well as separate config paths.
 	key := sha256.Sum256([]byte(id.Workspace + "\x00" + id.User))
-	return fmt.Sprintf("%s.%x.metadata.json", s.Path, key)
+	return fmt.Sprintf("%s.%x.%s.json", s.Path, key, kind)
 }
 
 // Conversations returns disposable cached summaries, or no entries for missing,

@@ -57,7 +57,7 @@ Drafts stay with their conversation or thread while you switch, but remain in me
 
 - Updates arrive through bounded polling, so activity may appear after a delay. Unread dots and the `Siftpane *` window title mean **unread here**, independently of Slack's read position. The title depends on [terminal/multiplexer support](docs/TERMINALS.md#unread-window-title).
 - Removing a conversation stops its local refresh and notifications without leaving it in Slack.
-- Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Included channel and people names are cached separately for faster startup. Tokens and message bodies never go into preferences or the metadata cache.
+- Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Channel, people and resolved author names are cached separately for faster startup. Messages appear before remaining names finish loading. Tokens and message bodies never go into preferences or the metadata cache.
 - Ordinary terminals work without patches. Rounded Unicode frames, bracketed amber focus titles, and a compact layout keep messages readable. See [terminal compatibility](docs/TERMINALS.md).
 - This version handles text messaging and threads. It does not include calls, huddles, file uploads, AI features, or a multi-workspace interface.
 

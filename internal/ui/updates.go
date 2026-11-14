@@ -89,6 +89,13 @@ func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{tick()}
 	cs := m.selected()
 	if !m.stopped && len(cs) > 0 {
+		// Keep the first visible page ahead of background timeline reads.
+		if line := m.cache[m.key()]; m.active != "" && m.thread == "" && (line == nil || (!line.Loaded && line.Err == nil)) {
+			if m.scroll == 0 {
+				cmds = append(cmds, m.fetch(m.key(), false))
+			}
+			return m, tea.Batch(cmds...)
+		}
 		m.pollCount++
 		var key string
 		if m.thread != "" && m.pollCount%threadPollEvery == 0 {
