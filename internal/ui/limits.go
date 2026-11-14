@@ -16,6 +16,7 @@ const (
 	composerRuneLimit      = 12000
 	composerLineLimit      = 1000
 	pickerRuneLimit        = 160
+	pickerPromptColumns    = 3
 	composerPromptColumns  = 2
 	initialComposerColumns = 60
 )

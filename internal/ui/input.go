@@ -62,7 +62,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if m.mode != pickerClosed {
 		return m, m.pickerKey(v)
 	}
-	if k == keySwitch {
+	if isSearchKey(k) {
 		return m, m.openPicker(pickerSwitch)
 	}
 	if m.focus == focusCompose {

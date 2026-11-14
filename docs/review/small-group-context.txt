@@ -17,4 +17,4 @@
 │ ╰ i compose ───────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
  Refreshed · local unread only · polling included conversat…
- Tab focus · / switch · i write · ? help
+ Tab focus · / search · i write · ? help

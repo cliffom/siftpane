@@ -54,15 +54,17 @@ type Model struct {
 	prefs      *store.Workspace
 	ctx        context.Context
 
-	directory     []core.Conversation
-	directoryNext string
-	directoryBusy bool
-	included      map[string]bool
-	contexts      map[string]context.Context
-	cancels       map[string]context.CancelFunc
-	generations   map[string]uint64
-	cache         map[string]*timeline
-	clock         uint64
+	directory       []core.Conversation
+	directoryNext   string
+	directoryBusy   bool
+	directoryLoaded bool
+	directoryErr    error
+	included        map[string]bool
+	contexts        map[string]context.Context
+	cancels         map[string]context.CancelFunc
+	generations     map[string]uint64
+	cache           map[string]*timeline
+	clock           uint64
 
 	drafts     map[string]string
 	deliveries map[string]*core.Delivery
@@ -114,6 +116,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	search.Prompt = " / "
 	search.Placeholder = "Search conversations"
 	search.CharLimit = pickerRuneLimit
+	search.SetVirtualCursor(true)
 	m := &Model{
 		service:     s,
 		identity:    id,
@@ -145,7 +148,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		m.active = "Cstudio"
 		m.unread["Cshipping"] = true
 		m.unread["Dmaya"] = true
-		m.status = "Offline demo · " + keyLabel(keyInclude) + " choose · " + keyLabel(keySearch) + " switch · " + keyLabel(keyWrite) + " compose · " + keyLabel(keyHelp) + " help"
+		m.status = "Offline demo · " + keyLabel(keyInclude) + " choose · " + keyLabel(keySearch) + " search · " + keyLabel(keyWrite) + " compose · " + keyLabel(keyHelp) + " help"
 	}
 	m.restoreDraft()
 	return m
@@ -190,14 +193,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m.updateKey(v)
 	}
-	// Textarea cursor blink and paste messages continue through Bubble Tea commands.
+	// Picker paste/blink messages take precedence even when the underlying send is pending.
+	if m.mode != pickerClosed {
+		return m, m.updatePickerInput(msg)
+	}
 	if d := m.deliveries[m.key()]; d != nil && d.State == core.DeliveryPending && m.focus == focusCompose {
 		return m, nil
-	}
-	if m.mode != pickerClosed {
-		var c tea.Cmd
-		m.picker, c = m.picker.Update(msg)
-		return m, c
 	}
 	if m.focus == focusCompose {
 		var c tea.Cmd

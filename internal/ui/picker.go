@@ -7,7 +7,7 @@ import (
 )
 
 func (m *Model) choices() []core.Conversation {
-	return core.Filter(m.directory, m.picker.Value(), m.included, m.mode == pickerSwitch)
+	return core.Filter(m.directory, m.picker.Value(), m.included, false)
 }
 
 func (m *Model) openPicker(mode pickerMode) tea.Cmd {
@@ -16,18 +16,29 @@ func (m *Model) openPicker(mode pickerMode) tea.Cmd {
 	m.pickIndex = 0
 	m.picker.SetValue("")
 	m.composer.Blur()
+	m.resize()
 	return m.picker.Focus()
+}
+
+func (m *Model) closePicker() tea.Cmd {
+	m.mode = pickerClosed
+	m.picker.Blur()
+	m.resize()
+	if m.focus == focusCompose {
+		return m.composer.Focus()
+	}
+	return nil
 }
 
 func (m *Model) pickerKey(v tea.KeyPressMsg) tea.Cmd {
 	cs := m.choices()
 	switch v.String() {
 	case keyEscape:
-		m.mode = pickerClosed
-		m.picker.Blur()
+		return m.closePicker()
+	case keySwitch, keyCommandSwitch:
 		return nil
 	case keyDown, keyPickerDown:
-		m.pickIndex = min(len(cs)-1, m.pickIndex+1)
+		m.pickIndex = max(0, min(len(cs)-1, m.pickIndex+1))
 		return nil
 	case keyUp, keyPickerUp:
 		m.pickIndex = max(0, m.pickIndex-1)
@@ -38,29 +49,77 @@ func (m *Model) pickerKey(v tea.KeyPressMsg) tea.Cmd {
 		}
 		return nil
 	case keyDirectoryReload:
-		m.directoryNext = ""
 		return m.directoryCmd("")
 	case keyFocus:
-		if m.mode == pickerInclude && len(cs) > 0 {
-			m.toggle(cs[max(0, min(m.pickIndex, len(cs)-1))].ID)
+		if len(cs) > 0 {
+			c := cs[max(0, min(m.pickIndex, len(cs)-1))]
+			if m.mode == pickerInclude {
+				m.toggle(c.ID)
+			} else {
+				m.completeChoice(c)
+			}
 		}
 		return nil
 	case keyCompose:
-		if len(cs) > 0 {
-			c := cs[max(0, min(m.pickIndex, len(cs)-1))]
-			if !m.included[c.ID] {
-				m.toggle(c.ID)
-			}
-			if m.included[c.ID] {
-				m.mode = pickerClosed
-				m.picker.Blur()
-				return m.selectConversation(c.ID)
-			}
-		}
+		return m.openChoice(cs)
+	}
+	return m.updatePickerInput(v)
+}
+
+func (m *Model) openChoice(cs []core.Conversation) tea.Cmd {
+	if len(cs) == 0 {
 		return nil
 	}
-	var cmd tea.Cmd
-	m.picker, cmd = m.picker.Update(v)
+	c := cs[max(0, min(m.pickIndex, len(cs)-1))]
+	if !m.included[c.ID] {
+		m.toggle(c.ID)
+	}
+	if !m.included[c.ID] {
+		return nil
+	}
+	m.mode = pickerClosed
+	m.picker.Blur()
+	m.resize()
+	return m.selectConversation(c.ID)
+}
+
+func (m *Model) completeChoice(c core.Conversation) {
+	m.picker.SetValue(c.Completion())
+	m.picker.CursorEnd()
+	m.reselectChoice(c.ID)
+}
+
+func (m *Model) pickedID() string {
+	if m.mode == pickerClosed {
+		return ""
+	}
+	cs := m.choices()
+	if len(cs) == 0 {
+		return ""
+	}
+	return cs[max(0, min(m.pickIndex, len(cs)-1))].ID
+}
+
+// Keep keyboard selection attached to identity when asynchronous metadata reorders suggestions.
+func (m *Model) reselectChoice(id string) {
+	if m.mode == pickerClosed || id == "" {
+		return
+	}
 	m.pickIndex = 0
+	for i, c := range m.choices() {
+		if c.ID == id {
+			m.pickIndex = i
+			break
+		}
+	}
+}
+
+func (m *Model) updatePickerInput(msg tea.Msg) tea.Cmd {
+	previous := m.picker.Value()
+	var cmd tea.Cmd
+	m.picker, cmd = m.picker.Update(msg)
+	if m.picker.Value() != previous {
+		m.pickIndex = 0
+	}
 	return cmd
 }

@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Ch╭ [Search conversations] ──────────────────────────╮   │
+│  L│ / @leo                                           │   │
+│  T│ @ people · # channels                            │   │
+│   │▸ [+] @Leo Park · dm @leo.park                    │   │
+│▸ Y│  [✓] @Maya, Leo, you · group                     │   │
+│  T│                                                  │und│
+│  t│                                                  │   │
+│   │                                                  │   │
+│   │                                                  │   │
+│   │ Enter include & open @Leo Park                   │   │
+│ ╭ │ 8 loaded · directory complete                    │─╮ │
+│ │ │ Tab complete · Esc close                         │ │ │
+│ │ │ Ctrl+L more · Ctrl+R reload                      │ │ │
+│ ╰ ╰──────────────────────────────────────────────────╯─╯ │
+╰──────────────────────────────────────────────────────────╯
+ Refreshed · local unread only · polling included conversat…
+ ↑/↓ move · Tab complete · Esc close

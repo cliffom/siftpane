@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -195,5 +196,35 @@ func TestPacingPolicyPreservesMethodIntervals(t *testing.T) {
 				t.Fatalf("%s pacing deadline %v outside expected interval", tc.method, deadline)
 			}
 		})
+	}
+}
+
+func TestSearchMetadataRetainsDisplayNameAndHandle(t *testing.T) {
+	var userCalls atomic.Int32
+	c := clientFor(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/users.info":
+			userCalls.Add(1)
+			writeResponse(t, w, `{"ok":true,"user":{"name":"mchen","real_name":"Maya Chen","profile":{"display_name":"Maya at work"}}}`)
+		case "/conversations.list":
+			writeResponse(t, w, `{"ok":true,"channels":[{"id":"D_SEARCH","is_im":true,"user":"U_SEARCH"}]}`)
+		case "/conversations.info":
+			writeResponse(t, w, `{"ok":true,"channel":{"id":"D_SEARCH","is_im":true,"user":"U_SEARCH"}}`)
+		default:
+			t.Error("unexpected request", r.URL.Path)
+		}
+	})
+	page, err := c.Directory(context.Background(), "")
+	if err != nil || len(page.Conversations) != 1 {
+		t.Fatal(page, err)
+	}
+	conversation, err := c.Conversation(context.Background(), "D_SEARCH")
+	if err != nil || conversation.Name != "Maya at work" || conversation.Handle != "mchen" || conversation.Kind != core.ConversationDM || userCalls.Load() != 1 {
+		t.Fatal("display name/handle lost or lookup was not cached", conversation, err, userCalls.Load())
+	}
+	for _, query := range []string{"@MCHEN", "@maya AT WORK"} {
+		if got := core.Filter(page.Conversations, query, nil, false); len(got) != 1 || got[0].ID != conversation.ID {
+			t.Fatal("directory metadata not searchable by available name/handle", query, got)
+		}
 	}
 }

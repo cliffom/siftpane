@@ -35,12 +35,16 @@ const (
 	composerInsetColumns   = 4 // Outer padding plus inset border.
 	composerPaddingColumns = 2
 	minInputColumns        = 5
-	pickerReservedColumns  = 10
 	helpInsetColumns       = 4 // Transient frame and text padding.
 	focusedTitleColumns    = 4 // Two brackets and surrounding spaces.
 	scrollPageDivisor      = 3
 	minScrollRows          = 3
-	pickerReservedRows     = 7 // Frame, input, guidance, section and page status.
+	modalColumns           = 72
+	modalRows              = 16
+	modalMarginColumns     = 4
+	modalMarginRows        = 3
+	modalMinRows           = 10
+	modalReservedRows      = 8 // Frame, input, scope hint, action, coverage, state, directory keys.
 	sidebarActivityRows    = 3
 	sidebarSelectionRows   = 8
 )
@@ -90,7 +94,10 @@ func (m *Model) resize() {
 	_, right, _, compose, _ := m.dimensions()
 	m.composer.SetWidth(max(minInputColumns, right-composerInsetColumns-composerPaddingColumns))
 	m.composer.SetHeight(compose)
-	m.picker.SetWidth(max(minInputColumns, m.width-pickerReservedColumns))
+	pickerWidth, _ := m.pickerSize()
+	// Bubbles reserves an extra cursor cell beyond the text field width.
+	m.picker.SetWidth(max(minInputColumns, pickerWidth-frameColumns-pickerPromptColumns-1))
+	m.picker.SetCursor(m.picker.Position())
 }
 
 func (m *Model) title() string {

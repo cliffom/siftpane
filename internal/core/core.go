@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"sort"
-	"strings"
 )
 
 type (
@@ -14,6 +13,7 @@ type (
 	// Conversation describes an accessible Slack channel or direct conversation.
 	Conversation struct {
 		ID, Name       string
+		Handle         string // Available user handle for an existing direct conversation.
 		Kind           ConversationKind
 		Topic, Purpose string
 		Members        int
@@ -80,15 +80,15 @@ type (
 	}
 )
 
-// Filter never selects on the user's behalf. Switching searches only included IDs.
+// Filter searches loaded metadata without selecting or including a conversation.
+// @ scopes to direct/group conversations; # scopes to public/private channels.
 func Filter(cs []Conversation, query string, included map[string]bool, onlyIncluded bool) []Conversation {
 	out := []Conversation{}
-	q := strings.ToLower(strings.TrimSpace(query))
 	for _, c := range cs {
 		if onlyIncluded && !included[c.ID] {
 			continue
 		}
-		if strings.Contains(strings.ToLower(c.Label()+" "+string(c.Kind)), q) {
+		if matchesConversation(c, query) {
 			out = append(out, c)
 		}
 	}

@@ -44,7 +44,7 @@ func key(s string) tea.KeyPressMsg {
 
 func TestLayoutDimensionsAndBorderJunctions(t *testing.T) {
 	for _, size := range [][2]int{{120, 36}, {100, 30}, {80, 24}, {60, 20}, {40, 14}} {
-		for _, mode := range []SnapshotMode{SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotThread, SnapshotHelp} {
+		for _, mode := range []SnapshotMode{SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotSearch, SnapshotThread, SnapshotHelp} {
 			t.Run(fmt.Sprint(size)+string(mode), func(t *testing.T) {
 				m := fixture(t)
 				s := Snapshot(m, size[0], size[1], mode)
@@ -349,6 +349,9 @@ func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode SnapshotMo
 	}
 	if mode == SnapshotPicker {
 		focusedHeader = "[Choose conversations]"
+	}
+	if mode == SnapshotSearch {
+		focusedHeader = "[Search conversations]"
 	}
 	if mode != SnapshotHelp && !strings.Contains(s, focusedHeader) {
 		t.Fatal("missing non-color focus cue")

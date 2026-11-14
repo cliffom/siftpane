@@ -17,8 +17,9 @@ func (m *Model) directoryCmd(cursor string) tea.Cmd {
 		return nil
 	}
 	m.directoryBusy = true
+	m.directoryErr = nil
 	svc, ctx := m.service, m.ctx
-	return func() tea.Msg { p, err := svc.Directory(ctx, cursor); return directoryResult{p, err} }
+	return func() tea.Msg { p, err := svc.Directory(ctx, cursor); return directoryResult{Page: p, Err: err} }
 }
 
 func (m *Model) fetch(key string, older bool) tea.Cmd {
