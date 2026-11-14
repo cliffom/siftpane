@@ -2,7 +2,7 @@
 
 ## 0.2.0 — Unreleased
 
-- Show `[unread] Siftpane` in the terminal window/tab title while any included conversation has locally observed unread activity. Restore `Siftpane` when all included conversations are read or removed, including below the minimum terminal size.
+- Show `Siftpane *` in the terminal window/tab title while any included conversation has locally observed unread activity. Restore `Siftpane` when all included conversations are read or removed, including below the minimum terminal size.
 - The marker shares the sidebar's local state, is independent of Slack's read position, and depends on terminal/multiplexer title support. Polling delays still apply; no extra fetching or scopes are added.
 
 ## 0.1.0 — 2026-11-14

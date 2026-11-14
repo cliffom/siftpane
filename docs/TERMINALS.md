@@ -22,7 +22,7 @@ The search/include picker is an opaque centered modal with a teal solid rounded 
 
 ## Unread window title
 
-The window/tab title is `[unread] Siftpane` whenever any included conversation has locally observed unread activity, matching the sidebar dots. Reading or removing the last unread conversation restores `Siftpane`. This applies across navigation, composing, threads, search/include modals, help, and the below-minimum resize prompt.
+The window/tab title is `Siftpane *` whenever any included conversation has locally observed unread activity, matching the sidebar dots. Reading or removing the last unread conversation restores `Siftpane`. This applies across navigation, composing, threads, search/include modals, help, and the below-minimum resize prompt.
 
 The marker counts no messages and is independent of Slack's read position. Activity appears only after existing polling observes it, so refresh delays still apply. The offline demo starts with unread conversations for testing. There are no bells, desktop notifications, extra requests, or additional scopes.
 

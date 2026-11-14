@@ -84,5 +84,5 @@ func TestWindowTitleAcrossViewsAndResize(t *testing.T) {
 
 const (
 	normalWindowTitle = "Siftpane"
-	unreadWindowTitle = "[unread] Siftpane"
+	unreadWindowTitle = "Siftpane *"
 )

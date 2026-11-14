@@ -82,7 +82,7 @@ func (m *Model) View() tea.View {
 func (m *Model) windowTitle() string {
 	for cid, unread := range m.unread {
 		if unread && m.included[cid] {
-			return "[unread] " + windowTitle
+			return windowTitle + " *"
 		}
 	}
 	return windowTitle

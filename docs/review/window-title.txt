@@ -1,14 +1,14 @@
 Offline PTY window-title review — 2026-11-14
 
 100×30 and 60×20, bin/siftpane --demo, TERM=xterm-256color:
-  Start (two seeded unread conversations): [unread] Siftpane
-  Ctrl+K, maya, Enter (one unread remains): [unread] Siftpane
+  Start (two seeded unread conversations): Siftpane *
+  Ctrl+K, maya, Enter (one unread remains): Siftpane *
   Ctrl+K, shipping, Enter (last unread read): Siftpane
   Resize to 30×10 (below minimum): Siftpane
   Ctrl+C: clean exit; Bubble Tea clears the title.
 
 Captured OSC 2 title updates for each process:
-  [unread] Siftpane
+  Siftpane *
   Siftpane
   <empty on exit>
 
