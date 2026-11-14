@@ -80,10 +80,13 @@ func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
 	cs := m.selected()
 	if !m.stopped && len(cs) > 0 {
 		m.pollCount++
-		key := cs[m.pollIndex%len(cs)].ID
-		m.pollIndex++
+		var key string
 		if m.thread != "" && m.pollCount%threadPollEvery == 0 {
 			key = m.key()
+		} else {
+			key = cs[m.pollIndex%len(cs)].ID
+			// Thread ticks leave the next conversation's turn intact.
+			m.pollIndex++
 		}
 		if key != m.key() || m.scroll == 0 {
 			cmds = append(cmds, m.fetch(key, false))
