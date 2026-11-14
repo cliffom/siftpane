@@ -1,9 +1,8 @@
 # Changelog
 
-## 0.3.0 — Unreleased
+## 0.3.0 — 2026-11-14
 
 - Display message pages before author/mention lookups finish, fill names in asynchronously for the active timeline, and reuse bounded account-isolated names across launches. Prioritize the active conversation’s initial page without changing API pacing, server backoff or send retries.
-
 - Cache included channel and people display metadata across launches, isolated by workspace and account. Cached names are available immediately while live metadata refreshes; message bodies and drafts stay in memory.
 - Keep the startup sidebar steady until saved metadata settles, then publish one alphabetized CHANNELS group and one PEOPLE group. Available message history and search remain usable while restoration continues.
 - Show actionable initial-history failures instead of indefinite loading, and let `R` retry unavailable saved conversations as well as message history.
