@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [@Maya, Leo, you] ───────────────────────────────────────╮
+│ Group DM · 3 people · Small launch review                │
+│  Maya Chen  Nov 13 10:39                                 │
+│  I'll take the viewport adjustment. Maya, could you      │
+│  review the labels?                                      │
+│                                                          │
+│▸ Leo Park  Nov 13 10:42                                  │
+│  Deal. Let's regroup once those changes are ready.       │
+│                                                          │
+│                                                          │
+│                                                          │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰ i compose ───────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Refreshed · local unread only · polling included conversat…
+ Tab focus · / switch · i write · ? help

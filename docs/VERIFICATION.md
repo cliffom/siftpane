@@ -1,0 +1,34 @@
+# Verification record
+
+Verified locally on 2026-11-13 using macOS arm64 and Go 1.27.4. The module declares Go 1.26.7, the highest minimum required by its pinned direct dependencies. Other OS builds, OS keyring behavior, and actual terminal fonts have not been exercised.
+
+`make check` passed: clean gofmt output, `go vet ./...`, `go test -race ./...`, and `go build -o bin/siftpane ./cmd/siftpane`. Tests use in-memory demo data and a local `httptest` server, with no Slack credentials. `--help` and all five offline snapshot modes were also exercised.
+
+Unit/adapter tests check inclusion filtering, workspace-specific persistence/removal and file permissions, corrupt-file handling, overlapping/capped message merges, history/thread/directory parameters and cursor propagation, rate-limit cancellation and retained Retry-After deadline, expired authentication, ambiguous send errors, fallback formatting, send identity/duplicate guards, draft retention across conversation/thread switches, failure/retry, pending-paste protection, late fetch rejection after removal/re-inclusion, LRU bounds, older-page visibility, local-read indicators, direct lookup of saved selections, header-aligned viewports, oversized-message continuation context, Slack topic/member metadata, and distinct demo histories with correct DM participants, and an unsent-exit warning that survives background updates.
+
+Layout tests render messages, composing, picker, thread, and help at 120×36, 100×30, 80×24, 60×20, and 40×14. They assert every row's display-cell width, total row count, non-color focus labels, absence of doubled vertical borders, and absence of experimental cell-border output. Help text is truncated to the viewport on short terminals; the README remains the complete shortcut reference.
+
+A subprocess attached to a real PTY ran `bin/siftpane --demo` at **100×30** and **60×20**. A temporary Python/pyte harness sent ordinary key bytes and decoded the terminal output. Both runs passed navigation, thread opening, threaded sending, switching away/back with draft preservation, simulated failed send and retry, older-page loading, the conversation picker, unsent-exit warning, group-size context, and clean confirmed exit. No experimental cell-border sequence appeared in the captured output. These are interactive process checks, not just model snapshots.
+
+Current rendered review captures (refreshed alongside UI changes):
+
+- [Desktop messages](review/desktop-messages.txt): shared sidebar boundary, inset composer frame, readable message spacing, selected-message marker, local unread dots.
+- [Small thread composer](review/small-thread-composer.txt): full-width thread history, wrapping, explicit composer focus, visible draft, compact help.
+- [Small group DM](review/small-group-context.txt): accurate demo group size, distinct conversation history, author-aligned viewport, and compact help.
+- [Conversation picker](review/conversation-picker.txt): rounded dashed transient frame, explicit checkboxes, dotted grouping, focused row.
+
+The article and its `styles.png` and `panes-box.png` examples were fetched and visually inspected. Rounded solid, dashed, and dotted border guidance is reflected in the fallback. PTY decoding and plaintext review do **not** prove stroke continuity or font metrics on real terminal emulators; native cell borders were deliberately not implemented.
+
+## Outstanding live verification
+
+No live Slack credentials were used or assumed available. The implementation is complete for the documented core Web API flow, but importing the manifest into Slack and end-to-end verification remain outstanding. Do not interpret fake-server/PTY success as proof of successful app installation or live event delivery.
+
+With an approved internal app, verify:
+
+1. Import manifest; inspect user-scope grant; install; store `xoxp-` token through `--login`; confirm `auth.test` workspace/user identity.
+2. Include one public channel, one accessible private channel, one DM, and one group DM. Load directory pages, remove/re-include an item, and restart to verify saved selections.
+3. Read/send as the user; confirm author in Slack; open/read/reply to a thread; load older history and multiple thread pages.
+4. Confirm local-only read behavior and delayed polling dots. Remove a conversation while a fetch is pending and confirm it stops receiving local activity.
+5. Exercise permission denial, revoked/expired credentials, intermittent network failure, and server rate limits. Inspect Slack before retrying any ambiguous send.
+
+Potential external blockers are workspace app approval, user-scope restrictions, conversation membership/posting policy, and OS keyring availability. The app makes no attempt to bypass them. Socket Mode is not configured, and there is no claim of receiving a complete Slack client event stream.

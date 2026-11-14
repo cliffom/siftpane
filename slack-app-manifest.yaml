@@ -1,0 +1,24 @@
+_metadata:
+  major_version: 1
+  minor_version: 1
+display_information:
+  name: Siftpane
+  description: Your channels. Your people. Your terminal.
+  background_color: "#162623"
+oauth_config:
+  scopes:
+    user:
+      - channels:read
+      - channels:history
+      - groups:read
+      - groups:history
+      - im:read
+      - im:history
+      - mpim:read
+      - mpim:history
+      - users:read
+      - chat:write
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

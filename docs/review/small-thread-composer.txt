@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ #studio / Thread ────────────────────────────────────────╮
+│ Channel · Daily collaboration, fewer interruptions · Thr…│
+│  You  Nov 13 10:33                                       │
+│  And dotted grouping inside the sidebar. No boxes around │
+│  individual messages.                                    │
+│                                                          │
+│  Nora Ellis  Nov 13 10:34                                │
+│  Agreed. Keep the messages at the center.                │
+│                                                          │
+│                                                          │
+│                                                          │
+│ ╭ [Thread reply] ──────────────────────────────────────╮ │
+│ │ › Thanks, Maya. I'll review the keyboard flow this   │ │
+│ │   afternoon.                                         │ │
+│ ╰ Ctrl+S send · Esc navigate ──────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Refreshed · local unread only · polling included conversat…
+ Ctrl+S send · Enter newline · Esc navigate · Ctrl+K switch

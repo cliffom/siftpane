@@ -1,0 +1,11 @@
+# Prioritized follow-ups
+
+1. **P0 — Verify a real internal Slack installation.** Import the manifest, validate the granted user scopes, and exercise public/private channels, DMs/group DMs, read/send, thread pagination/replies, policy errors, revocation, and `429` recovery. Confirm posting identity in Slack. Test on a fresh workspace without relying on developer permissions.
+2. **P1 — Improve refresh and recovery.** Preserve scroll anchors during arbitrary edits, handle cursor invalidation automatically, show per-conversation refresh ages/errors, reconcile uncertain sends by stable identifiers where Slack documents support, and make active/inactive scheduling adaptive within a fixed request budget. Cover very large threads and bursts beyond one page. Keep all fetching selection-scoped.
+3. **P1 — Credential lifecycle.** Add an explicit user OAuth/PKCE flow appropriate to desktop clients, token rotation and secure refresh storage, and clearer scope diagnostics. Evaluate an opt-in encrypted draft recovery store without persisting bodies by default.
+4. **P1 — Directory and content polish.** Progressive DM name lookup, friendly group member names, richer mrkdwn spans, custom emoji fallback, accessibility review, scrollable help on small terminals, and discoverable retry details independent of the status line. Keep unsupported-content links useful.
+5. **P2 — Optional event hints.** Validate user/workspace `message.*` subscription coverage on actual workspaces before adding Socket Mode. Filter included IDs immediately, acknowledge all envelopes, handle reconnects/deduplication, and retain bounded polling for gaps. Do not substitute bot membership for user visibility or widen local fetching.
+6. **P2 — Terminal matrix and packaging.** Test actual Ghostty, iTerm2, Terminal.app, Windows Terminal, Linux terminals, tmux, screen, monochrome themes, and multiple fonts; add signed release builds and CI. PTY tests are not a substitute for real font/rendering inspection.
+7. **P3 — Native cell borders.** Track protocol stability and renderer support. Add capability detection and isolated rendering integration only when feasible; preserve the Unicode fallback and emit no experimental border sequences without positive detection.
+
+Multi-workspace UI, huddles, calls, AI, enterprise deployment, and file uploads remain outside the first-version scope.

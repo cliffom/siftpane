@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you
+
+╭ [Choose conversations] ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╮
+╎ / Search conversations                                                                           ╎
+╎ Tab toggles locally · Enter opens · Esc closes                                                   ╎
+╎ ··· CHANNELS / DIRECT / GROUP MESSAGES ···                                                       ╎
+╎▸ [✓] #design  channel                                                                            ╎
+╎  [ ] #off-topic  channel                                                                         ╎
+╎  [✓] #shipping  channel                                                                          ╎
+╎  [✓] #studio  channel                                                                            ╎
+╎  [ ] @Leo Park  dm                                                                               ╎
+╎  [✓] @Maya Chen  dm                                                                              ╎
+╎  [✓] @Maya, Leo, you  group                                                                      ╎
+╎  [ ] ◇ quiet-corner  private                                                                     ╎
+╎ Directory complete · Ctrl+R reload first page                                                    ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╎                                                                                                  ╎
+╰╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╯
+ Refreshed · local unread only · polling included conversations
+ ↑/↓ move · Tab toggle · Enter open · Esc close
