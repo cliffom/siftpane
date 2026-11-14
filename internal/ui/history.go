@@ -48,7 +48,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 			m.index = max(0, len(t.Messages)-1)
 		}
 	}
-	if d := m.deliveries[m.key()]; !m.stopped && (d == nil || d.State == "sent") {
+	if d := m.deliveries[m.key()]; !m.stopped && (d == nil || d.State == core.DeliverySent) {
 		m.status = "Refreshed · local unread only · polling included conversations"
 	}
 	return m, nil
@@ -65,7 +65,7 @@ func (m *Model) observeActivity(cid, ts string) {
 	} else if ts > m.prefs.Read[cid] {
 		m.unread[cid] = true
 	}
-	if cid == m.active && m.thread == "" && m.scroll == 0 && m.focus != "compose" && m.mode == "" {
+	if cid == m.active && m.thread == "" && m.scroll == 0 && m.focus != focusCompose && m.mode == pickerClosed {
 		m.read(cid)
 	}
 }

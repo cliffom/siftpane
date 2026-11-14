@@ -57,7 +57,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 		}
 	}
 	sort.SliceStable(m.directory, func(i, j int) bool {
-		return m.directory[i].Kind+strings.ToLower(m.directory[i].Name) < m.directory[j].Kind+strings.ToLower(m.directory[j].Name)
+		return string(m.directory[i].Kind)+strings.ToLower(m.directory[i].Name) < string(m.directory[j].Kind)+strings.ToLower(m.directory[j].Name)
 	})
 	if m.active == "" {
 		cs := m.selected()
@@ -75,7 +75,7 @@ func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
 		m.pollCount++
 		key := cs[m.pollIndex%len(cs)].ID
 		m.pollIndex++
-		if m.thread != "" && m.pollCount%2 == 0 {
+		if m.thread != "" && m.pollCount%threadPollEvery == 0 {
 			key = m.key()
 		}
 		if key != m.key() || m.scroll == 0 {

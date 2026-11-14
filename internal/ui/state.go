@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -22,11 +23,8 @@ func (m *Model) key() string {
 }
 
 func split(key string) (string, string) {
-	p := strings.SplitN(key, "/", 2)
-	if len(p) == 2 {
-		return p[0], p[1]
-	}
-	return key, ""
+	conversation, thread, _ := strings.Cut(key, "/")
+	return conversation, thread
 }
 
 func (m *Model) line(key string) *timeline {
@@ -35,7 +33,7 @@ func (m *Model) line(key string) *timeline {
 		t.Touched = m.clock
 		return t
 	}
-	if len(m.cache) >= 16 {
+	if len(m.cache) >= timelineLimit {
 		old := ""
 		oldTime := ^uint64(0)
 		for k, t := range m.cache {
@@ -77,7 +75,7 @@ func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.thread = ""
 	m.index = 0
 	m.scroll = 0
-	m.focus = "messages"
+	m.focus = focusMessages
 	m.composer.Blur()
 	m.restoreDraft()
 	m.read(cid)
@@ -117,7 +115,7 @@ func (m *Model) toggle(cid string) {
 		m.status = "Removed locally; Slack membership unchanged. Draft retained for this session."
 	} else {
 		if len(m.included) >= selectionLimit {
-			m.status = "Limit: 32 included conversations. Remove one first."
+			m.status = fmt.Sprintf("Limit: %d included conversations. Remove one first.", selectionLimit)
 			return
 		}
 		m.included[cid] = true

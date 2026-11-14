@@ -2,6 +2,13 @@ package demo
 
 import "strings"
 
+// Fixture spacing keeps offline review timestamps and thread placement deterministic.
+const (
+	fixtureMessageSeconds = 180
+	fixtureReplySeconds   = 20
+	fixtureThreadIndex    = 31
+)
+
 type fixture struct {
 	topic    string
 	authors  []string
@@ -12,7 +19,7 @@ type fixture struct {
 }
 
 func fixtures() map[string]fixture {
-	team := []string{"Maya Chen", "Leo Park", "You", "Nora Ellis"}
+	team := []string{fixtureMaya, fixtureLeo, fixtureYou, fixtureNora}
 	return map[string]fixture{
 		"Cstudio": {
 			topic: "Daily collaboration, fewer interruptions", authors: team,
@@ -75,7 +82,7 @@ This feels calmer. The message text gets most of the room.`),
 			activity: "Updated the spacing notes with the latest composer treatment.",
 		},
 		"Dmaya": {
-			authors: []string{"Maya Chen", "You"},
+			authors: []string{fixtureMaya, fixtureYou},
 			tasks:   []string{"Tuesday review", "Navigation sketch", "Notes for Leo", "Composer wording", "Feedback list", "Review time", "Next iteration"},
 			recent: lines(`Hey, do you have ten minutes to look at the keyboard flow?
 Yes — send me the bits you want a second pair of eyes on.
@@ -95,7 +102,7 @@ Perfect. Thanks for the thoughtful review.`),
 			activity: "Tomorrow's compact-layout review is on my list. See you then.",
 		},
 		"Dleo": {
-			authors: []string{"Leo Park", "You"},
+			authors: []string{fixtureLeo, fixtureYou},
 			tasks:   []string{"Build setup", "Test fixtures", "Retry case", "Cursor paging", "Request pacing", "Error wording", "Local read check"},
 			recent: lines(`I reproduced the retry issue with the fake service.
 Was the body getting cleared before the acknowledgement?
@@ -115,7 +122,7 @@ Thanks. That closes the last item on my list.`),
 			activity: "The pagination regression checks are passing on my machine.",
 		},
 		"Gcrew": {
-			topic: "Small launch review", authors: []string{"Maya Chen", "Leo Park", "You"},
+			topic: "Small launch review", authors: []string{fixtureMaya, fixtureLeo, fixtureYou},
 			tasks: []string{"Review agenda", "Demo script", "Small-screen check", "Permission notes", "User-token setup", "Launch wording", "Open questions"},
 			recent: lines(`Starting a small group for the first walkthrough.
 I'll drive the demo so you can both focus on the rough edges.
@@ -135,7 +142,7 @@ Deal. Let's regroup once those changes are ready.`),
 			activity: "The walkthrough fixes are ready for one more look.",
 		},
 		"Cquiet": {
-			topic: "Private space for deliberate work", authors: []string{"Nora Ellis", "You"},
+			topic: "Private space for deliberate work", authors: []string{fixtureNora, fixtureYou},
 			tasks: []string{"Focus block", "Reading notes", "Research links", "Open questions", "Weekly reflection", "Writing time", "Loose ends"},
 			recent: lines(`I'm setting aside this channel for quieter work.
 Good idea. I'll keep the longer notes here.
@@ -177,3 +184,11 @@ See you there. Bringing a reusable cup this time.`),
 	}
 }
 func lines(s string) []string { return strings.Split(s, "\n") }
+
+const (
+	fixtureYou             = "You"
+	fixtureLeo             = "Leo Park"
+	fixtureMaya            = "Maya Chen"
+	fixtureNora            = "Nora Ellis"
+	fixtureTimestampFormat = "%d.000001"
+)

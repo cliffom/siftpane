@@ -33,10 +33,10 @@ func fixture(t *testing.T) *Model {
 }
 
 func key(s string) tea.KeyPressMsg {
-	if s == "esc" {
+	if s == keyEscape {
 		return tea.KeyPressMsg{Code: tea.KeyEscape}
 	}
-	if s == "ctrl+s" {
+	if s == keySend {
 		return tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl}
 	}
 	return tea.KeyPressMsg{Code: []rune(s)[0], Text: s}
@@ -44,8 +44,8 @@ func key(s string) tea.KeyPressMsg {
 
 func TestLayoutDimensionsAndBorderJunctions(t *testing.T) {
 	for _, size := range [][2]int{{120, 36}, {100, 30}, {80, 24}, {60, 20}, {40, 14}} {
-		for _, mode := range []string{"messages", "compose", "picker", "thread", "help"} {
-			t.Run(fmt.Sprint(size)+mode, func(t *testing.T) {
+		for _, mode := range []SnapshotMode{SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotThread, SnapshotHelp} {
+			t.Run(fmt.Sprint(size)+string(mode), func(t *testing.T) {
 				m := fixture(t)
 				s := Snapshot(m, size[0], size[1], mode)
 				assertLayout(t, m, s, size, mode)
@@ -56,18 +56,18 @@ func TestLayoutDimensionsAndBorderJunctions(t *testing.T) {
 
 func TestDraftSurvivesSwitchThreadAndFailure(t *testing.T) {
 	m := fixture(t)
-	m.composer.SetValue("main draft")
-	m.selectConversation("Dmaya")
+	m.composer.SetValue(mainDraft)
+	m.selectConversation(demoDM)
 	m.composer.SetValue("DM draft")
-	m.selectConversation("Cstudio")
-	if m.composer.Value() != "main draft" {
+	m.selectConversation(demoChannel)
+	if m.composer.Value() != mainDraft {
 		t.Fatal("draft lost")
 	}
 	m.index = 0
-	m.Update(key("t"))
+	m.Update(key(keyThread))
 	m.composer.SetValue("thread draft")
-	m.Update(key("esc"))
-	if m.composer.Value() != "main draft" {
+	m.Update(key(keyEscape))
+	if m.composer.Value() != mainDraft {
 		t.Fatalf("thread destroyed parent draft: active=%q thread=%q focus=%q value=%q drafts=%v", m.active, m.thread, m.focus, m.composer.Value(), m.drafts)
 	}
 	m.composer.SetValue("/fail hello")
@@ -80,7 +80,7 @@ func TestDraftSurvivesSwitchThreadAndFailure(t *testing.T) {
 		t.Fatal("duplicate queued")
 	}
 	m.Update(cmd())
-	if m.composer.Value() != "/fail hello" || m.deliveries[m.key()].State != "failed" {
+	if m.composer.Value() != "/fail hello" || m.deliveries[m.key()].State != core.DeliveryFailed {
 		t.Fatal("failed draft discarded")
 	}
 	cmd = m.send(true)
@@ -95,7 +95,7 @@ func TestDraftSurvivesSwitchThreadAndFailure(t *testing.T) {
 
 func TestPendingPasteLockedAndSuccessDoesNotClearAnotherDraft(t *testing.T) {
 	m := fixture(t)
-	m.focus = "compose"
+	m.focus = focusCompose
 	m.composer.Focus()
 	m.composer.SetValue("original")
 	m.rememberDraft()
@@ -104,17 +104,17 @@ func TestPendingPasteLockedAndSuccessDoesNotClearAnotherDraft(t *testing.T) {
 	if m.composer.Value() != "original" {
 		t.Fatal("pending composer changed")
 	}
-	m.selectConversation("Dmaya")
+	m.selectConversation(demoDM)
 	m.composer.SetValue("other draft")
 	m.Update(cmd())
-	if m.composer.Value() != "other draft" || m.drafts["Cstudio"] != "" {
+	if m.composer.Value() != "other draft" || m.drafts[demoChannel] != "" {
 		t.Fatal("success erased wrong draft")
 	}
 }
 
 func TestRemovalCancelsAndRejectsLateResponses(t *testing.T) {
 	m := fixture(t)
-	cid := "Cstudio"
+	cid := demoChannel
 	ctx := m.contexts[cid]
 	generation := m.generations[cid]
 	m.composer.SetValue("keep after removal")
@@ -125,12 +125,12 @@ func TestRemovalCancelsAndRejectsLateResponses(t *testing.T) {
 	if m.fetch(cid, false) != nil {
 		t.Fatal("removed conversation still fetched")
 	}
-	m.Update(historyResult{Key: cid, Generation: generation, Page: core.Page{Messages: []core.Message{{TS: "9999999999.1", Text: "late"}}}})
+	m.Update(historyResult{Key: cid, Generation: generation, Page: core.Page{Messages: []core.Message{{TS: futureTimestamp, Text: "late"}}}})
 	if m.cache[cid] != nil || m.unread[cid] {
 		t.Fatal("removed results applied")
 	}
 	m.toggle(cid)
-	m.Update(historyResult{Key: cid, Generation: generation, Page: core.Page{Messages: []core.Message{{TS: "9999999999.1"}}}})
+	m.Update(historyResult{Key: cid, Generation: generation, Page: core.Page{Messages: []core.Message{{TS: futureTimestamp}}}})
 	if m.cache[cid] != nil {
 		t.Fatal("old generation resurrected after re-inclusion")
 	}
@@ -191,15 +191,15 @@ func TestOnlyIncludedPollingAndLocalRead(t *testing.T) {
 			t.Fatal("fetched excluded conversation")
 		}
 	}
-	m.fetch("Dmaya", false)
-	m.prefs.Read["Dmaya"] = "1.0"
-	m.Update(historyResult{Key: "Dmaya", Generation: m.generations["Dmaya"], Page: core.Page{Messages: []core.Message{{TS: "9999999999.1", Text: "new"}}}})
-	if !m.unread["Dmaya"] {
+	m.fetch(demoDM, false)
+	m.prefs.Read[demoDM] = "1.0"
+	m.Update(historyResult{Key: demoDM, Generation: m.generations[demoDM], Page: core.Page{Messages: []core.Message{{TS: futureTimestamp, Text: "new"}}}})
+	if !m.unread[demoDM] {
 		t.Fatal("missing local activity")
 	}
-	m.selectConversation("Dmaya")
-	if m.unread["Dmaya"] || m.prefs.Read["Dmaya"] != "9999999999.1" {
-		t.Fatalf("local read not advanced: unread=%v read=%q latest=%q", m.unread, m.prefs.Read["Dmaya"], m.latest["Dmaya"])
+	m.selectConversation(demoDM)
+	if m.unread[demoDM] || m.prefs.Read[demoDM] != futureTimestamp {
+		t.Fatalf("local read not advanced: unread=%v read=%q latest=%q", m.unread, m.prefs.Read[demoDM], m.latest[demoDM])
 	}
 }
 
@@ -232,15 +232,15 @@ func TestSavedConversationLookupIndependentOfDirectory(t *testing.T) {
 	m := fixture(t)
 	m.directory = nil
 	m.active = ""
-	c, err := m.service.Conversation(m.ctx, "Dmaya")
+	c, err := m.service.Conversation(m.ctx, demoDM)
 	if err != nil {
 		t.Fatal(err)
 	}
 	_, cmd := m.Update(conversationResult{Conversation: c, ID: c.ID, Generation: m.generations[c.ID]})
-	if m.active != "Dmaya" || cmd == nil {
+	if m.active != demoDM || cmd == nil {
 		t.Fatal("saved selection needs directory scan")
 	}
-	m.toggle("Dmaya")
+	m.toggle(demoDM)
 	m.Update(conversationResult{Conversation: c, ID: c.ID, Generation: m.generations[c.ID] - 1})
 	if m.included[c.ID] {
 		t.Fatal("late metadata restored excluded conversation")
@@ -249,10 +249,10 @@ func TestSavedConversationLookupIndependentOfDirectory(t *testing.T) {
 
 func TestCombiningFailedTextNeverTruncatesNewDraft(t *testing.T) {
 	m := fixture(t)
-	m.deliveries[m.key()] = &core.Delivery{Outgoing: core.Outgoing{Text: strings.Repeat("a", 7000)}, State: "failed"}
+	m.deliveries[m.key()] = &core.Delivery{Outgoing: core.Outgoing{Text: strings.Repeat("a", 7000)}, State: core.DeliveryFailed}
 	body := strings.Repeat("b", 7000)
 	m.composer.SetValue(body)
-	m.Update(key("x"))
+	m.Update(key(keyEditFailed))
 	if m.composer.Value() != body || m.deliveries[m.key()] == nil {
 		t.Fatal("restoring failure truncated text")
 	}
@@ -260,10 +260,10 @@ func TestCombiningFailedTextNeverTruncatesNewDraft(t *testing.T) {
 
 func TestReadWatermarkNeverMovesBackward(t *testing.T) {
 	m := fixture(t)
-	m.prefs.Read[m.active] = "9999999999.1"
+	m.prefs.Read[m.active] = futureTimestamp
 	m.latest[m.active] = "1.0"
 	m.read(m.active)
-	if m.prefs.Read[m.active] != "9999999999.1" {
+	if m.prefs.Read[m.active] != futureTimestamp {
 		t.Fatal("older cached window moved read watermark backward")
 	}
 }
@@ -286,11 +286,11 @@ func TestHistoryViewportStartsWithAuthor(t *testing.T) {
 
 func TestOversizedMessageKeepsAuthorWhileScrolling(t *testing.T) {
 	m := fixture(t)
-	m.cache[m.active].Messages = []core.Message{{TS: "1794589200.000001", Author: "Maya Chen", Text: strings.Repeat("A longer message line.\n", 25)}}
+	m.cache[m.active].Messages = []core.Message{{TS: "1794589200.000001", Author: demoAuthor, Text: strings.Repeat("A longer message line.\n", 25)}}
 	m.index = 0
 	m.scroll = 5
 	rows := m.history(50, 8)
-	if !strings.Contains(ansi.Strip(rows[0]), "Maya Chen") || !strings.Contains(ansi.Strip(rows[0]), "continued") {
+	if !strings.Contains(ansi.Strip(rows[0]), demoAuthor) || !strings.Contains(ansi.Strip(rows[0]), "continued") {
 		t.Fatal("missing continuation context", rows[0])
 	}
 	if !strings.Contains(strings.Join(rows[1:], "\n"), "A longer message line.") {
@@ -304,16 +304,16 @@ func TestConversationContextUsesKnownMetadata(t *testing.T) {
 	if got := m.conversationContext(); !strings.Contains(got, "Group DM · 3 people") {
 		t.Fatal(got)
 	}
-	m.selectConversation("Cstudio")
+	m.selectConversation(demoChannel)
 	if !strings.Contains(m.conversationContext(), "Daily collaboration") {
 		t.Fatal("missing topic")
 	}
-	m.selectConversation("Dmaya")
+	m.selectConversation(demoDM)
 	if got := m.conversationContext(); got != "Direct message" {
 		t.Fatal(got)
 	}
 	// Rich metadata can arrive after the directory entry.
-	m.Update(conversationResult{Conversation: core.Conversation{ID: "Dmaya", Name: "Maya Chen", Kind: "dm", Topic: "Updated context"}, ID: "Dmaya", Generation: m.generations["Dmaya"]})
+	m.Update(conversationResult{Conversation: core.Conversation{ID: demoDM, Name: demoAuthor, Kind: core.ConversationDM, Topic: "Updated context"}, ID: demoDM, Generation: m.generations[demoDM]})
 	if !strings.Contains(m.conversationContext(), "Updated context") {
 		t.Fatal("late metadata discarded")
 	}
@@ -329,7 +329,7 @@ func TestUnsentExitWarningSurvivesBackgroundRefresh(t *testing.T) {
 	}
 }
 
-func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode string) {
+func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode SnapshotMode) {
 	t.Helper()
 	rows := strings.Split(s, "\n")
 	if len(rows) != size[1] {
@@ -344,13 +344,21 @@ func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode string) {
 		t.Fatal("doubled border or experimental protocol")
 	}
 	focusedHeader := "[" + m.title() + "]"
-	if mode == "compose" {
+	if mode == SnapshotCompose {
 		focusedHeader = "[Message]"
 	}
-	if mode == "picker" {
+	if mode == SnapshotPicker {
 		focusedHeader = "[Choose conversations]"
 	}
-	if mode != "help" && !strings.Contains(s, focusedHeader) {
+	if mode != SnapshotHelp && !strings.Contains(s, focusedHeader) {
 		t.Fatal("missing non-color focus cue")
 	}
 }
+
+const (
+	mainDraft       = "main draft"
+	demoDM          = "Dmaya"
+	demoChannel     = "Cstudio"
+	futureTimestamp = "9999999999.1"
+	demoAuthor      = "Maya Chen"
+)

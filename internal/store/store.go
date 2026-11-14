@@ -75,7 +75,7 @@ func (s *Store) Save() error {
 		return nil
 	} // isolated demo
 	dir := filepath.Dir(s.Path)
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	if err := os.MkdirAll(dir, privateDirectoryMode); err != nil {
 		return err
 	}
 	b, err := json.MarshalIndent(s.Config, "", "  ")
@@ -104,3 +104,5 @@ func (s *Store) Save() error {
 	}
 	return os.Rename(name, s.Path)
 }
+
+const privateDirectoryMode = 0o700 // Owner-only preference directory.

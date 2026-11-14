@@ -26,7 +26,7 @@ func clientFor(t *testing.T, h http.HandlerFunc) *Client {
 func TestHistoryPaginationAndThreadParams(t *testing.T) {
 	c := clientFor(t, func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			t.Errorf("parse request: %v", err)
+			t.Errorf(parseRequestFailure, err)
 			return
 		}
 		if r.Header.Get("Authorization") != "Bearer xoxp-test" {
@@ -51,10 +51,10 @@ func TestHistoryPaginationAndThreadParams(t *testing.T) {
 func TestDirectoryPassesCursorAndEmptyPage(t *testing.T) {
 	c := clientFor(t, func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			t.Errorf("parse request: %v", err)
+			t.Errorf(parseRequestFailure, err)
 			return
 		}
-		if r.Form.Get("cursor") != "next" || r.Form.Get("types") != "public_channel,private_channel,im,mpim" {
+		if r.Form.Get("limit") != "30" || r.Form.Get("cursor") != "next" || r.Form.Get("types") != "public_channel,private_channel,im,mpim" {
 			t.Error(r.Form)
 		}
 		writeResponse(t, w, `{"ok":true,"channels":[],"response_metadata":{"next_cursor":"still-more"}}`)
@@ -93,16 +93,16 @@ func TestSendFieldsAndAmbiguousFailure(t *testing.T) {
 	c := clientFor(t, func(w http.ResponseWriter, r *http.Request) {
 		n++
 		if err := r.ParseForm(); err != nil {
-			t.Errorf("parse request: %v", err)
+			t.Errorf(parseRequestFailure, err)
 			return
 		}
-		if r.Form.Get("thread_ts") != "parent" || r.Form.Get("text") != "keep body" || r.Form.Get("client_msg_id") != "stable" {
+		if r.Form.Get("thread_ts") != "parent" || r.Form.Get("text") != outgoingBody || r.Form.Get("client_msg_id") != "stable" {
 			t.Error(r.Form)
 		}
 		w.WriteHeader(503)
 	})
-	_, err := c.Send(context.Background(), core.Outgoing{Conversation: "C", Thread: "parent", Text: "keep body", ID: "stable"})
-	if !core.UncertainDelivery(err) || n != 1 || strings.Contains(err.Error(), "keep body") {
+	_, err := c.Send(context.Background(), core.Outgoing{Conversation: "C", Thread: "parent", Text: outgoingBody, ID: "stable"})
+	if !core.UncertainDelivery(err) || n != 1 || strings.Contains(err.Error(), outgoingBody) {
 		t.Fatal(err, n)
 	}
 }
@@ -130,7 +130,7 @@ func TestReadableAndSafe(t *testing.T) {
 func TestConversationMetadata(t *testing.T) {
 	c := clientFor(t, func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			t.Errorf("parse request: %v", err)
+			t.Errorf(parseRequestFailure, err)
 			return
 		}
 		switch r.URL.Path {
@@ -146,7 +146,7 @@ func TestConversationMetadata(t *testing.T) {
 		}
 	})
 	group, err := c.Conversation(context.Background(), "G1")
-	if err != nil || group.Members != 3 || group.Topic != "Launch review" || group.Kind != "group" {
+	if err != nil || group.Members != 3 || group.Topic != "Launch review" || group.Kind != core.ConversationGroup {
 		t.Fatal(group, err)
 	}
 	page, err := c.Directory(context.Background(), "")
@@ -159,5 +159,41 @@ func writeResponse(t *testing.T, w http.ResponseWriter, body string) {
 	t.Helper()
 	if _, err := io.WriteString(w, body); err != nil {
 		t.Errorf("write response: %v", err)
+	}
+}
+
+const (
+	parseRequestFailure = "parse request: %v"
+	outgoingBody        = "keep body"
+)
+
+func TestPacingPolicyPreservesMethodIntervals(t *testing.T) {
+	for _, tc := range []struct {
+		method string
+		gap    time.Duration
+	}{
+		{methodIdentity, 1300 * time.Millisecond},
+		{methodHistory, 1300 * time.Millisecond},
+		{methodReplies, 1300 * time.Millisecond},
+		{methodSend, 1300 * time.Millisecond},
+		{methodConversation, 1300 * time.Millisecond},
+		{methodUser, 650 * time.Millisecond},
+		{methodDirectory, 3100 * time.Millisecond},
+	} {
+		t.Run(tc.method, func(t *testing.T) {
+			c := New("offline-test")
+			if c.http.Timeout != 20*time.Second {
+				t.Fatal("request timeout changed", c.http.Timeout)
+			}
+			before := time.Now()
+			if err := c.wait(context.Background(), tc.method); err != nil {
+				t.Fatal(err)
+			}
+			after := time.Now()
+			deadline := c.next[tc.method]
+			if deadline.Before(before.Add(tc.gap)) || deadline.After(after.Add(tc.gap)) {
+				t.Fatalf("%s pacing deadline %v outside expected interval", tc.method, deadline)
+			}
+		})
 	}
 }

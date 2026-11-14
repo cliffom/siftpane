@@ -7,7 +7,42 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
+	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/slack"
+)
+
+// DefaultWidth and DefaultHeight are the initial viewport and CLI snapshot defaults.
+const (
+	DefaultWidth  = 100
+	DefaultHeight = 30
+	// MinWidth and MinHeight define the supported viewport in display cells.
+	MinWidth  = 40
+	MinHeight = 14
+)
+
+// Layout measurements are terminal columns/rows, including shared edges.
+const (
+	sidebarBreakpoint      = 76
+	sidebarColumns         = 23
+	compactHeight          = 22
+	composerRows           = 3
+	compactComposerRows    = 2
+	chromeRows             = 4 // Header, blank separator, status, shortcuts.
+	frameRows              = 2 // Top and bottom shared frame.
+	frameColumns           = 2
+	composerBorderRows     = 2
+	contextRows            = 1
+	composerInsetColumns   = 4 // Outer padding plus inset border.
+	composerPaddingColumns = 2
+	minInputColumns        = 5
+	pickerReservedColumns  = 10
+	helpInsetColumns       = 4 // Transient frame and text padding.
+	focusedTitleColumns    = 4 // Two brackets and surrounding spaces.
+	scrollPageDivisor      = 3
+	minScrollRows          = 3
+	pickerReservedRows     = 7 // Frame, input, guidance, section and page status.
+	sidebarActivityRows    = 3
+	sidebarSelectionRows   = 8
 )
 
 func fit(s string, w int) string {
@@ -22,8 +57,8 @@ func fit(s string, w int) string {
 // style can carry the title's foreground into the remaining border strokes.
 func labelLine(title string, w int, stroke string, border lipgloss.Style) string {
 	focused := strings.HasPrefix(title, "[") && strings.HasSuffix(title, "]")
-	if focused && w >= 4 {
-		title = "[" + ansi.Truncate(title[1:len(title)-1], w-4, "…") + "]"
+	if focused && w >= focusedTitleColumns {
+		title = "[" + ansi.Truncate(title[1:len(title)-1], w-focusedTitleColumns, "…") + "]"
 	}
 	text := ansi.Truncate(" "+title+" ", w, "")
 	rest := strings.Repeat(stroke, max(0, w-ansi.StringWidth(text)))
@@ -34,32 +69,32 @@ func labelLine(title string, w int, stroke string, border lipgloss.Style) string
 }
 
 func (m *Model) dimensions() (side, right, history, compose, inside int) {
-	inside = max(1, m.height-6)
-	compose = 3
-	if m.height < 22 {
-		compose = 2
+	inside = max(1, m.height-chromeRows-frameRows)
+	compose = composerRows
+	if m.height < compactHeight {
+		compose = compactComposerRows
 	}
-	side = 23
-	if m.width < 76 {
+	side = sidebarColumns
+	if m.width < sidebarBreakpoint {
 		side = 0
 	}
-	right = m.width - 2
+	right = m.width - frameColumns
 	if side > 0 {
 		right -= side + 1
 	}
-	history = max(1, inside-compose-3)
+	history = max(1, inside-compose-composerBorderRows-contextRows)
 	return
 }
 
 func (m *Model) resize() {
 	_, right, _, compose, _ := m.dimensions()
-	m.composer.SetWidth(max(5, right-6))
+	m.composer.SetWidth(max(minInputColumns, right-composerInsetColumns-composerPaddingColumns))
 	m.composer.SetHeight(compose)
-	m.picker.SetWidth(max(5, m.width-10))
+	m.picker.SetWidth(max(minInputColumns, m.width-pickerReservedColumns))
 }
 
 func (m *Model) title() string {
-	name := "Choose conversations · p"
+	name := "Choose conversations · " + keyLabel(keyInclude)
 	for _, c := range m.directory {
 		if c.ID == m.active {
 			name = c.Label()
@@ -77,14 +112,14 @@ func (m *Model) conversationContext() string {
 		if c.ID == m.active {
 			kind := "Channel"
 			switch c.Kind {
-			case "private":
+			case core.ConversationPrivate:
 				kind = "Private channel"
-			case "dm":
+			case core.ConversationDM:
 				kind = "Direct message"
-			case "group":
+			case core.ConversationGroup:
 				kind = "Group DM"
 			}
-			if c.Kind == "group" && c.Members > 0 {
+			if c.Kind == core.ConversationGroup && c.Members > 0 {
 				kind += fmt.Sprintf(" · %d people", c.Members)
 			}
 			detail := strings.TrimSpace(c.Topic)
@@ -100,7 +135,7 @@ func (m *Model) conversationContext() string {
 			return kind
 		}
 	}
-	return "Choose what belongs here · p"
+	return "Choose what belongs here · " + keyLabel(keyInclude)
 }
 
 func padRows(rows []string, w, h int) []string {

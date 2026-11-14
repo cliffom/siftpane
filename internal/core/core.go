@@ -13,7 +13,8 @@ type (
 	Identity struct{ Workspace, WorkspaceName, User, Username string }
 	// Conversation describes an accessible Slack channel or direct conversation.
 	Conversation struct {
-		ID, Name, Kind string
+		ID, Name       string
+		Kind           ConversationKind
 		Topic, Purpose string
 		Members        int
 	}
@@ -21,10 +22,10 @@ type (
 
 // Label returns the terminal label, including its channel or person prefix.
 func (c Conversation) Label() string {
-	if c.Kind == "channel" {
+	if c.Kind == ConversationChannel {
 		return "#" + c.Name
 	}
-	if c.Kind == "private" {
+	if c.Kind == ConversationPrivate {
 		return "◇ " + c.Name
 	}
 	return "@" + c.Name
@@ -87,7 +88,7 @@ func Filter(cs []Conversation, query string, included map[string]bool, onlyInclu
 		if onlyIncluded && !included[c.ID] {
 			continue
 		}
-		if strings.Contains(strings.ToLower(c.Label()+" "+c.Kind), q) {
+		if strings.Contains(strings.ToLower(c.Label()+" "+string(c.Kind)), q) {
 			out = append(out, c)
 		}
 	}
@@ -118,17 +119,17 @@ func Merge(old, fresh []Message, limit int) []Message {
 // An in-flight attempt cannot be submitted again.
 type Delivery struct {
 	Outgoing
-	State     string
+	State     DeliveryState
 	Err       error
 	Uncertain bool
 }
 
 // Begin starts an attempt unless this delivery is already pending or acknowledged.
 func (d *Delivery) Begin() bool {
-	if d.State == "pending" || d.State == "sent" {
+	if d.State == DeliveryPending || d.State == DeliverySent {
 		return false
 	}
-	d.State = "pending"
+	d.State = DeliveryPending
 	d.Err = nil
 	return true
 }
@@ -138,9 +139,9 @@ func (d *Delivery) Finish(err error, uncertain bool) {
 	d.Err = err
 	d.Uncertain = uncertain
 	if err != nil {
-		d.State = "failed"
+		d.State = DeliveryFailed
 	} else {
-		d.State = "sent"
+		d.State = DeliverySent
 	}
 }
 

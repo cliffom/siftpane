@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -23,8 +24,8 @@ var (
 // View renders state without performing I/O or mutating the model.
 func (m *Model) View() tea.View {
 	w, h := m.width, m.height
-	if w < 40 || h < 14 {
-		v := tea.NewView(fit("Siftpane · resize to at least 40 × 14", max(1, w)))
+	if w < MinWidth || h < MinHeight {
+		v := tea.NewView(fit(fmt.Sprintf("Siftpane · resize to at least %d × %d", MinWidth, MinHeight), max(1, w)))
 		v.AltScreen = true
 		return v
 	}
@@ -34,7 +35,7 @@ func (m *Model) View() tea.View {
 	username := strings.TrimPrefix(strings.Join(strings.Fields(slack.Safe(m.identity.Username)), ""), "@")
 	account := ""
 	if username != "" {
-		account = ansi.Truncate(" · @"+username, max(0, available-4), "…")
+		account = ansi.Truncate(" · @"+username, max(0, available-accountPrefixColumns), "…")
 	}
 	workspace = ansi.Truncate(workspace, available-ansi.StringWidth(account), "…") + account
 	gap := w - ansi.StringWidth(left) - ansi.StringWidth(workspace) - 1
@@ -42,29 +43,29 @@ func (m *Model) View() tea.View {
 	body := ""
 	switch {
 	case m.help:
-		body = m.helpView(w, h-4)
-	case m.mode != "":
-		body = m.pickerView(w, h-4)
+		body = m.helpView(w, h-chromeRows)
+	case m.mode != pickerClosed:
+		body = m.pickerView(w, h-chromeRows)
 	default:
 		body = m.mainView()
 	}
 	statusText := m.status
 	if m.quitConfirm {
-		statusText = "Unsent text is in memory. Ctrl+C again exits and discards it; any other key cancels."
+		statusText = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
 	}
 	if m.persistErr != "" && !m.quitConfirm {
 		statusText = "Preferences not saved: " + m.persistErr
 	}
 	status := fit(muted.Render(" "+slack.Safe(statusText)), w)
-	hint := " Tab focus · / switch · i write · t thread · ? help"
-	if m.focus == "compose" {
-		hint = " Ctrl+S send · Enter newline · Esc navigate · Ctrl+K switch"
+	hint := " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " switch · " + keyLabel(keyWrite) + " write · " + keyLabel(keyThread) + " thread · " + keyLabel(keyHelp) + " help"
+	if m.focus == focusCompose {
+		hint = " " + keyLabel(keySend) + " send · " + keyLabel(keyCompose) + " newline · " + keyLabel(keyEscape) + " navigate · " + keyLabel(keySwitch) + " switch"
 	}
-	if m.mode != "" {
-		hint = " ↑/↓ move · Tab toggle · Enter open · Esc close"
+	if m.mode != pickerClosed {
+		hint = " " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + " move · " + keyLabel(keyFocus) + " toggle · " + keyLabel(keyCompose) + " open · " + keyLabel(keyEscape) + " close"
 	}
-	if w < 76 && m.focus != "compose" && m.mode == "" {
-		hint = " Tab focus · / switch · i write · ? help"
+	if w < sidebarBreakpoint && m.focus != focusCompose && m.mode == pickerClosed {
+		hint = " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " switch · " + keyLabel(keyWrite) + " write · " + keyLabel(keyHelp) + " help"
 	}
 	v := tea.NewView(strings.Join([]string{header, strings.Repeat(" ", w), body, status, fit(accent.Render(hint), w)}, "\n"))
 	v.AltScreen = true
@@ -74,13 +75,13 @@ func (m *Model) View() tea.View {
 
 func (m *Model) mainView() string {
 	side, right, hist, comp, inside := m.dimensions()
-	showList := side == 0 && m.focus == "channels"
+	showList := side == 0 && m.focus == focusChannels
 	title := m.title()
-	if m.focus == "messages" {
+	if m.focus == focusMessages {
 		title = "[" + title + "]"
 	}
 	leftTitle := "Messages"
-	if m.focus == "channels" {
+	if m.focus == focusChannels {
 		leftTitle = "[Messages]"
 	}
 	rows := []string{}
@@ -119,3 +120,5 @@ func (m *Model) mainView() string {
 	}
 	return strings.Join(rows, "\n")
 }
+
+const accountPrefixColumns = 4 // Space, separator, space and @ before username.

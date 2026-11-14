@@ -8,7 +8,9 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
-func tick() tea.Cmd { return tea.Tick(3*time.Second, func(t time.Time) tea.Msg { return tickMsg(t) }) }
+func tick() tea.Cmd {
+	return tea.Tick(refreshInterval, func(t time.Time) tea.Msg { return tickMsg(t) })
+}
 
 func (m *Model) directoryCmd(cursor string) tea.Cmd {
 	if m.directoryBusy {

@@ -20,6 +20,14 @@ import (
 	"github.com/cliffom/siftpane/internal/ui"
 )
 
+const (
+	credentialService = "siftpane"
+	credentialAccount = "user-token"
+	tokenEnvironment  = "SIFTPANE_SLACK_TOKEN"
+	userTokenPrefix   = "xoxp-"
+	identityTimeout   = 25 * time.Second
+)
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "siftpane:", err)
@@ -33,11 +41,11 @@ func run() error {
 	login := flag.Bool("login", false, "read a user OAuth token securely and store in OS keyring")
 	logout := flag.Bool("logout", false, "delete the saved token from the OS keyring")
 	snapshot := flag.String("snapshot", "", "render offline review view: messages, compose, picker, thread, help")
-	width := flag.Int("width", 100, "snapshot columns")
-	height := flag.Int("height", 30, "snapshot rows")
+	width := flag.Int("width", ui.DefaultWidth, "snapshot columns")
+	height := flag.Int("height", ui.DefaultHeight, "snapshot rows")
 	flag.Parse()
 	if *logout {
-		return keyring.Delete("siftpane", "user-token")
+		return keyring.Delete(credentialService, credentialAccount)
 	}
 	if *login {
 		return loginToken()
@@ -52,14 +60,14 @@ func run() error {
 		svc = demo.New()
 		st = &store.Store{Config: store.Config{Workspaces: map[string]*store.Workspace{}}}
 	} else {
-		token := os.Getenv("SIFTPANE_SLACK_TOKEN")
+		token := os.Getenv(tokenEnvironment)
 		if token == "" {
-			token, err = keyring.Get("siftpane", "user-token")
+			token, err = keyring.Get(credentialService, credentialAccount)
 			if err != nil {
 				return fmt.Errorf("no user token: run siftpane --login, set SIFTPANE_SLACK_TOKEN, or use --demo")
 			}
 		}
-		if !strings.HasPrefix(token, "xoxp-") {
+		if !strings.HasPrefix(token, userTokenPrefix) {
 			return fmt.Errorf("expected an xoxp- user OAuth token; bot and app-level tokens are not supported")
 		}
 		svc = slack.New(token)
@@ -75,7 +83,7 @@ func run() error {
 			return err
 		}
 	}
-	authCtx, authCancel := context.WithTimeout(ctx, 25*time.Second)
+	authCtx, authCancel := context.WithTimeout(ctx, identityTimeout)
 	defer authCancel()
 	id, err := svc.Identity(authCtx)
 	if err != nil {
@@ -83,11 +91,11 @@ func run() error {
 	}
 	m := ui.New(ctx, svc, id, st, offline)
 	if *snapshot != "" {
-		if *width < 40 || *height < 14 {
-			return fmt.Errorf("snapshot requires at least 40 columns and 14 rows")
+		if *width < ui.MinWidth || *height < ui.MinHeight {
+			return fmt.Errorf("snapshot requires at least %d columns and %d rows", ui.MinWidth, ui.MinHeight)
 		}
-		switch *snapshot {
-		case "messages", "compose", "picker", "thread", "help":
+		switch ui.SnapshotMode(*snapshot) {
+		case ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotThread, ui.SnapshotHelp:
 		default:
 			return fmt.Errorf("unknown snapshot view")
 		}
@@ -95,7 +103,7 @@ func run() error {
 		if err = ui.LoadSnapshot(ctx, m, svc); err != nil {
 			return err
 		}
-		fmt.Println(ui.Snapshot(m, *width, *height, *snapshot))
+		fmt.Println(ui.Snapshot(m, *width, *height, ui.SnapshotMode(*snapshot)))
 		return nil
 	}
 	_, err = tea.NewProgram(m, tea.WithContext(ctx)).Run()
@@ -110,16 +118,16 @@ func loginToken() error {
 		return fmt.Errorf("read token: %w", err)
 	}
 	token := strings.TrimSpace(string(b))
-	if !strings.HasPrefix(token, "xoxp-") {
+	if !strings.HasPrefix(token, userTokenPrefix) {
 		return fmt.Errorf("expected a user OAuth token beginning xoxp-; use the internal app setup in README")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), identityTimeout)
 	defer cancel()
 	id, err := slack.New(token).Identity(ctx)
 	if err != nil {
 		return err
 	}
-	if err = keyring.Set("siftpane", "user-token", token); err != nil {
+	if err = keyring.Set(credentialService, credentialAccount, token); err != nil {
 		return fmt.Errorf("OS keyring unavailable; use SIFTPANE_SLACK_TOKEN for this session instead (token was not written to disk)")
 	}
 	fmt.Println("Saved user token for", slack.Safe(id.WorkspaceName))

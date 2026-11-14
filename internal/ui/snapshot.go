@@ -8,6 +8,18 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+// SnapshotMode is an offline review identifier accepted by the CLI.
+type SnapshotMode string
+
+// Snapshot modes are independent of the UI's navigation state.
+const (
+	SnapshotMessages SnapshotMode = "messages"
+	SnapshotCompose  SnapshotMode = "compose"
+	SnapshotPicker   SnapshotMode = "picker"
+	SnapshotThread   SnapshotMode = "thread"
+	SnapshotHelp     SnapshotMode = "help"
+)
+
 // LoadSnapshot loads offline review data through the normal update path.
 func LoadSnapshot(ctx context.Context, m *Model, s core.Service) error {
 	cursor := ""
@@ -32,21 +44,21 @@ func LoadSnapshot(ctx context.Context, m *Model, s core.Service) error {
 }
 
 // Snapshot renders a deterministic review state through the normal view path.
-func Snapshot(m *Model, width, height int, mode string) string {
+func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.width = width
 	m.height = height
 	m.resize()
-	m.focus = "messages"
+	m.focus = focusMessages
 	switch mode {
-	case "picker":
-		m.mode = "pick"
-	case "compose":
-		m.focus = "compose"
+	case SnapshotPicker:
+		m.mode = pickerInclude
+	case SnapshotCompose:
+		m.focus = focusCompose
 		m.composer.SetValue("Thanks, Maya. I'll review the keyboard flow this afternoon.\nThe small details are coming together.")
 		m.composer.Focus()
-	case "help":
+	case SnapshotHelp:
 		m.help = true
-	case "thread":
+	case SnapshotThread:
 		t := m.cache[m.active]
 		if t != nil {
 			for _, msg := range t.Messages {
