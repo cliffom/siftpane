@@ -93,3 +93,33 @@ func assertStatusBar(t *testing.T, m *Model, want string) {
 		t.Fatalf("status bar %q; want %q", rows[len(rows)-1], want)
 	}
 }
+
+func TestActionWarningsOverrideTimelineProgress(t *testing.T) {
+	for _, state := range []string{"initial-page-pending", "refreshing", "failed"} {
+		t.Run(state, func(t *testing.T) {
+			m := fixture(t)
+			m.focus = focusMessages
+			m.composer.SetValue(mainDraft)
+			switch state {
+			case "initial-page-pending":
+				m.cache[m.key()] = &timeline{Busy: true}
+			case "refreshing":
+				m.cache[m.key()].Busy = true
+			case "failed":
+				m.cache[m.key()].Err = errors.New("network unavailable")
+			}
+			_, cmd := m.Update(key(keyQuitQuiet))
+			if cmd != nil {
+				t.Fatal("quit discarded unsent text")
+			}
+			assertStatusBar(t, m, "Unsent drafts")
+			m.Update(key(keyRead))
+			assertStatusBar(t, m, "Marked read locally")
+			// Another navigation key restores timeline progress/error priority.
+			m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
+			if m.statusKind != statusRoutine || m.activityStatus() == m.status {
+				t.Fatal("action priority outlived the next explicit key")
+			}
+		})
+	}
+}

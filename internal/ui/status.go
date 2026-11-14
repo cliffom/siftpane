@@ -5,7 +5,7 @@ import "github.com/cliffom/siftpane/internal/core"
 // activityStatus derives progress from current state, so unrelated background
 // completions cannot replace the selected timeline's loading indicator.
 func (m *Model) activityStatus() string {
-	if m.stopped {
+	if m.stopped || m.statusKind == statusAction {
 		return m.status
 	}
 	if d := m.deliveries[m.key()]; d != nil && (d.State == core.DeliveryPending || d.State == core.DeliveryFailed) {
@@ -26,4 +26,8 @@ func (m *Model) activityStatus() string {
 		return m.restorationState()
 	}
 	return m.status
+}
+
+func (m *Model) setStatus(text string, kind statusKind) {
+	m.status, m.statusKind = text, kind
 }

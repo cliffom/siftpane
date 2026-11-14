@@ -56,7 +56,7 @@ func (m *Model) save() {
 	m.persistErr = ""
 	if err := m.store.Save(); err != nil {
 		m.persistErr = err.Error()
-		m.status = "Cannot save preferences: " + err.Error()
+		m.setStatus("Cannot save preferences: "+err.Error(), statusAction)
 	}
 }
 
@@ -154,16 +154,16 @@ func (m *Model) toggle(cid string) {
 			m.thread = ""
 			m.composer.Reset()
 		}
-		m.status = "Removed locally; Slack membership unchanged. Draft retained for this session."
+		m.setStatus("Removed locally; Slack membership unchanged. Draft retained for this session.", statusAction)
 	} else {
 		if len(m.included) >= selectionLimit {
-			m.status = fmt.Sprintf("Limit: %d included conversations. Remove one first.", selectionLimit)
+			m.setStatus(fmt.Sprintf("Limit: %d included conversations. Remove one first.", selectionLimit), statusAction)
 			return
 		}
 		m.included[cid] = true
 		m.addContext(cid)
 		m.publishStartupConversation(cid)
-		m.status = "Included. Only chosen conversations are refreshed."
+		m.setStatus("Included. Only chosen conversations are refreshed.", statusAction)
 	}
 	m.save()
 	m.saveMetadata()

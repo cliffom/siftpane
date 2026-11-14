@@ -17,4 +17,4 @@
 │                                                          │
 │                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Loading messages…                                   ? help
+ Included. Only chosen conversations are refreshed.  ? help

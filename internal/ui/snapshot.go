@@ -64,7 +64,7 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 				m.metadataBusy[cid] = true
 			}
 		}
-		m.status = "Restoring saved conversations"
+		m.setStatus("Restoring saved conversations", statusRoutine)
 	case SnapshotLoading:
 		m.startupSidebar = m.selected()
 		m.startupRestoring = true
@@ -74,10 +74,10 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 			}
 		}
 		m.cache[m.key()] = &timeline{Busy: true}
-		m.status = "Loading conversation history"
+		m.setStatus("Loading conversation history", statusRoutine)
 	case SnapshotLoadError:
 		m.cache[m.key()] = &timeline{Err: errors.New("connection unavailable")}
-		m.status = "History unavailable · R retry / refresh"
+		m.setStatus("History unavailable · R retry / refresh", statusRoutine)
 
 	case SnapshotPicker:
 		m.openPicker(pickerInclude)
@@ -98,7 +98,7 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 					m.thread = msg.TS
 					p, err := m.service.History(m.ctx, core.Query{Conversation: m.active, Thread: m.thread})
 					if err != nil {
-						m.status = err.Error()
+						m.setStatus(err.Error(), statusRoutine)
 						break
 					}
 					m.cache[m.key()] = &timeline{Messages: core.Merge(nil, p.Messages, cacheLimit), Loaded: true}

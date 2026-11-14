@@ -21,7 +21,7 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 	}
 	if v.Err != nil {
 		m.metadataFailed[v.ID] = true
-		m.status = "Saved conversation " + v.ID + " unavailable: " + v.Err.Error()
+		m.setStatus("Saved conversation "+v.ID+" unavailable: "+v.Err.Error(), statusRoutine)
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
 		}
@@ -50,7 +50,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 	m.directoryBusy = false
 	m.directoryErr = v.Err
 	if v.Err != nil {
-		m.status = v.Err.Error()
+		m.setStatus(v.Err.Error(), statusRoutine)
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
 		}

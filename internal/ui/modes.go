@@ -15,3 +15,11 @@ const (
 	pickerInclude pickerMode = "pick"
 	pickerSwitch  pickerMode = "switch"
 )
+
+// statusKind separates user-action feedback from routine transport progress.
+type statusKind uint8
+
+const (
+	statusRoutine statusKind = iota
+	statusAction
+)

@@ -5,6 +5,9 @@ import (
 	"image/color"
 	"strings"
 	"testing"
+	"time"
+
+	"charm.land/bubbles/v2/cursor"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -169,8 +172,8 @@ func assertHelpRestoresContext(t *testing.T, focus focusPane, mode pickerMode) {
 	if !m.help || m.helpScroll == 0 {
 		t.Fatal("help did not scroll")
 	}
-	_, cmd := m.Update(key(keySend))
-	if cmd != nil || m.help || len(m.deliveries) != 0 {
+	m.Update(key(keySend))
+	if m.help || len(m.deliveries) != 0 {
 		t.Fatal("dismiss key sent text")
 	}
 	if m.active != active || m.thread != thread || m.index != index || m.scroll != scroll || m.focus != priorFocus || m.mode != mode || m.composer.Value() != mainDraft {
@@ -180,8 +183,8 @@ func assertHelpRestoresContext(t *testing.T, focus focusPane, mode pickerMode) {
 		t.Fatal("help paste altered search")
 	}
 	m.Update(tea.KeyPressMsg{Code: tea.KeyF1})
-	_, cmd = m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
-	if cmd != nil || m.help || m.quitConfirm {
+	m.Update(tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
+	if m.help || m.quitConfirm {
 		t.Fatal("help close key triggered quit")
 	}
 }
@@ -193,4 +196,55 @@ func TestOpeningHelpCancelsQuitAndRetryConfirmation(t *testing.T) {
 	if !m.help || m.quitConfirm || m.retryConfirm {
 		t.Fatal("help retained a destructive confirmation")
 	}
+}
+
+func TestHelpResumesFocusedInputCursor(t *testing.T) {
+	for _, mode := range []pickerMode{pickerClosed, pickerSwitch} {
+		t.Run(string(mode), func(t *testing.T) {
+			m := fixture(t)
+			m.focus = focusCompose
+			styles := m.composer.Styles()
+			styles.Cursor.BlinkSpeed = time.Millisecond
+			m.composer.SetStyles(styles)
+			pickerStyles := m.picker.Styles()
+			pickerStyles.Cursor.BlinkSpeed = time.Millisecond
+			m.picker.SetStyles(pickerStyles)
+			start := m.composer.Focus()
+			if mode != pickerClosed {
+				start = m.openPicker(mode)
+			}
+			// Consume a hidden-phase timer while help owns input, then dismiss it.
+			_, next := m.Update(cursorMessage(t, start))
+			m.Update(tea.KeyPressMsg{Code: tea.KeyF1})
+			m.Update(cursorMessage(t, next))
+			_, resume := m.Update(key(keyEscape))
+			if resume == nil {
+				t.Fatal("help did not restart the focused cursor")
+			}
+			// Verify the resumed timer is accepted and schedules another blink.
+			_, next = m.Update(cursorMessage(t, resume))
+			if next == nil {
+				t.Fatal("cursor did not continue blinking after dismissal")
+			}
+		})
+	}
+}
+
+func cursorMessage(t *testing.T, cmd tea.Cmd) tea.Msg {
+	t.Helper()
+	if cmd == nil {
+		t.Fatal("missing cursor command")
+	}
+	msg := cmd()
+	if batch, ok := msg.(tea.BatchMsg); ok {
+		for _, c := range batch {
+			if c != nil {
+				return cursorMessage(t, c)
+			}
+		}
+	}
+	if _, ok := msg.(cursor.BlinkMsg); !ok {
+		t.Fatalf("expected blink, got %T", msg)
+	}
+	return msg
 }

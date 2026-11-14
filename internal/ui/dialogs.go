@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
+
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 )
@@ -84,7 +86,7 @@ func (m *Model) helpView(w, h int) string {
 	return dialogFrame("Keyboard guide", visible, w, h, lipgloss.RoundedBorder())
 }
 
-func (m *Model) helpKey(k string) {
+func (m *Model) helpKey(k string) tea.Cmd {
 	w, h := m.pickerSize()
 	available := h - frameRows - helpFooterRows
 	end := max(0, len(helpRows(w))-available)
@@ -104,5 +106,14 @@ func (m *Model) helpKey(k string) {
 	default:
 		// Consume the close key: it must never act on the obscured conversation.
 		m.help = false
+		// Help consumes blink messages. Restart the focused input's timer chain
+		// so dismissal cannot leave its virtual cursor hidden or frozen.
+		if m.mode != pickerClosed {
+			return m.picker.Focus()
+		}
+		if m.focus == focusCompose {
+			return m.composer.Focus()
+		}
 	}
+	return nil
 }

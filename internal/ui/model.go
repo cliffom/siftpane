@@ -95,10 +95,11 @@ type Model struct {
 	composer                     textarea.Model
 	width, height, index, scroll int
 
-	status    string
-	stopped   bool
-	pollIndex int
-	pollCount int
+	status     string
+	statusKind statusKind
+	stopped    bool
+	pollIndex  int
+	pollCount  int
 
 	help, quitConfirm, retryConfirm bool
 	helpScroll                      int
@@ -183,7 +184,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		m.active = "Cstudio"
 		m.unread["Cshipping"] = true
 		m.unread["Dmaya"] = true
-		m.status = "Offline demo"
+		m.setStatus("Offline demo", statusRoutine)
 	}
 	m.restoreDraft()
 	return m
