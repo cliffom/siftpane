@@ -62,7 +62,7 @@ func helpRows(w int) []string {
 		"",
 		"HELP AND APPEARANCE",
 		keyLabel(keyHelp) + "  help from navigation; " + keyLabel(keyHelpGlobal) + "  help anywhere",
-		"Solid panes/composer/search; dashed help/separators. [Title] and ▸ show focus without color.",
+		"Solid panes/composer/modals; dashed separators. [Title] and ▸ show focus without color.",
 		"Full shortcuts and limits: docs/USAGE.md",
 	}
 	wrapped := []string{}
@@ -81,10 +81,7 @@ func (m *Model) helpView(w, h int) string {
 	visible := append([]string{}, rows[start:min(len(rows), start+available)]...)
 	visible = padRows(visible, w-frameColumns, available)
 	visible = append(visible, muted.Render(fmt.Sprintf(" %d–%d/%d %s/%s · %s close", start+1, min(len(rows), start+available), len(rows), keyLabel(keyUp), keyLabel(keyDown), keyLabel(keyEscape))))
-	border := lipgloss.RoundedBorder()
-	border.Top, border.Bottom = "╌", "╌"
-	border.Left, border.Right = "╎", "╎"
-	return dialogFrame("Keyboard guide", visible, w, h, border)
+	return dialogFrame("Keyboard guide", visible, w, h, lipgloss.RoundedBorder())
 }
 
 func (m *Model) helpKey(k string) {

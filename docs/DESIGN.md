@@ -22,7 +22,7 @@ The primary reference is Josh McKinney's [Terminal borders that don't cost a cel
 | Active composer and transient frame | Teal `#8AC7BA` |
 | Focused pane title | Bold amber `#E5C07B`, wrapped as `[Title]` |
 | Selected conversation/message | Bold pale teal `#BFE4DA` and `▸` |
-| Channel/people separators, help outline | Dashed approximation `╌` |
+| Channel/people separators | Dashed approximation `╌` |
 | Local-activity grouping | Subtle dotted delimiters |
 
 Use matching colors on adjoining strokes and corners. Style focused title text and surrounding border segments independently: nesting the title inside a border style previously leaked amber into a horizontal stroke. Focus changes only the intended title/frame; preserve the accepted border palette. Brackets and selection arrows must still communicate focus without color. Do not put `[FOCUS]` before a title.
@@ -50,7 +50,7 @@ The [project icon](BRANDING.md) combines a retro terminal and original conversat
 
 ## Help modal
 
-`?` in navigation or `F1` anywhere opens an opaque centered keyboard guide over dimmed context, using a dashed outline and bracketed amber title. Keep the status row readable. Wrap a single-column guide to the available width; reserve a fixed scroll-position/control row. Arrow keys or `j/k` scroll, `PgUp/PgDn` page, and `End`/`G` reaches the end. Any other key dismisses and is consumed, including send/quit/search keys. Pasted text is ignored. Dismissal preserves the prior conversation, thread, selection, focus and draft, including an underlying picker. `?` remains ordinary composer text. Review full guide reachability at the minimum viewport and after resize.
+`?` in navigation or `F1` anywhere opens an opaque centered keyboard guide over dimmed context, using a solid rounded outline and bracketed amber title. Keep the status row readable. Wrap a single-column guide to the available width; reserve a fixed scroll-position/control row. Arrow keys or `j/k` scroll, `PgUp/PgDn` page, and `End`/`G` reaches the end. Any other key dismisses and is consumed, including send/quit/search keys. Pasted text is ignored. Dismissal preserves the prior conversation, thread, selection, focus and draft, including an underlying picker. `?` remains ordinary composer text. Review full guide reachability at the minimum viewport and after resize.
 
 Layout measurements and defaults are owned by `internal/ui/layout.go`; palette values remain attached to named styles in `view.go`. Shortcut identifiers and display labels are owned by `keys.go` so handlers and hints share one source. Keep focus/picker state distinct from display copy and offline snapshot identifiers. Follow the [value policy](DEVELOPMENT.md#values-states-and-settings) when extending these definitions; a matching number alone is not a reason to share two unrelated layout measurements.
 
