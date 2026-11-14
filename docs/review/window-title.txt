@@ -1,0 +1,17 @@
+Offline PTY window-title review — 2026-11-14
+
+100×30 and 60×20, bin/siftpane --demo, TERM=xterm-256color:
+  Start (two seeded unread conversations): Siftpane *
+  Ctrl+K, maya, Enter (one unread remains): Siftpane *
+  Ctrl+K, shipping, Enter (last unread read): Siftpane
+  Resize to 30×10 (below minimum): Siftpane
+  Ctrl+C: clean exit; Bubble Tea clears the title.
+
+Captured OSC 2 title updates for each process:
+  Siftpane *
+  Siftpane
+  <empty on exit>
+
+The renderer does not re-emit an unchanged title. Assertions checked the last
+emitted title after each action. This is PTY escape-output evidence, not a
+screenshot of a real terminal tab or verification of multiplexer title policy.

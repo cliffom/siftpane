@@ -27,6 +27,7 @@ func (m *Model) View() tea.View {
 	if w < MinWidth || h < MinHeight {
 		v := tea.NewView(fit(fmt.Sprintf("Siftpane · resize to at least %d × %d", MinWidth, MinHeight), max(1, w)))
 		v.AltScreen = true
+		v.WindowTitle = m.windowTitle()
 		return v
 	}
 	left := accent.Render(" siftpane")
@@ -72,9 +73,22 @@ func (m *Model) View() tea.View {
 	}
 	v := tea.NewView(content)
 	v.AltScreen = true
-	v.WindowTitle = "Siftpane"
+	v.WindowTitle = m.windowTitle()
 	return v
 }
+
+// windowTitle reflects the same local activity as the sidebar, including only
+// conversations selected for this workspace. It is independent of pane focus.
+func (m *Model) windowTitle() string {
+	for cid, unread := range m.unread {
+		if unread && m.included[cid] {
+			return windowTitle + " *"
+		}
+	}
+	return windowTitle
+}
+
+const windowTitle = "Siftpane"
 
 func (m *Model) mainView() string {
 	side, right, hist, comp, inside := m.dimensions()

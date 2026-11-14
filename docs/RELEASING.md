@@ -2,7 +2,7 @@
 
 The authoritative application version is `internal/version/VERSION`, embedded by `internal/version` so checkout builds and `go install` have the same `siftpane --version` identity. Versions use semantic versioning with `v`-prefixed Git tags. Before 1.0, compatible features increment minor, fixes increment patch, and breaking changes increment minor with migration notes. Reuse a suitable prepared, unpublished version. Behavior-preserving refactors and docs-only changes do not need a dedicated release.
 
-`0.1.0` is prepared as the initial versioned release; no tag or release has been published by its implementation PR. The release notes are in [CHANGELOG.md](../CHANGELOG.md). Source builds before the first versioned release have no runtime version identity.
+`0.1.0` was published as the initial versioned release on 2026-11-14. `0.2.0` is prepared for the compatible unread-title feature; its tag and release have not been published. The release notes are in [CHANGELOG.md](../CHANGELOG.md). Source builds before the first versioned release have no runtime version identity.
 
 When authorized to release:
 
