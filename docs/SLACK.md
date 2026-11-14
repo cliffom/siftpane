@@ -6,6 +6,8 @@
 4. Run `./bin/siftpane --login`, paste the token into the hidden prompt, and press Enter. Siftpane validates it with `auth.test` and saves it in the OS credential store. Then run `./bin/siftpane`.
 5. Press `p` to choose conversations. Type to filter the loaded directory page, use arrows to move, `Tab` to include/remove, and `Enter` to include and open. Use `Ctrl+L` to load another directory page; search covers only pages loaded in this session. A new installation includes **nothing** until you choose it. The sidebar’s `CHANNELS included/total` count covers public/private channel entries loaded so far; load more picker pages to discover additional channels.
 
+Upload the [project icon](../assets/branding/icon.png) under **Basic Information → Display Information** to use the same artwork for your Slack app. See [branding assets](BRANDING.md) for dimensions and the generation record.
+
 An environment variable is an explicit fallback when the OS credential store is unavailable:
 
 ```sh

@@ -1,6 +1,6 @@
-# Siftpane
+![Siftpane — Your channels. Your people. Your terminal.](assets/branding/hero.png)
 
-**Your channels. Your people. Your terminal.**
+# Siftpane
 
 A focused Slack client for your terminal. Choose the channels, DMs, and group DMs you want to keep close, then read and reply with the keyboard. Siftpane only refreshes conversations you include.
 

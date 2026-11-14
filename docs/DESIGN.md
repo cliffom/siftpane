@@ -43,3 +43,7 @@ Keep shared boundaries single and junctions aligned. Do not box individual messa
 Below 76 columns, use a full-width focused view rather than squeezing two panes. Minimum supported layout is 40×14; review 100×30 and 60×20 at a minimum. Long titles, workspace names, topics, and usernames must truncate by display-cell width without losing focus brackets or colliding with another region.
 
 Review messages, channels, composing, threads, picker, and help. Include long/multiline drafts, long messages, unread/draft markers, failed/uncertain sends, and navigation after resize. Snapshot dimension tests cannot establish font stroke continuity, terminal color behavior, clipboard support, or live Slack correctness; use a terminal for those checks and record the evidence separately.
+
+## Project artwork
+
+The [project icon](BRANDING.md) combines a retro terminal and original conversation bubbles, inspired by Bambustand. Use the saved PNG for project documentation and the Slack app avatar; do not substitute Slack’s mark for Siftpane’s identity.
