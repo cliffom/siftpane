@@ -13,6 +13,7 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+// Service implements core.Service entirely in memory, with no credential access.
 type Service struct {
 	mu            sync.Mutex
 	conversations []core.Conversation
@@ -23,6 +24,7 @@ type Service struct {
 	polls         int
 }
 
+// New seeds distinct conversation histories, threads, and simulated activity.
 func New() *Service {
 	s := &Service{activity: map[string]core.Message{}, messages: map[string][]core.Message{}, sent: map[string]core.Message{}, failed: map[string]bool{}}
 	s.conversations = []core.Conversation{{ID: "Cstudio", Name: "studio", Kind: "channel"}, {ID: "Cshipping", Name: "shipping", Kind: "channel"}, {ID: "Cdesign", Name: "design", Kind: "channel"}, {ID: "Dmaya", Name: "Maya Chen", Kind: "dm"}, {ID: "Dleo", Name: "Leo Park", Kind: "dm"}, {ID: "Gcrew", Name: "Maya, Leo, you", Kind: "group"}, {ID: "Cquiet", Name: "quiet-corner", Kind: "private"}, {ID: "Crandom", Name: "off-topic", Kind: "channel"}}
@@ -59,11 +61,18 @@ func New() *Service {
 
 	return s
 }
+
+// Identity returns the fixed offline workspace and demo user.
 func (s *Service) Identity(context.Context) (core.Identity, error) {
 	return core.Identity{Workspace: "DEMO", WorkspaceName: "Fieldwork · demo", User: "U2", Username: "you"}, nil
 }
+
+// Directory returns a page of the demo conversation catalog.
 func (s *Service) Directory(_ context.Context, cursor string) (core.DirectoryPage, error) {
-	offset, _ := strconv.Atoi(cursor)
+	offset, err := pageOffset(cursor, len(s.conversations))
+	if err != nil {
+		return core.DirectoryPage{}, err
+	}
 	end := min(offset+4, len(s.conversations))
 	p := core.DirectoryPage{Conversations: s.conversations[offset:end]}
 	if end < len(s.conversations) {
@@ -71,6 +80,8 @@ func (s *Service) Directory(_ context.Context, cursor string) (core.DirectoryPag
 	}
 	return p, nil
 }
+
+// History returns a bounded timeline page and occasionally simulates new activity.
 func (s *Service) History(_ context.Context, q core.Query) (core.Page, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -114,7 +125,10 @@ func (s *Service) History(_ context.Context, q core.Query) (core.Page, error) {
 		}
 		ms = filtered
 	}
-	offset, _ := strconv.Atoi(q.Cursor)
+	offset, err := pageOffset(q.Cursor, len(ms))
+	if err != nil {
+		return core.Page{}, err
+	}
 	end := len(ms) - offset
 	if q.Thread != "" {
 		end = min(len(ms), offset+15)
@@ -131,6 +145,8 @@ func (s *Service) History(_ context.Context, q core.Query) (core.Page, error) {
 	}
 	return p, nil
 }
+
+// Send records a demo message, failing the first /fail attempt for retry review.
 func (s *Service) Send(_ context.Context, o core.Outgoing) (core.Message, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -139,7 +155,7 @@ func (s *Service) Send(_ context.Context, o core.Outgoing) (core.Message, error)
 	}
 	if strings.Contains(o.Text, "/fail") && !s.failed[o.ID] {
 		s.failed[o.ID] = true
-		return core.Message{}, errors.New("demo: simulated send failure; press Esc then r to retry")
+		return core.Message{}, sendFailure{}
 	}
 	m := core.Message{TS: fmt.Sprintf("%d.%06d", time.Now().Unix(), time.Now().Nanosecond()/1000), User: "U2", Author: "You", Text: o.Text, Thread: o.Thread, ClientID: o.ID}
 	key := o.Conversation
@@ -156,6 +172,7 @@ func (s *Service) Send(_ context.Context, o core.Outgoing) (core.Message, error)
 	return m, nil
 }
 
+// Conversation returns metadata for one demo conversation.
 func (s *Service) Conversation(_ context.Context, id string) (core.Conversation, error) {
 	for _, c := range s.conversations {
 		if c.ID == id {
@@ -164,3 +181,20 @@ func (s *Service) Conversation(_ context.Context, id string) (core.Conversation,
 	}
 	return core.Conversation{}, errors.New("conversation unavailable")
 }
+
+func pageOffset(cursor string, limit int) (int, error) {
+	if cursor == "" {
+		return 0, nil
+	}
+	offset, err := strconv.Atoi(cursor)
+	if err != nil || offset < 0 || offset > limit {
+		return 0, errors.New("invalid demo cursor")
+	}
+	return offset, nil
+}
+
+// sendFailure represents a definite simulated failure, before any message is saved.
+type sendFailure struct{}
+
+func (sendFailure) Error() string           { return "demo: simulated send failure; press Esc then r to retry" }
+func (sendFailure) DeliveryUncertain() bool { return false }

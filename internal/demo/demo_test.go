@@ -2,18 +2,19 @@ package demo
 
 import (
 	"context"
-	"github.com/cliffom/siftpane/internal/core"
 	"strings"
 	"testing"
+
+	"github.com/cliffom/siftpane/internal/core"
 )
 
 func TestDistinctConversationFixturesAndParticipants(t *testing.T) {
 	s := New()
 	seen := map[string]string{}
 	for _, c := range s.conversations {
-		p, e := s.History(context.Background(), core.Query{Conversation: c.ID})
-		if e != nil {
-			t.Fatal(e)
+		p, err := s.History(context.Background(), core.Query{Conversation: c.ID})
+		if err != nil {
+			t.Fatal(err)
 		}
 		if len(p.Messages) != 15 || !p.More {
 			t.Fatal("missing older history", c.ID)
@@ -31,11 +32,28 @@ func TestDistinctConversationFixturesAndParticipants(t *testing.T) {
 		seen[body.String()] = c.ID
 		for _, m := range p.Messages {
 			if m.Replies > 0 {
-				thread, _ := s.History(context.Background(), core.Query{Conversation: c.ID, Thread: m.TS})
+				thread, err := s.History(context.Background(), core.Query{Conversation: c.ID, Thread: m.TS})
+				if err != nil {
+					t.Fatal(err)
+				}
 				if len(thread.Messages) != 4 || thread.Messages[0].Text != m.Text {
 					t.Fatal("thread doesn't match parent", c.ID)
 				}
 			}
 		}
+	}
+}
+
+func TestInvalidPaginationCursorsReturnErrors(t *testing.T) {
+	for _, cursor := range []string{"invalid", "-1", "10000"} {
+		t.Run(cursor, func(t *testing.T) {
+			s := New()
+			if _, err := s.Directory(context.Background(), cursor); err == nil {
+				t.Fatal("directory accepted invalid cursor")
+			}
+			if _, err := s.History(context.Background(), core.Query{Conversation: "Cstudio", Cursor: cursor}); err == nil {
+				t.Fatal("history accepted invalid cursor")
+			}
+		})
 	}
 }

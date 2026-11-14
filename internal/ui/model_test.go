@@ -10,6 +10,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
+
 	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/demo"
 	"github.com/cliffom/siftpane/internal/store"
@@ -20,13 +21,17 @@ func fixture(t *testing.T) *Model {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	s := demo.New()
-	id, _ := s.Identity(ctx)
+	id, err := s.Identity(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
 	m := New(ctx, s, id, &store.Store{Config: store.Config{Workspaces: map[string]*store.Workspace{}}}, true)
-	if e := LoadSnapshot(ctx, m, s); e != nil {
-		t.Fatal(e)
+	if err := LoadSnapshot(ctx, m, s); err != nil {
+		t.Fatal(err)
 	}
 	return m
 }
+
 func key(s string) tea.KeyPressMsg {
 	if s == "esc" {
 		return tea.KeyPressMsg{Code: tea.KeyEscape}
@@ -36,38 +41,19 @@ func key(s string) tea.KeyPressMsg {
 	}
 	return tea.KeyPressMsg{Code: []rune(s)[0], Text: s}
 }
+
 func TestLayoutDimensionsAndBorderJunctions(t *testing.T) {
 	for _, size := range [][2]int{{120, 36}, {100, 30}, {80, 24}, {60, 20}, {40, 14}} {
 		for _, mode := range []string{"messages", "compose", "picker", "thread", "help"} {
 			t.Run(fmt.Sprint(size)+mode, func(t *testing.T) {
 				m := fixture(t)
 				s := Snapshot(m, size[0], size[1], mode)
-				rows := strings.Split(s, "\n")
-				if len(rows) != size[1] {
-					t.Fatalf("rows=%d want=%d", len(rows), size[1])
-				}
-				for i, r := range rows {
-					if n := ansi.StringWidth(r); n != size[0] {
-						t.Fatalf("row %d has width %d want %d: %q", i, n, size[0], r)
-					}
-				}
-				if strings.Contains(s, "││") || strings.Contains(s, "cell-border;") {
-					t.Fatal("doubled border or experimental protocol")
-				}
-				focusedHeader := "[" + m.title() + "]"
-				if mode == "compose" {
-					focusedHeader = "[Message]"
-				}
-				if mode == "picker" {
-					focusedHeader = "[Choose conversations]"
-				}
-				if mode != "help" && !strings.Contains(s, focusedHeader) {
-					t.Fatal("missing non-color focus cue")
-				}
+				assertLayout(t, m, s, size, mode)
 			})
 		}
 	}
 }
+
 func TestDraftSurvivesSwitchThreadAndFailure(t *testing.T) {
 	m := fixture(t)
 	m.composer.SetValue("main draft")
@@ -106,6 +92,7 @@ func TestDraftSurvivesSwitchThreadAndFailure(t *testing.T) {
 		t.Fatal("retry changed identity or did not clear acknowledged draft")
 	}
 }
+
 func TestPendingPasteLockedAndSuccessDoesNotClearAnotherDraft(t *testing.T) {
 	m := fixture(t)
 	m.focus = "compose"
@@ -124,6 +111,7 @@ func TestPendingPasteLockedAndSuccessDoesNotClearAnotherDraft(t *testing.T) {
 		t.Fatal("success erased wrong draft")
 	}
 }
+
 func TestRemovalCancelsAndRejectsLateResponses(t *testing.T) {
 	m := fixture(t)
 	cid := "Cstudio"
@@ -151,6 +139,7 @@ func TestRemovalCancelsAndRejectsLateResponses(t *testing.T) {
 		t.Fatal("removal discarded unsent text")
 	}
 }
+
 func TestUnknownSendRequiresExplicitRetryAndKeepsOriginal(t *testing.T) {
 	m := fixture(t)
 	m.composer.SetValue("uncertain text")
@@ -164,6 +153,7 @@ func TestUnknownSendRequiresExplicitRetryAndKeepsOriginal(t *testing.T) {
 		t.Fatal("explicit retry lost original")
 	}
 }
+
 func TestBoundedCacheAndOlderWindow(t *testing.T) {
 	m := fixture(t)
 	for i := 0; i < 100; i++ {
@@ -190,6 +180,7 @@ func TestBoundedCacheAndOlderWindow(t *testing.T) {
 		t.Fatal("older cursor lost")
 	}
 }
+
 func TestOnlyIncludedPollingAndLocalRead(t *testing.T) {
 	m := fixture(t)
 	delete(m.unread, m.active)
@@ -236,11 +227,15 @@ func TestOlderPageBecomesVisibleAndRefreshDoesNotStrandPagination(t *testing.T) 
 		t.Fatal("refresh stranded history paging")
 	}
 }
+
 func TestSavedConversationLookupIndependentOfDirectory(t *testing.T) {
 	m := fixture(t)
 	m.directory = nil
 	m.active = ""
-	c, _ := m.service.Conversation(m.ctx, "Dmaya")
+	c, err := m.service.Conversation(m.ctx, "Dmaya")
+	if err != nil {
+		t.Fatal(err)
+	}
 	_, cmd := m.Update(conversationResult{Conversation: c, ID: c.ID, Generation: m.generations[c.ID]})
 	if m.active != "Dmaya" || cmd == nil {
 		t.Fatal("saved selection needs directory scan")
@@ -251,6 +246,7 @@ func TestSavedConversationLookupIndependentOfDirectory(t *testing.T) {
 		t.Fatal("late metadata restored excluded conversation")
 	}
 }
+
 func TestCombiningFailedTextNeverTruncatesNewDraft(t *testing.T) {
 	m := fixture(t)
 	m.deliveries[m.key()] = &core.Delivery{Outgoing: core.Outgoing{Text: strings.Repeat("a", 7000)}, State: "failed"}
@@ -287,6 +283,7 @@ func TestHistoryViewportStartsWithAuthor(t *testing.T) {
 		}
 	}
 }
+
 func TestOversizedMessageKeepsAuthorWhileScrolling(t *testing.T) {
 	m := fixture(t)
 	m.cache[m.active].Messages = []core.Message{{TS: "1794589200.000001", Author: "Maya Chen", Text: strings.Repeat("A longer message line.\n", 25)}}
@@ -300,6 +297,7 @@ func TestOversizedMessageKeepsAuthorWhileScrolling(t *testing.T) {
 		t.Fatal("long-message body became inaccessible")
 	}
 }
+
 func TestConversationContextUsesKnownMetadata(t *testing.T) {
 	m := fixture(t)
 	m.selectConversation("Gcrew")
@@ -328,5 +326,31 @@ func TestUnsentExitWarningSurvivesBackgroundRefresh(t *testing.T) {
 	m.Update(historyResult{Key: m.active, Generation: m.generations[m.active], Page: core.Page{Messages: m.cache[m.active].Messages}})
 	if !strings.Contains(ansi.Strip(m.View().Content), "Unsent text is in memory") {
 		t.Fatal("background refresh hid discard warning")
+	}
+}
+
+func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode string) {
+	t.Helper()
+	rows := strings.Split(s, "\n")
+	if len(rows) != size[1] {
+		t.Fatalf("rows=%d want=%d", len(rows), size[1])
+	}
+	for i, r := range rows {
+		if n := ansi.StringWidth(r); n != size[0] {
+			t.Fatalf("row %d has width %d want %d: %q", i, n, size[0], r)
+		}
+	}
+	if strings.Contains(s, "││") || strings.Contains(s, "cell-border;") {
+		t.Fatal("doubled border or experimental protocol")
+	}
+	focusedHeader := "[" + m.title() + "]"
+	if mode == "compose" {
+		focusedHeader = "[Message]"
+	}
+	if mode == "picker" {
+		focusedHeader = "[Choose conversations]"
+	}
+	if mode != "help" && !strings.Contains(s, focusedHeader) {
+		t.Fatal("missing non-color focus cue")
 	}
 }

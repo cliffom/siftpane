@@ -1,12 +1,36 @@
-.PHONY: build test demo check
+.DEFAULT_GOAL := build
+
+GO ?= go
+LINT := $(GO) tool -modfile=tools/go.mod golangci-lint
+
+.PHONY: build demo test vet fmt fmt-check lint check mod-check
+
 build:
-	go build -o bin/siftpane ./cmd/siftpane
-test:
-	go test -race ./...
+	$(GO) build -o bin/siftpane ./cmd/siftpane
+
 demo:
-	go run ./cmd/siftpane --demo
-check:
-	test -z "$$(gofmt -l cmd internal)"
-	go vet ./...
-	go test -race ./...
-	go build -o bin/siftpane ./cmd/siftpane
+	$(GO) run ./cmd/siftpane --demo
+
+test:
+	$(GO) test -race ./...
+
+vet:
+	$(GO) vet ./...
+
+fmt:
+	$(LINT) fmt ./...
+
+fmt-check:
+	$(LINT) fmt --diff ./...
+
+lint:
+	$(LINT) config verify
+	$(LINT) run ./...
+
+mod-check:
+	$(GO) mod tidy -diff
+	$(GO) -C tools mod tidy -diff
+	$(GO) mod verify
+	$(GO) -C tools mod verify
+
+check: fmt-check lint vet test build mod-check

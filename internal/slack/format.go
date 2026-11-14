@@ -9,8 +9,10 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
-var mentionRE = regexp.MustCompile(`<@[A-Z0-9]+>`)
-var angleRE = regexp.MustCompile(`<([^<>]+)>`)
+var (
+	mentionRE = regexp.MustCompile(`<@[A-Z0-9]+>`)
+	angleRE   = regexp.MustCompile(`<([^<>]+)>`)
+)
 
 // Safe removes control sequences, bidi overrides and terminal controls from untrusted text.
 func Safe(s string) string {
@@ -27,6 +29,8 @@ func Safe(s string) string {
 		return r
 	}, s)
 }
+
+// Readable renders Slack mentions, links, and entities as safe terminal text.
 func Readable(s string) string {
 	s = angleRE.ReplaceAllStringFunc(s, func(v string) string {
 		parts := strings.SplitN(v[1:len(v)-1], "|", 2)
@@ -53,6 +57,8 @@ func Readable(s string) string {
 	})
 	return Safe(html.UnescapeString(s))
 }
+
+// Body returns readable text with fallbacks for unsupported message content.
 func Body(m core.Message) string {
 	s := Readable(m.Text)
 	for _, a := range m.Attachments {

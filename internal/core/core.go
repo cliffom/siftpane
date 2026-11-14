@@ -3,17 +3,23 @@ package core
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"strings"
 )
 
-type Identity struct{ Workspace, WorkspaceName, User, Username string }
-type Conversation struct {
-	ID, Name, Kind string
-	Topic, Purpose string
-	Members        int
-}
+type (
+	// Identity is the workspace and user authenticated by the active credential.
+	Identity struct{ Workspace, WorkspaceName, User, Username string }
+	// Conversation describes an accessible Slack channel or direct conversation.
+	Conversation struct {
+		ID, Name, Kind string
+		Topic, Purpose string
+		Members        int
+	}
+)
 
+// Label returns the terminal label, including its channel or person prefix.
 func (c Conversation) Label() string {
 	if c.Kind == "channel" {
 		return "#" + c.Name
@@ -24,6 +30,7 @@ func (c Conversation) Label() string {
 	return "@" + c.Name
 }
 
+// Message contains the text and fallback content needed to display one Slack message.
 type Message struct {
 	TS       string `json:"ts"`
 	User     string `json:"user"`
@@ -44,24 +51,33 @@ type Message struct {
 	} `json:"attachments"`
 	Blocks []map[string]any `json:"blocks"`
 }
+
+// Page is one history or thread page; Next and More describe pagination.
 type Page struct {
 	Messages []Message
 	Next     string
 	More     bool
 }
+
+// DirectoryPage is a page of accessible conversation metadata.
 type DirectoryPage struct {
 	Conversations []Conversation
 	Next          string
 }
-type Query struct{ Conversation, Thread, Cursor, Before, After string }
-type Outgoing struct{ Conversation, Thread, Text, ID string }
-type Service interface {
-	Identity(context.Context) (Identity, error)
-	Conversation(context.Context, string) (Conversation, error)
-	Directory(context.Context, string) (DirectoryPage, error)
-	History(context.Context, Query) (Page, error)
-	Send(context.Context, Outgoing) (Message, error)
-}
+type (
+	// Query identifies a timeline and optional cursor or exclusive timestamp bounds.
+	Query struct{ Conversation, Thread, Cursor, Before, After string }
+	// Outgoing is an immutable send attempt with a stable client ID.
+	Outgoing struct{ Conversation, Thread, Text, ID string }
+	// Service is the context-aware boundary shared by Slack and the offline demo.
+	Service interface {
+		Identity(context.Context) (Identity, error)
+		Conversation(context.Context, string) (Conversation, error)
+		Directory(context.Context, string) (DirectoryPage, error)
+		History(context.Context, Query) (Page, error)
+		Send(context.Context, Outgoing) (Message, error)
+	}
+)
 
 // Filter never selects on the user's behalf. Switching searches only included IDs.
 func Filter(cs []Conversation, query string, included map[string]bool, onlyIncluded bool) []Conversation {
@@ -107,6 +123,7 @@ type Delivery struct {
 	Uncertain bool
 }
 
+// Begin starts an attempt unless this delivery is already pending or acknowledged.
 func (d *Delivery) Begin() bool {
 	if d.State == "pending" || d.State == "sent" {
 		return false
@@ -115,6 +132,8 @@ func (d *Delivery) Begin() bool {
 	d.Err = nil
 	return true
 }
+
+// Finish records acknowledgement or failure without discarding the original body.
 func (d *Delivery) Finish(err error, uncertain bool) {
 	d.Err = err
 	d.Uncertain = uncertain
@@ -123,4 +142,20 @@ func (d *Delivery) Finish(err error, uncertain bool) {
 	} else {
 		d.State = "sent"
 	}
+}
+
+// DeliveryError classifies a failed send without depending on its display text.
+// Implementations return true when the remote service may have accepted the write.
+type DeliveryError interface {
+	error
+	DeliveryUncertain() bool
+}
+
+// UncertainDelivery conservatively treats unclassified errors as ambiguous.
+func UncertainDelivery(err error) bool {
+	var outcome DeliveryError
+	if errors.As(err, &outcome) {
+		return outcome.DeliveryUncertain()
+	}
+	return err != nil
 }

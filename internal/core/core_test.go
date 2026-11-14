@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -22,6 +23,7 @@ func TestExplicitFilter(t *testing.T) {
 		t.Fatal("removed conversation still included")
 	}
 }
+
 func TestMergeOverlapAndBound(t *testing.T) {
 	got := Merge([]Message{{TS: "1", Text: "old"}, {TS: "2"}}, []Message{{TS: "1", Text: "edited"}, {TS: "3"}}, 3)
 	if len(got) != 3 || got[0].Text != "edited" {
@@ -32,6 +34,7 @@ func TestMergeOverlapAndBound(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
 func TestDeliveryRetainsTextAndGuardsDuplicates(t *testing.T) {
 	d := Delivery{Outgoing: Outgoing{Text: "keep me", ID: "same-id"}}
 	if !d.Begin() || d.Begin() {
@@ -46,3 +49,27 @@ func TestDeliveryRetainsTextAndGuardsDuplicates(t *testing.T) {
 		t.Fatal("sent delivery repeated")
 	}
 }
+
+func TestUncertainDeliveryHandlesWrappedOutcomes(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{name: "acknowledged"},
+		{name: "unknown", err: errors.New("connection lost"), want: true},
+		{name: "definite", err: testDeliveryError{}},
+		{name: "wrapped ambiguous", err: fmt.Errorf("post: %w", testDeliveryError{uncertain: true}), want: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := UncertainDelivery(tc.err); got != tc.want {
+				t.Fatalf("UncertainDelivery()=%v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+type testDeliveryError struct{ uncertain bool }
+
+func (testDeliveryError) Error() string             { return "test delivery outcome" }
+func (e testDeliveryError) DeliveryUncertain() bool { return e.uncertain }

@@ -17,30 +17,30 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+// APIError reports a sanitized Slack failure, retry delay, and delivery uncertainty.
 type APIError struct {
 	Code       string
 	RetryAfter time.Duration
 	Ambiguous  bool
 }
 
-func (e *APIError) Error() string {
-	if e.RetryAfter > 0 {
-		return fmt.Sprintf("rate limited; retry in %s", e.RetryAfter.Round(time.Second))
+func (err *APIError) Error() string {
+	if err.RetryAfter > 0 {
+		return fmt.Sprintf("rate limited; retry in %s", err.RetryAfter.Round(time.Second))
 	}
-	return "Slack: " + e.Code
-}
-func IsAuth(err error) bool {
-	var e *APIError
-	return errors.As(err, &e) && (e.Code == "invalid_auth" || e.Code == "token_revoked" || e.Code == "token_expired" || e.Code == "account_inactive" || e.Code == "not_authed")
-}
-func Uncertain(err error) bool {
-	var e *APIError
-	if errors.As(err, &e) {
-		return e.Ambiguous
-	}
-	return err != nil
+	return "Slack: " + err.Code
 }
 
+// IsAuth reports whether the error requires replacing the authenticated credential.
+func IsAuth(err error) bool {
+	var apiErr *APIError
+	return errors.As(err, &apiErr) && (apiErr.Code == "invalid_auth" || apiErr.Code == "token_revoked" || apiErr.Code == "token_expired" || apiErr.Code == "account_inactive" || apiErr.Code == "not_authed")
+}
+
+// DeliveryUncertain reports whether Slack might have accepted the failed write.
+func (err *APIError) DeliveryUncertain() bool { return err.Ambiguous }
+
+// Client is a concurrency-safe, paced Web API client for one user and workspace.
 type Client struct {
 	token string
 	base  string
@@ -50,6 +50,7 @@ type Client struct {
 	names map[string]string
 }
 
+// New constructs a user-token client without making network requests.
 func New(token string) *Client {
 	return &Client{token: token, base: "https://slack.com/api/", http: &http.Client{Timeout: 20 * time.Second}, next: map[string]time.Time{}, names: map[string]string{}}
 }
@@ -81,24 +82,28 @@ func (c *Client) wait(ctx context.Context, method string) error {
 		}
 	}
 }
+
 func (c *Client) call(ctx context.Context, method string, v url.Values, out any) error {
-	if e := c.wait(ctx, method); e != nil {
-		return e
+	if err := c.wait(ctx, method); err != nil {
+		return err
 	}
-	req, e := http.NewRequestWithContext(ctx, "POST", c.base+method, strings.NewReader(v.Encode()))
-	if e != nil {
+	req, err := http.NewRequestWithContext(ctx, "POST", c.base+method, strings.NewReader(v.Encode()))
+	if err != nil {
 		return errors.New("cannot create Slack request")
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r, e := c.http.Do(req)
-	if e != nil {
+	r, err := c.http.Do(req)
+	if err != nil {
 		return &APIError{Code: "connection failed; refresh will reconnect", Ambiguous: method == "chat.postMessage"}
 	}
-	defer r.Body.Close()
+	defer func() {
+		// Closing an already-read response cannot change its API result.
+		_ = r.Body.Close()
+	}()
 	if r.StatusCode == 429 {
-		n, _ := strconv.Atoi(r.Header.Get("Retry-After"))
-		if n < 1 {
+		n, err := strconv.Atoi(r.Header.Get("Retry-After"))
+		if err != nil || n < 1 {
 			n = 30
 		}
 		d := time.Duration(n) * time.Second
@@ -113,8 +118,8 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 	if r.StatusCode != 200 {
 		return &APIError{Code: fmt.Sprintf("HTTP %d", r.StatusCode), Ambiguous: method == "chat.postMessage"}
 	}
-	b, e := io.ReadAll(io.LimitReader(r.Body, 4<<20))
-	if e != nil {
+	b, err := io.ReadAll(io.LimitReader(r.Body, 4<<20))
+	if err != nil {
 		return &APIError{Code: "incomplete response", Ambiguous: method == "chat.postMessage"}
 	}
 	var envelope struct {
@@ -131,11 +136,13 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 		}
 		return &APIError{Code: code, Ambiguous: code == "internal_error" || code == "fatal_error" || code == "request_timeout" || code == "service_unavailable"}
 	}
-	if e = json.Unmarshal(b, out); e != nil {
+	if err = json.Unmarshal(b, out); err != nil {
 		return &APIError{Code: "invalid payload", Ambiguous: method == "chat.postMessage"}
 	}
 	return nil
 }
+
+// Identity validates the token and returns the workspace and authenticated user.
 func (c *Client) Identity(ctx context.Context) (core.Identity, error) {
 	var r struct {
 		TeamID   string `json:"team_id"`
@@ -144,15 +151,16 @@ func (c *Client) Identity(ctx context.Context) (core.Identity, error) {
 		Username string `json:"user"`
 		BotID    string `json:"bot_id"`
 	}
-	e := c.call(ctx, "auth.test", url.Values{}, &r)
-	if e != nil {
-		return core.Identity{}, e
+	err := c.call(ctx, "auth.test", url.Values{}, &r)
+	if err != nil {
+		return core.Identity{}, err
 	}
 	if r.BotID != "" {
 		return core.Identity{}, errors.New("a user OAuth token is required; bot tokens cannot act as you")
 	}
 	return core.Identity{Workspace: r.TeamID, WorkspaceName: r.Team, User: r.UserID, Username: r.Username}, nil
 }
+
 func (c *Client) name(ctx context.Context, id string) string {
 	if id == "" {
 		return "Slack"
@@ -193,6 +201,8 @@ func (c *Client) name(ctx context.Context, id string) string {
 	c.mu.Unlock()
 	return n
 }
+
+// Directory fetches one page of accessible channels, DMs, and group DMs.
 func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPage, error) {
 	var r struct {
 		Channels []struct {
@@ -212,9 +222,9 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 			Next string `json:"next_cursor"`
 		} `json:"response_metadata"`
 	}
-	e := c.call(ctx, "conversations.list", url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {"true"}, "limit": {"30"}, "cursor": {cursor}}, &r)
-	if e != nil {
-		return core.DirectoryPage{}, e
+	err := c.call(ctx, "conversations.list", url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {"true"}, "limit": {"30"}, "cursor": {cursor}}, &r)
+	if err != nil {
+		return core.DirectoryPage{}, err
 	}
 	p := core.DirectoryPage{Next: r.Meta.Next}
 	for _, v := range r.Channels {
@@ -234,6 +244,8 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 	}
 	return p, nil
 }
+
+// History fetches one bounded history or reply page and resolves its authors.
 func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 	method := "conversations.history"
 	v := url.Values{"channel": {q.Conversation}, "limit": {"50"}, "cursor": {q.Cursor}}
@@ -254,8 +266,8 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 			Next string `json:"next_cursor"`
 		} `json:"response_metadata"`
 	}
-	if e := c.call(ctx, method, v, &r); e != nil {
-		return core.Page{}, e
+	if err := c.call(ctx, method, v, &r); err != nil {
+		return core.Page{}, err
 	}
 	// Resolve only authors and mentions in this page, never a workspace user download.
 	for i := range r.Messages {
@@ -266,6 +278,8 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 	}
 	return core.Page{Messages: r.Messages, Next: r.Meta.Next, More: r.More}, nil
 }
+
+// Send posts once as the authenticated user; it never retries a write.
 func (c *Client) Send(ctx context.Context, o core.Outgoing) (core.Message, error) {
 	v := url.Values{"channel": {o.Conversation}, "text": {o.Text}, "unfurl_links": {"false"}, "unfurl_media": {"false"}, "client_msg_id": {o.ID}}
 	if o.Thread != "" {
@@ -275,8 +289,8 @@ func (c *Client) Send(ctx context.Context, o core.Outgoing) (core.Message, error
 		TS      string       `json:"ts"`
 		Message core.Message `json:"message"`
 	}
-	if e := c.call(ctx, "chat.postMessage", v, &r); e != nil {
-		return core.Message{}, e
+	if err := c.call(ctx, "chat.postMessage", v, &r); err != nil {
+		return core.Message{}, err
 	}
 	r.Message.TS = r.TS
 	r.Message.Text = o.Text
@@ -302,8 +316,8 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 			Members int `json:"num_members"`
 		} `json:"channel"`
 	}
-	if e := c.call(ctx, "conversations.info", url.Values{"channel": {id}, "include_num_members": {"true"}}, &r); e != nil {
-		return core.Conversation{}, e
+	if err := c.call(ctx, "conversations.info", url.Values{"channel": {id}, "include_num_members": {"true"}}, &r); err != nil {
+		return core.Conversation{}, err
 	}
 	v := r.Channel
 	kind := "channel"
