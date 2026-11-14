@@ -7,6 +7,7 @@ const (
 	keyQuit            = "ctrl+c"
 	keySend            = "ctrl+s"
 	keySwitch          = "ctrl+k"
+	keyCommandSwitch   = "super+k"
 	keyPickerDown      = "ctrl+n"
 	keyPickerUp        = "ctrl+p"
 	keyDirectoryNext   = "ctrl+l"
@@ -60,3 +61,5 @@ func keyLabel(k string) string {
 	}
 	return k
 }
+
+func isSearchKey(k string) bool { return k == keySwitch || k == keyCommandSwitch }

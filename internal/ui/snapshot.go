@@ -16,6 +16,7 @@ const (
 	SnapshotMessages SnapshotMode = "messages"
 	SnapshotCompose  SnapshotMode = "compose"
 	SnapshotPicker   SnapshotMode = "picker"
+	SnapshotSearch   SnapshotMode = "search"
 	SnapshotThread   SnapshotMode = "thread"
 	SnapshotHelp     SnapshotMode = "help"
 )
@@ -51,7 +52,10 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.focus = focusMessages
 	switch mode {
 	case SnapshotPicker:
-		m.mode = pickerInclude
+		m.openPicker(pickerInclude)
+	case SnapshotSearch:
+		m.openPicker(pickerSwitch)
+		m.picker.SetValue("@leo")
 	case SnapshotCompose:
 		m.focus = focusCompose
 		m.composer.SetValue("Thanks, Maya. I'll review the keyboard flow this afternoon.\nThe small details are coming together.")

@@ -22,7 +22,7 @@ The primary reference is Josh McKinney's [Terminal borders that don't cost a cel
 | Active composer and transient frame | Teal `#8AC7BA` |
 | Focused pane title | Bold amber `#E5C07B`, wrapped as `[Title]` |
 | Selected conversation/message | Bold pale teal `#BFE4DA` and `▸` |
-| Channel/people separators, picker/help outline | Dashed approximation `╌` |
+| Channel/people separators, help outline | Dashed approximation `╌` |
 | Local-activity grouping | Subtle dotted delimiters |
 
 Use matching colors on adjoining strokes and corners. Style focused title text and surrounding border segments independently: nesting the title inside a border style previously leaked amber into a horizontal stroke. Focus changes only the intended title/frame; preserve the accepted border palette. Brackets and selection arrows must still communicate focus without color. Do not put `[FOCUS]` before a title.
@@ -49,3 +49,9 @@ Review messages, channels, composing, threads, picker, and help. Include long/mu
 The [project icon](BRANDING.md) combines a retro terminal and original conversation bubbles, inspired by Bambustand. Use the saved PNG for project documentation and the Slack app avatar; do not substitute Slack’s mark for Siftpane’s identity.
 
 Layout measurements and defaults are owned by `internal/ui/layout.go`; palette values remain attached to named styles in `view.go`. Shortcut identifiers and display labels are owned by `keys.go` so handlers and hints share one source. Keep focus/picker state distinct from display copy and offline snapshot identifiers. Follow the [value policy](DEVELOPMENT.md#values-states-and-settings) when extending these definitions; a matching number alone is not a reason to share two unrelated layout measurements.
+
+## Search modal
+
+Search and include/remove use an opaque centered modal over a dimmed main view, preserving surrounding conversation context. Strip underlying color highlights and apply dim gray plus faint styling; keep the modal's teal solid rounded border and bracketed amber title independent. The modal fits the viewport with visible outside margins at 100×30, 60×20, and the 40×14 minimum. Input, suggestions, explicit selected action, directory coverage/state, and page controls reserve their own rows; long text truncates by display-cell width.
+
+Search `Tab` completion is separate from inclusion. Always show **Enter include & open** for an excluded result and `[✓]`/`[+]` inclusion markers. Keep loading, empty, and directory errors inside the modal where background events cannot hide them. Restore the prior draft and composing focus on dismissal. See [search interaction](USAGE.md#search) and the [colored PTY review captures](review/search-desktop.png) / [small layout](review/search-small.png).

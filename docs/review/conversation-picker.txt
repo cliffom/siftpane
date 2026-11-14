@@ -1,30 +1,30 @@
  siftpane                                                                   Fieldwork · demo · @you
 
-╭ [Choose conversations] ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╮
-╎ / Search conversations                                                                           ╎
-╎ Tab toggles locally · Enter opens · Esc closes                                                   ╎
-╎ ··· CHANNELS / DIRECT / GROUP MESSAGES ···                                                       ╎
-╎▸ [✓] #design  channel                                                                            ╎
-╎  [ ] #off-topic  channel                                                                         ╎
-╎  [✓] #shipping  channel                                                                          ╎
-╎  [✓] #studio  channel                                                                            ╎
-╎  [ ] @Leo Park  dm                                                                               ╎
-╎  [✓] @Maya Chen  dm                                                                              ╎
-╎  [✓] @Maya, Leo, you  group                                                                      ╎
-╎  [ ] ◇ quiet-corner  private                                                                     ╎
-╎ Directory complete · Ctrl+R reload first page                                                    ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╎                                                                                                  ╎
-╰╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╯
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  Leo Park  Nov 13 10:27                                                  │
+│  #shipping ●          │  Here's the checklist: review notes (https://example.com/review)         │
+│▸ #studio              │                                                                          │
+│ PEOPLE ╌╌╌╌╌╭ [Choose conversations] ──────────────────────────────────────────────╮             │
+│  @Maya Chen │ / Search conversations                                               │             │
+│  @Maya, Leo,│ @ people · # channels                                                │             │
+│             │▸ [✓] #design · channel                                               │             │
+│             │  [+] #off-topic · channel                                            │             │
+│             │  [✓] #shipping · channel                                             │             │
+│             │  [✓] #studio · channel                                               │             │
+│             │  [+] @Leo Park · dm @leo.park                                        │             │
+│             │  [✓] @Maya Chen · dm @maya.chen                                      │             │
+│             │  [✓] @Maya, Leo, you · group                                         │             │
+│             │  [+] ◇ quiet-corner · private                                        │             │
+│             │ Enter open #design                                                   │             │
+│             │ 8 loaded · directory complete                                        │             │
+│             │ Tab include/remove · [✓] included                                    │e input.     │
+│             │ Ctrl+L more · Ctrl+R reload                                          │             │
+│             ╰──────────────────────────────────────────────────────────────────────╯───────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│ ··· UNREAD HERE ···   │ │                                                                      │ │
+│ ● unread here  ✎ draft│ │                                                                      │ │
+│ p choose   / search   │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
  Refreshed · local unread only · polling included conversations
- ↑/↓ move · Tab toggle · Enter open · Esc close
+ ↑/↓ move · Tab toggle · Esc close

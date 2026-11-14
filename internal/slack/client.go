@@ -73,12 +73,12 @@ type Client struct {
 	http  *http.Client
 	mu    sync.Mutex
 	next  map[string]time.Time
-	names map[string]string
+	names map[string]userProfile
 }
 
 // New constructs a user-token client without making network requests.
 func New(token string) *Client {
-	return &Client{token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]string{}}
+	return &Client{token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]userProfile{}}
 }
 
 // Pacing is per method and workspace. A 429 blocks that method, including manual calls.
@@ -187,14 +187,20 @@ func (c *Client) Identity(ctx context.Context) (core.Identity, error) {
 	return core.Identity{Workspace: r.TeamID, WorkspaceName: r.Team, User: r.UserID, Username: r.Username}, nil
 }
 
+type userProfile struct{ name, handle string }
+
 func (c *Client) name(ctx context.Context, id string) string {
+	return c.profile(ctx, id).name
+}
+
+func (c *Client) profile(ctx context.Context, id string) userProfile {
 	if id == "" {
-		return "Slack"
+		return userProfile{name: "Slack"}
 	}
 	c.mu.Lock()
 	n := c.names[id]
 	c.mu.Unlock()
-	if n != "" {
+	if n.name != "" {
 		return n
 	}
 	var r struct {
@@ -207,21 +213,22 @@ func (c *Client) name(ctx context.Context, id string) string {
 		} `json:"user"`
 	}
 	if c.call(ctx, methodUser, url.Values{"user": {id}}, &r) != nil {
-		return id
+		return userProfile{name: id}
 	}
-	n = r.User.Profile.Display
-	if n == "" {
-		n = r.User.Real
+	n.name = r.User.Profile.Display
+	n.handle = r.User.Name
+	if n.name == "" {
+		n.name = r.User.Real
 	}
-	if n == "" {
-		n = r.User.Name
+	if n.name == "" {
+		n.name = r.User.Name
 	}
-	if n == "" {
-		n = id
+	if n.name == "" {
+		n.name = id
 	}
 	c.mu.Lock()
 	if len(c.names) >= authorCacheEntries {
-		c.names = map[string]string{}
+		c.names = map[string]userProfile{}
 	}
 	c.names[id] = n
 	c.mu.Unlock()
@@ -256,6 +263,7 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 	for _, v := range r.Channels {
 		kind := core.ConversationChannel
 		name := v.Name
+		handle := ""
 		if v.Private {
 			kind = core.ConversationPrivate
 		}
@@ -264,9 +272,10 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 		}
 		if v.IM {
 			kind = core.ConversationDM
-			name = c.name(ctx, v.User)
+			profile := c.profile(ctx, v.User)
+			name, handle = profile.name, profile.handle
 		}
-		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
+		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
 	}
 	return p, nil
 }
@@ -348,6 +357,7 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 	v := r.Channel
 	kind := core.ConversationChannel
 	name := v.Name
+	handle := ""
 	if v.Private {
 		kind = core.ConversationPrivate
 	}
@@ -356,9 +366,10 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 	}
 	if v.IM {
 		kind = core.ConversationDM
-		name = c.name(ctx, v.User)
+		profile := c.profile(ctx, v.User)
+		name, handle = profile.name, profile.handle
 	}
-	return core.Conversation{ID: v.ID, Name: name, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members}, nil
+	return core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members}, nil
 }
 
 // paramChannel is the shared Web API conversation parameter.

@@ -77,6 +77,8 @@ For visible UI changes, review both a desktop and a small terminal:
 go run ./cmd/siftpane --snapshot messages --width 100 --height 30
 go run ./cmd/siftpane --snapshot compose --width 60 --height 20
 go run ./cmd/siftpane --snapshot picker --width 80 --height 24
+go run ./cmd/siftpane --snapshot search --width 100 --height 30
+go run ./cmd/siftpane --snapshot search --width 60 --height 20
 go run ./cmd/siftpane --snapshot thread --width 100 --height 30
 go run ./cmd/siftpane --demo
 ```

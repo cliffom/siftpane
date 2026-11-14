@@ -17,4 +17,4 @@
 │ ╰ Ctrl+S send · Esc navigate ──────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
  Refreshed · local unread only · polling included conversat…
- Ctrl+S send · Enter newline · Esc navigate · Ctrl+K switch
+ Ctrl+S send · Enter newline · Esc navigate · Ctrl+K search

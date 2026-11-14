@@ -33,7 +33,7 @@ type Service struct {
 // New seeds distinct conversation histories, threads, and simulated activity.
 func New() *Service {
 	s := &Service{activity: map[string]core.Message{}, messages: map[string][]core.Message{}, sent: map[string]core.Message{}, failed: map[string]bool{}}
-	s.conversations = []core.Conversation{{ID: "Cstudio", Name: "studio", Kind: core.ConversationChannel}, {ID: "Cshipping", Name: "shipping", Kind: core.ConversationChannel}, {ID: "Cdesign", Name: "design", Kind: core.ConversationChannel}, {ID: "Dmaya", Name: fixtureMaya, Kind: core.ConversationDM}, {ID: "Dleo", Name: fixtureLeo, Kind: core.ConversationDM}, {ID: "Gcrew", Name: "Maya, Leo, you", Kind: core.ConversationGroup}, {ID: "Cquiet", Name: "quiet-corner", Kind: core.ConversationPrivate}, {ID: "Crandom", Name: "off-topic", Kind: core.ConversationChannel}}
+	s.conversations = []core.Conversation{{ID: "Cstudio", Name: "studio", Kind: core.ConversationChannel}, {ID: "Cshipping", Name: "shipping", Kind: core.ConversationChannel}, {ID: "Cdesign", Name: "design", Kind: core.ConversationChannel}, {ID: "Dmaya", Name: fixtureMaya, Handle: "maya.chen", Kind: core.ConversationDM}, {ID: "Dleo", Name: fixtureLeo, Handle: "leo.park", Kind: core.ConversationDM}, {ID: "Gcrew", Name: "Maya, Leo, you", Kind: core.ConversationGroup}, {ID: "Cquiet", Name: "quiet-corner", Kind: core.ConversationPrivate}, {ID: "Crandom", Name: "off-topic", Kind: core.ConversationChannel}}
 	seeds := fixtures()
 	base := time.Date(2026, 11, 13, 9, 0, 0, 0, time.Local).Unix()
 	for ci := range s.conversations {

@@ -18,6 +18,7 @@ import (
 	"github.com/cliffom/siftpane/internal/slack"
 	"github.com/cliffom/siftpane/internal/store"
 	"github.com/cliffom/siftpane/internal/ui"
+	"github.com/cliffom/siftpane/internal/version"
 )
 
 const (
@@ -36,14 +37,19 @@ func main() {
 }
 
 func run() error {
+	versionFlag := flag.Bool("version", false, "print version and exit")
 	demoFlag := flag.Bool("demo", false, "offline demonstration; isolated from real configuration")
 	config := flag.String("config", "", "configuration path (credentials are stored separately)")
 	login := flag.Bool("login", false, "read a user OAuth token securely and store in OS keyring")
 	logout := flag.Bool("logout", false, "delete the saved token from the OS keyring")
-	snapshot := flag.String("snapshot", "", "render offline review view: messages, compose, picker, thread, help")
+	snapshot := flag.String("snapshot", "", "render offline review view: messages, compose, picker, search, thread, help")
 	width := flag.Int("width", ui.DefaultWidth, "snapshot columns")
 	height := flag.Int("height", ui.DefaultHeight, "snapshot rows")
 	flag.Parse()
+	if *versionFlag {
+		fmt.Println("siftpane " + version.String())
+		return nil
+	}
 	if *logout {
 		return keyring.Delete(credentialService, credentialAccount)
 	}
@@ -95,7 +101,7 @@ func run() error {
 			return fmt.Errorf("snapshot requires at least %d columns and %d rows", ui.MinWidth, ui.MinHeight)
 		}
 		switch ui.SnapshotMode(*snapshot) {
-		case ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotThread, ui.SnapshotHelp:
+		case ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp:
 		default:
 			return fmt.Errorf("unknown snapshot view")
 		}

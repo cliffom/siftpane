@@ -11,6 +11,7 @@ Requires Go **1.26.7 or newer**. From this checkout:
 ```sh
 go build -o bin/siftpane ./cmd/siftpane
 ./bin/siftpane --demo
+./bin/siftpane --version
 ```
 
 The demo runs offline without credentials. It includes distinct conversations, unread activity, older messages, threads, and a simulated send failure you can try by sending `/fail`.
@@ -37,7 +38,7 @@ The live integration is implemented and tested with a fake Slack server. **App i
 | Key | Action |
 | --- | --- |
 | `p` | Choose conversations; `Tab` includes or removes an item |
-| `/` or `Ctrl+K` | Search included conversations |
+| `/` or `Ctrl+K` | Search existing conversations by `@person` or `#channel`; `Tab` completes |
 | `Tab` | Switch sidebar/message focus |
 | `j/k` or arrows | Move through conversations or messages |
 | `i` | Start composing |
@@ -47,6 +48,8 @@ The live integration is implemented and tested with a fake Slack server. **App i
 | `o` | Load older messages or the next thread page |
 | `?` | Open the full keyboard guide |
 | `q` | Quit; warns if you have unsent text |
+
+Search opens over a dimmed main view. `Enter` explicitly includes and opens an excluded result; typing or completing a name changes no inclusion. Supported terminals can also deliver `Cmd+K`; see [terminal compatibility](docs/TERMINALS.md#command-k).
 
 Drafts stay with their conversation or thread while you switch, but remain in memory and do not survive exit. Failed sends keep their text. See the [full keyboard and retry guide](docs/USAGE.md).
 
@@ -64,4 +67,4 @@ The [Slack guide](docs/SLACK.md) explains permissions, rate limits, credential r
 
 Start with the [development guide](docs/DEVELOPMENT.md). Run `make fmt` to format changes and `make check` before submitting them. Tool versions are pinned; no separate linter installation is needed.
 
-[Architecture](docs/ARCHITECTURE.md) · [UI and UX guidelines](docs/DESIGN.md) · [Verification record](docs/VERIFICATION.md) · [Follow-up backlog](docs/BACKLOG.md)
+[Architecture](docs/ARCHITECTURE.md) · [UI and UX guidelines](docs/DESIGN.md) · [Verification record](docs/VERIFICATION.md) · [Follow-up backlog](docs/BACKLOG.md) · [Changelog](CHANGELOG.md) · [Release guide](docs/RELEASING.md)

@@ -42,7 +42,7 @@ func (m *Model) sidebar(w, h int) []string {
 		rows = append(rows, "")
 	}
 	if len(rows) <= h-sidebarActivityRows {
-		rows = append(rows, muted.Render(" ··· UNREAD HERE ···"), muted.Render(" ● unread here  ✎ draft"), muted.Render(" "+keyLabel(keyInclude)+" choose   "+keyLabel(keySearch)+" switch"))
+		rows = append(rows, muted.Render(" ··· UNREAD HERE ···"), muted.Render(" ● unread here  ✎ draft"), muted.Render(" "+keyLabel(keyInclude)+" choose   "+keyLabel(keySearch)+" search"))
 	}
 	return padRows(rows, w, h)
 }

@@ -10,6 +10,7 @@ import (
 )
 
 func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
+	pickedID := m.pickedID()
 	if !m.included[v.ID] || m.generations[v.ID] != v.Generation {
 		return m, nil
 	}
@@ -23,10 +24,12 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 	for i, c := range m.directory {
 		if c.ID == v.ID {
 			m.directory[i] = v.Conversation
+			m.reselectChoice(pickedID)
 			return m, nil
 		}
 	}
 	m.directory = append(m.directory, v.Conversation)
+	m.reselectChoice(pickedID)
 	if m.active == "" {
 		return m, m.selectConversation(v.ID)
 	}
@@ -34,7 +37,9 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
+	pickedID := m.pickedID()
 	m.directoryBusy = false
+	m.directoryErr = v.Err
 	if v.Err != nil {
 		m.status = v.Err.Error()
 		if slack.IsAuth(v.Err) {
@@ -42,6 +47,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
+	m.directoryLoaded = true
 	m.directoryNext = v.Page.Next
 	for _, c := range v.Page.Conversations {
 		found := false
@@ -59,6 +65,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 	sort.SliceStable(m.directory, func(i, j int) bool {
 		return string(m.directory[i].Kind)+strings.ToLower(m.directory[i].Name) < string(m.directory[j].Kind)+strings.ToLower(m.directory[j].Name)
 	})
+	m.reselectChoice(pickedID)
 	if m.active == "" {
 		cs := m.selected()
 		if len(cs) > 0 {

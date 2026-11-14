@@ -40,14 +40,9 @@ func (m *Model) View() tea.View {
 	workspace = ansi.Truncate(workspace, available-ansi.StringWidth(account), "…") + account
 	gap := w - ansi.StringWidth(left) - ansi.StringWidth(workspace) - 1
 	header := left + strings.Repeat(" ", max(0, gap)) + muted.Render(workspace) + " "
-	body := ""
-	switch {
-	case m.help:
+	body := m.mainView()
+	if m.help {
 		body = m.helpView(w, h-chromeRows)
-	case m.mode != pickerClosed:
-		body = m.pickerView(w, h-chromeRows)
-	default:
-		body = m.mainView()
 	}
 	statusText := m.status
 	if m.quitConfirm {
@@ -57,17 +52,25 @@ func (m *Model) View() tea.View {
 		statusText = "Preferences not saved: " + m.persistErr
 	}
 	status := fit(muted.Render(" "+slack.Safe(statusText)), w)
-	hint := " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " switch · " + keyLabel(keyWrite) + " write · " + keyLabel(keyThread) + " thread · " + keyLabel(keyHelp) + " help"
+	hint := " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " search · " + keyLabel(keyWrite) + " write · " + keyLabel(keyThread) + " thread · " + keyLabel(keyHelp) + " help"
 	if m.focus == focusCompose {
-		hint = " " + keyLabel(keySend) + " send · " + keyLabel(keyCompose) + " newline · " + keyLabel(keyEscape) + " navigate · " + keyLabel(keySwitch) + " switch"
+		hint = " " + keyLabel(keySend) + " send · " + keyLabel(keyCompose) + " newline · " + keyLabel(keyEscape) + " navigate · " + keyLabel(keySwitch) + " search"
 	}
 	if m.mode != pickerClosed {
-		hint = " " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + " move · " + keyLabel(keyFocus) + " toggle · " + keyLabel(keyCompose) + " open · " + keyLabel(keyEscape) + " close"
+		hint = " " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + " move · " + keyLabel(keyFocus) + " complete · " + keyLabel(keyEscape) + " close"
+		if m.mode == pickerInclude {
+			hint = " " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + " move · " + keyLabel(keyFocus) + " toggle · " + keyLabel(keyEscape) + " close"
+		}
 	}
+
 	if w < sidebarBreakpoint && m.focus != focusCompose && m.mode == pickerClosed {
-		hint = " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " switch · " + keyLabel(keyWrite) + " write · " + keyLabel(keyHelp) + " help"
+		hint = " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " search · " + keyLabel(keyWrite) + " write · " + keyLabel(keyHelp) + " help"
 	}
-	v := tea.NewView(strings.Join([]string{header, strings.Repeat(" ", w), body, status, fit(accent.Render(hint), w)}, "\n"))
+	content := strings.Join([]string{header, strings.Repeat(" ", w), body, status, fit(accent.Render(hint), w)}, "\n")
+	if m.mode != pickerClosed {
+		content = m.pickerOverlay(content, w, h)
+	}
+	v := tea.NewView(content)
 	v.AltScreen = true
 	v.WindowTitle = "Siftpane"
 	return v
