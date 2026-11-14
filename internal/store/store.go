@@ -1,4 +1,4 @@
-// Package store persists non-secret preferences only. Message bodies stay in memory.
+// Package store persists non-secret preferences and display summaries. Message bodies stay in memory.
 package store
 
 import (
@@ -19,7 +19,7 @@ type Config struct {
 	Workspaces map[string]*Workspace `json:"workspaces"`
 }
 
-// Store owns preferences and their path; an empty path disables disk writes.
+// Store owns preferences and disposable display metadata; an empty path disables disk I/O.
 type Store struct {
 	Path   string
 	Config Config
@@ -74,12 +74,16 @@ func (s *Store) Save() error {
 	if s.Path == "" {
 		return nil
 	} // isolated demo
-	dir := filepath.Dir(s.Path)
-	if err := os.MkdirAll(dir, privateDirectoryMode); err != nil {
-		return err
-	}
 	b, err := json.MarshalIndent(s.Config, "", "  ")
 	if err != nil {
+		return err
+	}
+	return writePrivate(s.Path, b)
+}
+
+func writePrivate(path string, b []byte) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, privateDirectoryMode); err != nil {
 		return err
 	}
 	f, err := os.CreateTemp(dir, ".config-*")
@@ -102,7 +106,7 @@ func (s *Store) Save() error {
 	if err = f.Close(); err != nil {
 		return err
 	}
-	return os.Rename(name, s.Path)
+	return os.Rename(name, path)
 }
 
 const privateDirectoryMode = 0o700 // Owner-only preference directory.

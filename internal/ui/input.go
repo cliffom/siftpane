@@ -135,7 +135,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyOlder:
 		return m, m.fetch(m.key(), true)
 	case keyRefresh:
-		return m, m.fetch(m.key(), false)
+		return m, m.refresh()
 	case keyRead:
 		m.read(m.active)
 		m.status = "Marked read locally; Slack read position unchanged"
@@ -157,7 +157,7 @@ func (m *Model) moveSelection(k string) tea.Cmd {
 		delta = -1
 	}
 	if m.focus == focusChannels {
-		cs := m.selected()
+		cs := m.sidebarConversations()
 		if len(cs) > 0 {
 			idx := 0
 			for i, c := range cs {

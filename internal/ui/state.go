@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -67,7 +68,33 @@ func (m *Model) rememberDraft() {
 
 func (m *Model) restoreDraft() { m.composer.SetValue(m.drafts[m.key()]); m.composer.MoveToEnd() }
 
-func (m *Model) selected() []core.Conversation { return core.Filter(m.directory, "", m.included, true) }
+// Sidebar and keyboard navigation share one grouped, deterministic order.
+func (m *Model) selected() []core.Conversation {
+	cs := core.Filter(m.directory, "", m.included, true)
+	sort.Slice(cs, func(i, j int) bool {
+		a, b := cs[i], cs[j]
+		if isPerson(a) != isPerson(b) {
+			return !isPerson(a)
+		}
+		an, bn := strings.ToLower(a.Name), strings.ToLower(b.Name)
+		if an != bn {
+			return an < bn
+		}
+		return a.ID < b.ID
+	})
+	return cs
+}
+
+func isPerson(c core.Conversation) bool {
+	return c.Kind == core.ConversationDM || c.Kind == core.ConversationGroup
+}
+
+func (m *Model) saveMetadata() {
+	m.metadataErr = ""
+	if err := m.store.SaveConversations(m.identity, m.selected()); err != nil {
+		m.metadataErr = err.Error()
+	}
+}
 
 func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.rememberDraft()
@@ -97,6 +124,12 @@ func (m *Model) toggle(cid string) {
 			f()
 		}
 		delete(m.contexts, cid)
+		delete(m.metadataBusy, cid)
+		if len(m.metadataBusy) == 0 {
+			m.startupRestoring = false
+			m.startupSidebar = nil
+		}
+		delete(m.metadataFailed, cid)
 		delete(m.cancels, cid)
 		delete(m.unread, cid)
 		for k := range m.cache {
@@ -123,4 +156,5 @@ func (m *Model) toggle(cid string) {
 		m.status = "Included. Only chosen conversations are refreshed."
 	}
 	m.save()
+	m.saveMetadata()
 }

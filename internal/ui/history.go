@@ -20,6 +20,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	t.Busy = false
+	t.Err = v.Err
 	if v.Err != nil {
 		if !errors.Is(v.Err, context.Canceled) {
 			m.status = v.Err.Error() + " · R refresh"

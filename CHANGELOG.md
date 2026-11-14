@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.2.1 — Unreleased
+## 0.3.0 — Unreleased
+
+- Cache included channel and people display metadata across launches, isolated by workspace and account. Cached names are available immediately while live metadata refreshes; message bodies and drafts stay in memory.
+- Keep the startup sidebar steady until saved metadata settles, then publish one alphabetized CHANNELS group and one PEOPLE group. Available message history and search remain usable while restoration continues.
+- Show actionable initial-history failures instead of indefinite loading, and let `R` retry unavailable saved conversations as well as message history.
+
+## 0.2.1 — 2026-11-14
 
 - Keep every included conversation in the background refresh rotation while a thread is open. Thread refreshes no longer skip conversation turns, preventing stale messages and local unread indicators for even-sized selections. The three-second tick, alternating thread refresh, and one background timeline request per tick remain unchanged.
 

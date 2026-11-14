@@ -9,7 +9,7 @@ import (
 
 func (m *Model) sidebar(w, h int) []string {
 	rows := []string{}
-	cs := m.selected()
+	cs := m.sidebarConversations()
 	activeIndex := 0
 	for i, c := range cs {
 		if c.ID == m.active {
@@ -22,7 +22,7 @@ func (m *Model) sidebar(w, h int) []string {
 	for i := start; i < len(cs); i++ {
 		c := cs[i]
 		kind := "CHANNELS"
-		if c.Kind == core.ConversationDM || c.Kind == core.ConversationGroup {
+		if isPerson(c) {
 			kind = "PEOPLE"
 		}
 		if lastKind != kind {
@@ -35,7 +35,9 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 		rows = append(rows, m.conversationRow(c, w))
 	}
-	if len(cs) == 0 {
+	if text := m.restorationState(); text != "" {
+		rows = append(rows, muted.Render(" "+text))
+	} else if len(cs) == 0 {
 		rows = append(rows, " Nothing included yet.", " "+keyLabel(keyInclude)+"  choose conversations")
 	}
 	for len(rows) < h-sidebarActivityRows {
@@ -76,4 +78,33 @@ func (m *Model) conversationRow(c core.Conversation, w int) string {
 		return selected.Render(fit(text, w))
 	}
 	return fit(text, w)
+}
+
+// Restoration state stays visible independently of transient history/send status.
+func (m *Model) restorationState() string {
+	if m.stopped && len(m.metadataFailed) > 0 {
+		return "Credentials expired · replace token and restart"
+	}
+	if len(m.metadataBusy) > 0 {
+		return fmt.Sprintf("Loading %d saved conversations…", len(m.metadataBusy))
+	}
+	if len(m.metadataFailed) > 0 {
+		return "Unavailable · " + keyLabel(keyRefresh) + " retry"
+	}
+	return ""
+}
+
+// Publish restored sidebar entries together so uncached startup cannot shuffle
+// visible rows. Active history and search use arriving metadata immediately.
+func (m *Model) sidebarConversations() []core.Conversation {
+	if m.startupRestoring {
+		cs := []core.Conversation{}
+		for _, c := range m.startupSidebar {
+			if m.included[c.ID] {
+				cs = append(cs, c)
+			}
+		}
+		return cs
+	}
+	return m.selected()
 }

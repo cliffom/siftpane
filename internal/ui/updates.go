@@ -14,21 +14,30 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 	if !m.included[v.ID] || m.generations[v.ID] != v.Generation {
 		return m, nil
 	}
+	delete(m.metadataBusy, v.ID)
+	if len(m.metadataBusy) == 0 {
+		m.startupRestoring = false
+		m.startupSidebar = nil
+	}
 	if v.Err != nil {
+		m.metadataFailed[v.ID] = true
 		m.status = "Saved conversation " + v.ID + " unavailable: " + v.Err.Error()
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
 		}
 		return m, nil
 	}
+	delete(m.metadataFailed, v.ID)
 	for i, c := range m.directory {
 		if c.ID == v.ID {
 			m.directory[i] = v.Conversation
 			m.reselectChoice(pickedID)
+			m.saveMetadata()
 			return m, nil
 		}
 	}
 	m.directory = append(m.directory, v.Conversation)
+	m.saveMetadata()
 	m.reselectChoice(pickedID)
 	if m.active == "" {
 		return m, m.selectConversation(v.ID)
@@ -66,6 +75,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 		return string(m.directory[i].Kind)+strings.ToLower(m.directory[i].Name) < string(m.directory[j].Kind)+strings.ToLower(m.directory[j].Name)
 	})
 	m.reselectChoice(pickedID)
+	m.saveMetadata()
 	if m.active == "" {
 		cs := m.selected()
 		if len(cs) > 0 {

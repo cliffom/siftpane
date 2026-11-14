@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"errors"
 
 	"github.com/charmbracelet/x/ansi"
 
@@ -13,12 +14,15 @@ type SnapshotMode string
 
 // Snapshot modes are independent of the UI's navigation state.
 const (
-	SnapshotMessages SnapshotMode = "messages"
-	SnapshotCompose  SnapshotMode = "compose"
-	SnapshotPicker   SnapshotMode = "picker"
-	SnapshotSearch   SnapshotMode = "search"
-	SnapshotThread   SnapshotMode = "thread"
-	SnapshotHelp     SnapshotMode = "help"
+	SnapshotMessages  SnapshotMode = "messages"
+	SnapshotCompose   SnapshotMode = "compose"
+	SnapshotPicker    SnapshotMode = "picker"
+	SnapshotSearch    SnapshotMode = "search"
+	SnapshotThread    SnapshotMode = "thread"
+	SnapshotHelp      SnapshotMode = "help"
+	SnapshotStartup   SnapshotMode = "startup"
+	SnapshotLoading   SnapshotMode = "loading"
+	SnapshotLoadError SnapshotMode = "load-error"
 )
 
 // LoadSnapshot loads offline review data through the normal update path.
@@ -51,6 +55,30 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.resize()
 	m.focus = focusMessages
 	switch mode {
+	case SnapshotStartup:
+		m.focus = focusChannels
+		m.directory = nil
+		m.active = ""
+		for cid, included := range m.included {
+			if included {
+				m.metadataBusy[cid] = true
+			}
+		}
+		m.status = "Restoring saved conversations"
+	case SnapshotLoading:
+		m.startupSidebar = m.selected()
+		m.startupRestoring = true
+		for cid, included := range m.included {
+			if included {
+				m.metadataBusy[cid] = true
+			}
+		}
+		m.cache[m.key()] = &timeline{Busy: true}
+		m.status = "Loading conversation history"
+	case SnapshotLoadError:
+		m.cache[m.key()] = &timeline{Err: errors.New("connection unavailable")}
+		m.status = "History unavailable · R retry / refresh"
+
 	case SnapshotPicker:
 		m.openPicker(pickerInclude)
 	case SnapshotSearch:

@@ -35,6 +35,7 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		return nil
 	}
 	t.Busy = true
+	t.Err = nil
 	q := core.Query{Conversation: cid, Thread: thread}
 	if !older && thread != "" && t.Loaded && !t.More && len(t.Messages) > 0 {
 		q.After = t.Messages[len(t.Messages)-1].TS
@@ -52,4 +53,25 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		p, err := svc.History(ctx, q)
 		return historyResult{Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: q.After}
 	}
+}
+
+func (m *Model) conversationCmd(cid string) tea.Cmd {
+	if m.metadataBusy[cid] || !m.included[cid] || m.stopped {
+		return nil
+	}
+	m.metadataBusy[cid] = true
+	delete(m.metadataFailed, cid)
+	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
+	return func() tea.Msg {
+		c, err := svc.Conversation(ctx, cid)
+		return conversationResult{Conversation: c, ID: cid, Generation: gen, Err: err}
+	}
+}
+
+func (m *Model) refresh() tea.Cmd {
+	cmds := []tea.Cmd{m.fetch(m.key(), false)}
+	for cid := range m.metadataFailed {
+		cmds = append(cmds, m.conversationCmd(cid))
+	}
+	return tea.Batch(cmds...)
 }

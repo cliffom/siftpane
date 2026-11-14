@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Channel · Daily collaboration, fewer interruptions       │
+│                                                          │
+│ Could not load messages.                                 │
+│ connection unavailable                                   │
+│ R retry / refresh                                        │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰ i compose ───────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ History unavailable · R retry / refresh
+ Tab focus · / search · i write · ? help

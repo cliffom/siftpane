@@ -8,7 +8,7 @@ The program has one Bubble Tea event loop. State changes happen in `Update`; vie
 | `internal/core` | Service interface, conversation/message/page types, filtering, bounded merge, delivery state |
 | `internal/slack` | Documented Web API transport, per-method pacing/backoff, lazy author lookup, safe textual Slack content |
 | `internal/demo` | In-memory implementation of the identical service interface, pagination, threads, deterministic send failure |
-| `internal/store` | Workspace/conversation preferences, private atomic replacement, no credentials or bodies |
+| `internal/store` | Workspace/conversation preferences and disposable display metadata, private atomic replacement, no credentials or bodies |
 | `internal/ui` | Application state, commands, navigation, drafts/outbox, layout and rendering |
 
 `core.Service` provides identity, direct conversation metadata, paginated discovery, paginated history/replies, and posting. Slack authentication uses a previously authorized user token from the internal app's install flow. `conversations.info` restores included IDs without scanning the directory. The directory is a user-paged metadata catalog; history is fetched only for included conversations. Demo mode creates a memory-only store and never opens a credential store or network transport.
@@ -40,3 +40,11 @@ Immutable session limits, transport policy, CLI defaults, and layout/key present
 Quick search and the include/remove picker share loaded conversation metadata and a single event-loop-owned text input. `core.Filter` understands `@`/`#` scopes; DM metadata retains the available handle alongside its preferred display name from the existing bounded `users.info` cache. No service method, scope, user-directory scan, new-DM creation, or per-keystroke network request is added. Explicit user-paged metadata discovery remains separate from included-conversation history polling.
 
 The modal is composed with Lip Gloss layers over a color-stripped, dimmed copy of the main view. Rendering remains pure. Input and paste are routed to the modal even if an underlying send is pending. Dismissal restores composer focus; completion never selects/includes; explicit Enter can include-and-open. Asynchronous metadata updates retain the highlighted conversation's ID when list ordering changes. Directory busy/error/coverage state is independent of transient history/send status, and failed pagination preserves its retry cursor.
+
+## Startup restoration
+
+Before the event loop starts, `ui.New` reads the bounded disposable display cache through `store`, filtering it by current inclusion. `Init` schedules the active cached conversation's history alongside metadata restoration and directory discovery, so history does not await a directory scan or all saved metadata. Without a cache, the first available included conversation can start history immediately.
+
+The startup sidebar retains its cached list (or a loading row on an uncached launch) while saved metadata requests settle, then publishes the grouped, name/ID-sorted result together. Search and message history can use arriving metadata immediately. Sidebar rendering and keyboard navigation share the same published list; selection remains a conversation ID, independent of metadata sorting. Removal can end the startup wait, and late generations cannot change restoration state. Unavailable saved metadata has independent retry state; `R` retries those reads along with the current history. The existing per-method pacing and bounded polling remain unchanged.
+
+Initial history errors stay on their timeline, so unrelated refreshes cannot turn them into an indefinite loading message. Explicit refresh clears that error while requesting a new page; successful empty history is distinct from loading. `store` owns cache schema, byte/entry/age bounds and whitelisted fields; cache writes reuse private atomic replacement independently of preferences. See [configuration and privacy](CONFIGURATION.md).

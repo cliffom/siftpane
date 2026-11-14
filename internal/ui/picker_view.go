@@ -31,7 +31,7 @@ func (m *Model) pickerOverlay(content string, w, h int) string {
 	))
 	rows := padRows(strings.Split(canvas.Render(), "\n"), w, h)
 	// Keep the unsent-exit warning and save failures readable above background updates.
-	if m.quitConfirm || m.persistErr != "" {
+	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" {
 		rows[h-2] = strings.Split(content, "\n")[h-2]
 	}
 	return strings.Join(rows, "\n")
