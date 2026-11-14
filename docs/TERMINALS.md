@@ -11,4 +11,3 @@ Design reference: Josh McKinney's [Terminal borders that don't cost a cell](http
 - Mouse reporting is off, so normal terminal selection remains available. Unicode borders may enter copied selections; `y` copies only the selected message body with OSC52. OSC52 depends on terminal/multiplexer policy. Use the modifier your terminal requires for native selection.
 
 Slack mentions, labeled links, HTML entities, timestamps, basic mrkdwn text, and attachment fallbacks are readable. Bold/italic/code delimiters are preserved as text. Files, blocks, and unsupported message subtypes get a useful textual fallback and Slack deep link where available; this is not a Block Kit renderer. Text controls and directional overrides from Slack are stripped before display. Emoji aliases may remain aliases.
-

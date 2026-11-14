@@ -35,4 +35,3 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Anywhere | `Ctrl+C` | Quit; a second press explicitly discards unsent text |
 
 Unsent drafts survive conversation and thread switches and removal/re-inclusion during the session. Drafts and message bodies are **memory-only** and do not survive exit/crash. The composer stays locked while a send is pending, duplicate submissions are rejected, and its body is cleared only on a successful acknowledgement for that draft. Failed and pending states remain visible in the composer frame. A network timeout or server failure can mean Slack accepted a message without returning a response: inspect Slack before explicitly retrying. There are no automatic write retries, and exactly-once delivery is not promised. Retrying reuses the original body and client ID.
-
