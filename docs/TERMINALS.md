@@ -19,3 +19,11 @@ Slack mentions, labeled links, HTML entities, timestamps, basic mrkdwn text, and
 `Cmd+K` works only when the terminal sends it to the application. Terminals may intercept it for actions such as clearing the screen, and legacy terminal input does not encode Command. Remap `Cmd+K` in your terminal's keyboard settings to send **Ctrl+K**, hexadecimal byte **0B** (`\x0b`), or use `Ctrl+K` directly. If your terminal can send Kitty keyboard events, the decoded Super modifier is supported; no blanket claim is made for every terminal/multiplexer. A delivered Kitty sequence was exercised through a PTY, not a physical Command-key press in each terminal.
 
 The search/include picker is an opaque centered modal with a teal solid rounded frame and bracketed amber title. The main screen remains visible with its prior highlights removed, a dim gray foreground, and the faint attribute. In no-color terminals the inset frame, brackets, result arrow, inclusion markers, and explicit action still distinguish it; faint rendering depends on terminal support.
+
+## Unread window title
+
+The window/tab title is `[unread] Siftpane` whenever any included conversation has locally observed unread activity, matching the sidebar dots. Reading or removing the last unread conversation restores `Siftpane`. This applies across navigation, composing, threads, search/include modals, help, and the below-minimum resize prompt.
+
+The marker counts no messages and is independent of Slack's read position. Activity appears only after existing polling observes it, so refresh delays still apply. The offline demo starts with unread conversations for testing. There are no bells, desktop notifications, extra requests, or additional scopes.
+
+Title updates use Bubble Tea's window-title support. Visibility depends on the terminal's tab/window title settings and any multiplexer title policy; a fixed tab name or tmux/screen configuration may hide or override them. Real terminal/multiplexer behavior remains unverified.
