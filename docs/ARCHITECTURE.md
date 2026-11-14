@@ -33,7 +33,7 @@ The UI is organized by responsibility: `model.go` defines lifecycle/state, `comm
 
 `core` owns the string-backed conversation kinds and delivery states shared by both services and the UI. Their textual values remain compatible; the preference schema is unchanged. UI focus and picker modes have separate private types, and offline snapshot mode identifiers are a distinct public boundary. The event loop continues to own all runtime state.
 
-Immutable session limits, transport policy, CLI defaults, and layout/key presentation definitions stay in their owning packages and files, as specified by the [value policy](DEVELOPMENT.md#values-states-and-settings). They do not become mutable settings. The existing thread scheduling cadence is named without changing its behavior; scheduling fixes remain separate work. Named durations and capacities explain the resource bound, while server backoff and runtime cancellation retain priority.
+Immutable session limits, transport policy, CLI defaults, and layout/key presentation definitions stay in their owning packages and files, as specified by the [value policy](DEVELOPMENT.md#values-states-and-settings). They do not become mutable settings. Thread refreshes reserve every second tick while a thread is open; only conversation ticks advance the round-robin conversation index. Named durations and capacities explain the resource bound, while server backoff and runtime cancellation retain priority.
 
 ## Conversation search
 

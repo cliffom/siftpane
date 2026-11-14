@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.2.0 — Unreleased
+## 0.2.1 — Unreleased
+
+- Keep every included conversation in the background refresh rotation while a thread is open. Thread refreshes no longer skip conversation turns, preventing stale messages and local unread indicators for even-sized selections. The three-second tick, alternating thread refresh, and one background timeline request per tick remain unchanged.
+
+## 0.2.0 — 2026-11-14
 
 - Show `Siftpane *` in the terminal window/tab title while any included conversation has locally observed unread activity. Restore `Siftpane` when all included conversations are read or removed, including below the minimum terminal size.
 - The marker shares the sidebar's local state, is independent of Slack's read position, and depends on terminal/multiplexer title support. Polling delays still apply; no extra fetching or scopes are added.
