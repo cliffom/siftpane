@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -67,9 +68,41 @@ func (m *Model) rememberDraft() {
 
 func (m *Model) restoreDraft() { m.composer.SetValue(m.drafts[m.key()]); m.composer.MoveToEnd() }
 
-func (m *Model) selected() []core.Conversation { return core.Filter(m.directory, "", m.included, true) }
+// Sidebar and keyboard navigation share one grouped, deterministic order.
+func (m *Model) selected() []core.Conversation {
+	cs := core.Filter(m.directory, "", m.included, true)
+	sortConversations(cs)
+	return cs
+}
+
+func sortConversations(cs []core.Conversation) {
+	sort.Slice(cs, func(i, j int) bool {
+		a, b := cs[i], cs[j]
+		if isPerson(a) != isPerson(b) {
+			return !isPerson(a)
+		}
+		an, bn := strings.ToLower(a.Name), strings.ToLower(b.Name)
+		if an != bn {
+			return an < bn
+		}
+		return a.ID < b.ID
+	})
+}
+
+func isPerson(c core.Conversation) bool {
+	return c.Kind == core.ConversationDM || c.Kind == core.ConversationGroup
+}
+
+func (m *Model) saveMetadata() {
+	m.syncProfiles()
+	m.metadataErr = ""
+	if err := m.store.SaveConversations(m.identity, m.selected()); err != nil {
+		m.metadataErr = err.Error()
+	}
+}
 
 func (m *Model) selectConversation(cid string) tea.Cmd {
+	m.cancelProfileLookup()
 	m.rememberDraft()
 	m.active = cid
 	m.thread = ""
@@ -79,7 +112,7 @@ func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.composer.Blur()
 	m.restoreDraft()
 	m.read(cid)
-	return m.fetch(cid, false)
+	return tea.Batch(m.fetch(cid, false), m.profileCmd())
 }
 
 func (m *Model) read(cid string) {
@@ -96,7 +129,16 @@ func (m *Model) toggle(cid string) {
 		if f := m.cancels[cid]; f != nil {
 			f()
 		}
+		if profileCID, _ := split(m.profileKey); profileCID == cid {
+			m.cancelProfileLookup()
+		}
 		delete(m.contexts, cid)
+		delete(m.metadataBusy, cid)
+		if len(m.metadataBusy) == 0 {
+			m.startupRestoring = false
+			m.startupSidebar = nil
+		}
+		delete(m.metadataFailed, cid)
 		delete(m.cancels, cid)
 		delete(m.unread, cid)
 		for k := range m.cache {
@@ -120,7 +162,32 @@ func (m *Model) toggle(cid string) {
 		}
 		m.included[cid] = true
 		m.addContext(cid)
+		m.publishStartupConversation(cid)
 		m.status = "Included. Only chosen conversations are refreshed."
 	}
 	m.save()
+	m.saveMetadata()
+}
+
+// Explicit user actions publish their target without exposing unrelated pending
+// metadata or thawing the rest of the startup list.
+func (m *Model) publishStartupConversation(cid string) {
+	if !m.startupRestoring || !m.included[cid] {
+		return
+	}
+	for _, c := range m.directory {
+		if c.ID != cid {
+			continue
+		}
+		for i, old := range m.startupSidebar {
+			if old.ID == cid {
+				m.startupSidebar[i] = c
+				sortConversations(m.startupSidebar)
+				return
+			}
+		}
+		m.startupSidebar = append(m.startupSidebar, c)
+		sortConversations(m.startupSidebar)
+		return
+	}
 }

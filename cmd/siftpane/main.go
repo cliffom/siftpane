@@ -42,7 +42,7 @@ func run() error {
 	config := flag.String("config", "", "configuration path (credentials are stored separately)")
 	login := flag.Bool("login", false, "read a user OAuth token securely and store in OS keyring")
 	logout := flag.Bool("logout", false, "delete the saved token from the OS keyring")
-	snapshot := flag.String("snapshot", "", "render offline review view: messages, compose, picker, search, thread, help")
+	snapshot := flag.String("snapshot", "", "render offline review view: messages, compose, picker, search, thread, help, startup, loading, load-error")
 	width := flag.Int("width", ui.DefaultWidth, "snapshot columns")
 	height := flag.Int("height", ui.DefaultHeight, "snapshot rows")
 	flag.Parse()
@@ -101,7 +101,7 @@ func run() error {
 			return fmt.Errorf("snapshot requires at least %d columns and %d rows", ui.MinWidth, ui.MinHeight)
 		}
 		switch ui.SnapshotMode(*snapshot) {
-		case ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp:
+		case ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp, ui.SnapshotStartup, ui.SnapshotLoading, ui.SnapshotLoadError:
 		default:
 			return fmt.Errorf("unknown snapshot view")
 		}

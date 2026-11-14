@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Channel · Daily collaboration, fewer interruptions       │
+│                                                          │
+│ Loading messages…                                        │
+│ R retry / refresh                                        │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰ i compose ───────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Loading conversation history
+ Tab focus · / search · i write · ? help

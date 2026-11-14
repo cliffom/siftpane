@@ -2,7 +2,7 @@
 
 The authoritative application version is `internal/version/VERSION`, embedded by `internal/version` so checkout builds and `go install` have the same `siftpane --version` identity. Versions use semantic versioning with `v`-prefixed Git tags. Before 1.0, compatible features increment minor, fixes increment patch, and breaking changes increment minor with migration notes. Reuse a suitable prepared, unpublished version. Behavior-preserving refactors and docs-only changes do not need a dedicated release.
 
-`0.1.0` (initial release) and `0.2.0` (local unread title) were published on 2026-11-14. `0.2.1` is prepared for the background refresh scheduling fix; its tag and release have not been published. The release notes are in [CHANGELOG.md](../CHANGELOG.md). Source builds before the first versioned release have no runtime version identity.
+`0.1.0` (initial release) and `0.2.0` (local unread title) were published on 2026-11-14. `0.2.1` (background refresh scheduling fix) was also published on 2026-11-14. The `0.3.0` release adds persistent display metadata/name caching, immediate message pages with deferred names, and stable startup loading. The release notes are in [CHANGELOG.md](../CHANGELOG.md). Source builds before the first versioned release have no runtime version identity.
 
 When authorized to release:
 

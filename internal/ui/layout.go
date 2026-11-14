@@ -45,6 +45,7 @@ const (
 	modalMarginRows        = 3
 	modalMinRows           = 10
 	modalReservedRows      = 8 // Frame, input, scope hint, action, coverage, state, directory keys.
+	sidebarRestorationRows = 1 // Keep loading/recovery visible even when the list fills.
 	sidebarActivityRows    = 3
 	sidebarSelectionRows   = 8
 )

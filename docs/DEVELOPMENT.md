@@ -45,7 +45,7 @@ Name behavioral values before using them in handlers or adapters. Keep definitio
 | --- | --- |
 | Domain states | `core.ConversationKind` and `core.DeliveryState` with typed constants in `internal/core/values.go`. Use these constants across adapters, fixtures, and UI; convert to strings only for text/serialization boundaries. Delivery's zero value means idle. |
 | UI states | Private `focusPane` and `pickerMode` types in `internal/ui/modes.go`; `pickerClosed` is the zero value. Snapshot CLI identifiers have a separate `SnapshotMode` type. Never use snapshot identifiers as navigation state. |
-| Operational bounds | `internal/ui/limits.go` owns session/cache/input limits and polling. Slack transport policy lives in `internal/slack/client.go`; CLI credential identifiers and authentication timeout live in `cmd/siftpane`. Use `time.Duration` expressions with explicit units and names/comments indicating messages, entries, bytes, runes, or ticks. |
+| Operational bounds | `internal/ui/limits.go` owns session/cache/input limits and polling. Disposable display metadata bounds live in `internal/store/metadata.go`. Slack transport policy lives in `internal/slack/client.go`; CLI credential identifiers and authentication timeout live in `cmd/siftpane`. Use `time.Duration` expressions with explicit units and names/comments indicating messages, entries, bytes, runes, or ticks. |
 | Presentation | `internal/ui/layout.go` owns viewport defaults, breakpoints, and row/column reservations. Compose related dimensions from those reservations. Named styles in `view.go` own the palette. `keys.go` owns Bubble Tea key identifiers and derives display labels used by help/status/composer text. |
 | Runtime settings and defaults | Flags in the CLI and workspace preferences in `store` are runtime inputs. Defaults remain in the owning package; share viewport defaults with the CLI. Do not persist immutable policy or copy credentials into preferences. |
 | Protocol identifiers | Keep Web API methods and shared parameter identifiers in the Slack adapter; use standard-library HTTP method/status constants. JSON struct tags must remain literal tags. One-use parameter keys, regular expressions, formatting verbs, UUID bit masks/slices, and timestamp layouts can remain local where the protocol meaning is clear and documented. |
@@ -80,6 +80,9 @@ go run ./cmd/siftpane --snapshot picker --width 80 --height 24
 go run ./cmd/siftpane --snapshot search --width 100 --height 30
 go run ./cmd/siftpane --snapshot search --width 60 --height 20
 go run ./cmd/siftpane --snapshot thread --width 100 --height 30
+go run ./cmd/siftpane --snapshot startup --width 100 --height 30
+go run ./cmd/siftpane --snapshot loading --width 60 --height 20
+go run ./cmd/siftpane --snapshot load-error --width 60 --height 20
 go run ./cmd/siftpane --demo
 ```
 

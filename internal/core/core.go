@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"sort"
+	"time"
 )
 
 type (
@@ -29,6 +30,12 @@ func (c Conversation) Label() string {
 		return "◇ " + c.Name
 	}
 	return "@" + c.Name
+}
+
+// Profile is the minimal display identity retained for authors and mentions.
+type Profile struct {
+	ID, Name, Handle string
+	Updated          time.Time
 }
 
 // Message contains the text and fallback content needed to display one Slack message.

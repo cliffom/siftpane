@@ -44,7 +44,7 @@ func key(s string) tea.KeyPressMsg {
 
 func TestLayoutDimensionsAndBorderJunctions(t *testing.T) {
 	for _, size := range [][2]int{{120, 36}, {100, 30}, {80, 24}, {60, 20}, {40, 14}} {
-		for _, mode := range []SnapshotMode{SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotSearch, SnapshotThread, SnapshotHelp} {
+		for _, mode := range []SnapshotMode{SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotSearch, SnapshotThread, SnapshotHelp, SnapshotStartup, SnapshotLoading, SnapshotLoadError} {
 			t.Run(fmt.Sprint(size)+string(mode), func(t *testing.T) {
 				m := fixture(t)
 				s := Snapshot(m, size[0], size[1], mode)
@@ -300,7 +300,7 @@ func TestOversizedMessageKeepsAuthorWhileScrolling(t *testing.T) {
 
 func TestConversationContextUsesKnownMetadata(t *testing.T) {
 	m := fixture(t)
-	m.selectConversation("Gcrew")
+	m.selectConversation(demoGroup)
 	if got := m.conversationContext(); !strings.Contains(got, "Group DM · 3 people") {
 		t.Fatal(got)
 	}
@@ -344,6 +344,9 @@ func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode SnapshotMo
 		t.Fatal("doubled border or experimental protocol")
 	}
 	focusedHeader := "[" + m.title() + "]"
+	if mode == SnapshotStartup {
+		focusedHeader = "[Messages]"
+	}
 	if mode == SnapshotCompose {
 		focusedHeader = "[Message]"
 	}
@@ -361,6 +364,7 @@ func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode SnapshotMo
 const (
 	mainDraft       = "main draft"
 	demoDM          = "Dmaya"
+	demoGroup       = "Gcrew"
 	demoChannel     = "Cstudio"
 	futureTimestamp = "9999999999.1"
 	demoAuthor      = "Maya Chen"

@@ -7,7 +7,7 @@ import (
 )
 
 func TestWorkspaceIsolationAndPersistence(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "prefs", "config.json")
+	path := filepath.Join(t.TempDir(), "prefs", testConfigFilename)
 	s, err := Open(path)
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +46,7 @@ func TestWorkspaceIsolationAndPersistence(t *testing.T) {
 }
 
 func TestCorruptConfigIsNotOverwritten(t *testing.T) {
-	p := filepath.Join(t.TempDir(), "config.json")
+	p := filepath.Join(t.TempDir(), testConfigFilename)
 	if err := os.WriteFile(p, []byte("bad"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -54,3 +54,5 @@ func TestCorruptConfigIsNotOverwritten(t *testing.T) {
 		t.Fatal("corrupt config ignored")
 	}
 }
+
+const testConfigFilename = "config.json"

@@ -77,6 +77,7 @@ func (m *Model) openChoice(cs []core.Conversation) tea.Cmd {
 	if !m.included[c.ID] {
 		return nil
 	}
+	m.publishStartupConversation(c.ID)
 	m.mode = pickerClosed
 	m.picker.Blur()
 	m.resize()

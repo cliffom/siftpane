@@ -23,9 +23,22 @@ func stamp(ts string) string {
 
 func (m *Model) history(w, h int) []string {
 	if m.active == "" {
+		if text := m.restorationState(); text != "" {
+			rows := []string{"", " " + text}
+			if !m.stopped {
+				rows = append(rows, " "+keyLabel(keyRefresh)+" retry saved conversations")
+			}
+			return padRows(rows, w, h)
+		}
 		return padRows([]string{"", " Your channels. Your people.", " Your terminal.", "", " p  choose what belongs here", "", " Only included conversations refresh."}, w, h)
 	}
 	t := m.cache[m.key()]
+	if t != nil && !t.Loaded && t.Err != nil {
+		if m.stopped {
+			return padRows([]string{"", " Credentials expired/revoked.", " Replace user token and restart; drafts kept."}, w, h)
+		}
+		return padRows([]string{"", " Could not load messages.", " " + slack.Safe(t.Err.Error()), " " + keyLabel(keyRefresh) + " retry / refresh"}, w, h)
+	}
 	if t == nil || !t.Loaded {
 		return padRows([]string{"", " Loading messages…", " R retry / refresh"}, w, h)
 	}
@@ -37,7 +50,7 @@ func (m *Model) history(w, h int) []string {
 		if i == m.index {
 			selectedStart = len(rows)
 		}
-		rows = append(rows, messageRows(msg, w, i == m.index)...)
+		rows = append(rows, messageRows(slack.WithProfiles(msg, m.profiles), w, i == m.index)...)
 		if i == m.index {
 			selectedEnd = len(rows)
 		}

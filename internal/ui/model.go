@@ -18,6 +18,7 @@ type timeline struct {
 	Messages           []core.Message
 	Next               string
 	More, Loaded, Busy bool
+	Err                error
 	Touched            uint64
 }
 type historyResult struct {
@@ -47,12 +48,25 @@ type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
-	persistErr string
-	service    core.Service
-	identity   core.Identity
-	store      *store.Store
-	prefs      *store.Workspace
-	ctx        context.Context
+	profileCacheErr         string
+	profiles                map[string]core.Profile
+	profileAttempted        map[string]bool
+	profileBusy             bool
+	profileCancel           context.CancelFunc
+	profileLookupGeneration uint64
+	profileKey              string
+
+	persistErr       string
+	metadataErr      string
+	metadataBusy     map[string]bool
+	metadataFailed   map[string]bool
+	startupSidebar   []core.Conversation
+	startupRestoring bool
+	service          core.Service
+	identity         core.Identity
+	store            *store.Store
+	prefs            *store.Workspace
+	ctx              context.Context
 
 	directory       []core.Conversation
 	directoryNext   string
@@ -118,31 +132,51 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	search.CharLimit = pickerRuneLimit
 	search.SetVirtualCursor(true)
 	m := &Model{
-		service:     s,
-		identity:    id,
-		store:       st,
-		prefs:       p,
-		ctx:         ctx,
-		included:    p.Included,
-		contexts:    map[string]context.Context{},
-		cancels:     map[string]context.CancelFunc{},
-		generations: map[string]uint64{},
-		cache:       map[string]*timeline{},
-		drafts:      map[string]string{},
-		deliveries:  map[string]*core.Delivery{},
-		unread:      map[string]bool{},
-		latest:      map[string]string{},
-		composer:    t,
-		picker:      search,
-		width:       DefaultWidth,
-		height:      DefaultHeight,
-		focus:       focusChannels,
-		status:      "Choose your conversations with " + keyLabel(keyInclude) + " · local read state",
+		profiles:         map[string]core.Profile{},
+		profileAttempted: map[string]bool{},
+
+		service:        s,
+		metadataBusy:   map[string]bool{},
+		metadataFailed: map[string]bool{},
+		identity:       id,
+		store:          st,
+		prefs:          p,
+		ctx:            ctx,
+		included:       p.Included,
+		contexts:       map[string]context.Context{},
+		cancels:        map[string]context.CancelFunc{},
+		generations:    map[string]uint64{},
+		cache:          map[string]*timeline{},
+		drafts:         map[string]string{},
+		deliveries:     map[string]*core.Delivery{},
+		unread:         map[string]bool{},
+		latest:         map[string]string{},
+		composer:       t,
+		picker:         search,
+		width:          DefaultWidth,
+		height:         DefaultHeight,
+		focus:          focusChannels,
+		status:         "Choose your conversations with " + keyLabel(keyInclude) + " · local read state",
 	}
 	for cid, v := range m.included {
 		if v {
 			m.addContext(cid)
 		}
+	}
+	if svc, ok := s.(profileService); ok {
+		ps := st.Profiles(id)
+		svc.RestoreProfiles(ps)
+		for _, p := range ps {
+			m.profiles[p.ID] = p
+		}
+	}
+	for _, c := range st.Conversations(id) {
+		if m.included[c.ID] {
+			m.directory = append(m.directory, c)
+		}
+	}
+	if cs := m.selected(); len(cs) > 0 {
+		m.active = cs[0].ID
 	}
 	if isDemo {
 		m.active = "Cstudio"
@@ -159,13 +193,11 @@ func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{m.directoryCmd(""), tick()}
 	for cid, included := range m.included {
 		if included {
-			id, ctx, svc, gen := cid, m.contexts[cid], m.service, m.generations[cid]
-			cmds = append(cmds, func() tea.Msg {
-				c, err := svc.Conversation(ctx, id)
-				return conversationResult{Conversation: c, ID: id, Generation: gen, Err: err}
-			})
+			cmds = append(cmds, m.conversationCmd(cid))
 		}
 	}
+	m.startupSidebar = m.selected()
+	m.startupRestoring = len(m.metadataBusy) > 0
 	if m.active != "" {
 		cmds = append(cmds, m.fetch(m.key(), false))
 	}
@@ -186,6 +218,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateDirectory(v)
 	case historyResult:
 		return m.updateHistory(v)
+	case profileResult:
+		return m.updateProfile(v)
 	case sendResult:
 		return m.updateSend(v)
 	case tickMsg:
