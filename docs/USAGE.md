@@ -52,6 +52,6 @@ The modal reports directory coverage, loading, and errors. The initial metadata 
 
 ## Help and local markers
 
-Help opens over dimmed conversation context. Its single-column guide wraps to the terminal width; scroll to see all shortcuts and marker explanations. Paste is ignored while help is open. Closing restores the prior draft, focus and picker. Use `F1` while composing; `?` still inserts a question mark. The footer keeps a minimal help entry beside status rather than repeating hotkeys.
+Help opens over dimmed conversation context. Its single-column guide wraps to the terminal width; scroll to see all shortcuts and marker explanations. Paste is ignored while help is open. Closing restores the prior draft, focus and picker. Use `F1` while composing; `?` still inserts a question mark. The footer keeps a minimal help entry beside status rather than repeating hotkeys. Its bottom-left status bar shows message loading/refresh progress or saved-conversation restoration counts, then returns to the completed status. The message area stays clear while loading; failures retain actionable recovery text.
 
 Sidebar trailing slots show `●` for locally observed unread activity and `✎` for a retained conversation draft. Long names truncate before these slots. These markers do not imply Slack-synchronized read state or persisted drafts.

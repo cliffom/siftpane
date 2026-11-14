@@ -1,10 +1,10 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ [Messages] ───────────┬ Choose conversations · p ────────────────────────────────────────────────╮
-│ Loading 5 saved conve…│ Choose what belongs here · p                                             │
+│                       │ Choose what belongs here · p                                             │
 │                       │                                                                          │
-│                       │ Loading 5 saved conversations…                                           │
-│                       │ R retry saved conversations                                              │
+│                       │                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
@@ -27,4 +27,4 @@
 │                       │ │                                                                      │ │
 │                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Restoring saved conversations                                                               ? help
+ Loading 5 saved conversations…                                                              ? help

@@ -10,6 +10,10 @@ import (
 func (m *Model) sidebar(w, h int) []string {
 	rows := []string{}
 	state := m.restorationState()
+	// Loading progress belongs to the bottom status bar; keep sidebar recovery.
+	if len(m.metadataBusy) > 0 && !m.stopped {
+		state = ""
+	}
 	listHeight := h
 	if state != "" {
 		listHeight = max(0, h-sidebarRestorationRows)
@@ -49,7 +53,7 @@ func (m *Model) sidebar(w, h int) []string {
 	}
 	if state != "" {
 		rows = append(rows, muted.Render(" "+state))
-	} else if len(cs) == 0 {
+	} else if len(cs) == 0 && len(m.metadataBusy) == 0 {
 		rows = append(rows, " Nothing included yet.", " "+keyLabel(keyInclude)+"  choose conversations")
 	}
 	return padRows(rows, w, h)

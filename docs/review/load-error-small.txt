@@ -17,4 +17,4 @@
 │ │                                                      │ │
 │ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
- History unavailable · R retry / refresh             ? help
+ connection unavailable · R retry / refresh          ? help

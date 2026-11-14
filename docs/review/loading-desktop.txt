@@ -3,12 +3,12 @@
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │                                                                          │
-│  #shipping         ●  │ Loading messages…                                                        │
-│▸ #studio              │ R retry / refresh                                                        │
+│  #shipping         ●  │                                                                          │
+│▸ #studio              │                                                                          │
 │ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
 │  @Maya Chen        ●  │                                                                          │
 │  @Maya, Leo, you      │                                                                          │
-│ Loading 5 saved conve…│                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
@@ -27,4 +27,4 @@
 │                       │ │                                                                      │ │
 │                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Loading conversation history                                                                ? help
+ Loading messages…                                                                           ? help

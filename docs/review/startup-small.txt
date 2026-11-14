@@ -1,7 +1,7 @@
  siftpane                           Fieldwork · demo · @you
 
 ╭ [Messages] ──────────────────────────────────────────────╮
-│ Loading 5 saved conversations…                           │
+│                                                          │
 │                                                          │
 │                                                          │
 │                                                          │
@@ -17,4 +17,4 @@
 │                                                          │
 │                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Restoring saved conversations                       ? help
+ Loading 5 saved conversations…                      ? help

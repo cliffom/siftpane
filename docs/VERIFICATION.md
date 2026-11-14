@@ -106,3 +106,9 @@ Prepared minor version 0.4.0 for this compatible user-facing UI feature because 
 ### Solid modal borders
 
 Follow-up for #12: help now uses the same solid rounded outline as search and inclusion modals, per the requested visual direction. Updated the guide's appearance explanation and design/architecture rules, and refreshed desktop/small/minimum help captures. `make fmt` and `make check` passed with zero lint findings. Offline PTY help/paste/draft/picker checks passed at 100×30, 60×20 and 40×14; these retain the terminal/live Slack limitations above. Version 0.4.0 remains prepared and unpublished.
+
+### Loading progress in the status bar
+
+Message loading/refresh progress and saved-conversation restoration counts now occupy the bottom-left status bar, replacing idle completion text. The message area stays clear while waiting, and the sidebar retains retry recovery instead of duplicating loading counts. Progress derives from the selected timeline, so an unrelated successful refresh cannot replace it with “Refreshed.” Empty results and actionable errors remain distinct; sending/failure/authentication recovery, persistence errors and discard warnings retain priority.
+
+`make fmt` and `make check` passed with zero lint findings. New offline regressions cover initial loading, unrelated completion, error/retry/success/empty transitions, refresh, conversation/thread selection, restoration counts, duplicate loading removal and recovery priority at desktop/small/minimum sizes. Refreshed and inspected the affected loading, startup, explicit-selection and error text captures at 100×30 and 60×20. This follow-up adds no live Slack or physical terminal verification. Version 0.4.0 remains prepared and unpublished.

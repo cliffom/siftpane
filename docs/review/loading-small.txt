@@ -3,8 +3,8 @@
 ╭ [#studio] ───────────────────────────────────────────────╮
 │ Channel · Daily collaboration, fewer interruptions       │
 │                                                          │
-│ Loading messages…                                        │
-│ R retry / refresh                                        │
+│                                                          │
+│                                                          │
 │                                                          │
 │                                                          │
 │                                                          │
@@ -17,4 +17,4 @@
 │ │                                                      │ │
 │ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
- Loading conversation history                        ? help
+ Loading messages…                                   ? help

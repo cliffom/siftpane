@@ -3,13 +3,13 @@
 ╭ [Messages] ───────────┬ #newly-included ─────────────────────────────────────────────────────────╮
 │ CHANNELS 4/6 ╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
 │  #design              │                                                                          │
-│▸ #newly-included      │ Loading messages…                                                        │
-│  #shipping         ●  │ R retry / refresh                                                        │
+│▸ #newly-included      │                                                                          │
+│  #shipping         ●  │                                                                          │
 │  #studio              │                                                                          │
 │ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
 │  @Maya Chen        ●  │                                                                          │
 │  @Maya, Leo, you      │                                                                          │
-│ Loading 5 saved conve…│                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
@@ -27,4 +27,4 @@
 │                       │ │                                                                      │ │
 │                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Included. Only chosen conversations are refreshed.                                          ? help
+ Loading messages…                                                                           ? help

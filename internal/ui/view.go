@@ -42,7 +42,7 @@ func (m *Model) View() tea.View {
 	gap := w - ansi.StringWidth(left) - ansi.StringWidth(workspace) - 1
 	header := left + strings.Repeat(" ", max(0, gap)) + muted.Render(workspace) + " "
 	body := m.mainView()
-	statusText := m.status
+	statusText := m.activityStatus()
 	if m.quitConfirm {
 		statusText = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
 	}

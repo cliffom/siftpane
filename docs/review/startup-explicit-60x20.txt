@@ -9,7 +9,7 @@
 │ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
 │  @Maya Chen                                           ●  │
 │  @Maya, Leo, you                                         │
-│ Loading 5 saved conversations…                           │
+│                                                          │
 │                                                          │
 │                                                          │
 │                                                          │
@@ -17,4 +17,4 @@
 │                                                          │
 │                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Included. Only chosen conversations are refreshed.  ? help
+ Loading messages…                                   ? help
