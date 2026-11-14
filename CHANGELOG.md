@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 — Unreleased
+
+- Right-align sidebar unread and draft indicators in reserved columns, keeping them visible beside long names. Remove the sidebar activity legend and repeated shortcut lists.
+- Use a single quiet status row with a help entry point, giving messages another row. Retain pending/failed delivery recovery in the solid composer.
+- Open a scrollable keyboard guide over dimmed conversation context with `?` from navigation or `F1` anywhere. Help consumes input and restores the prior context and draft on dismissal.
+
 ## 0.3.0 — 2026-11-14
 
 - Display message pages before author/mention lookups finish, fill names in asynchronously for the active timeline, and reuse bounded account-isolated names across launches. Prioritize the active conversation’s initial page without changing API pacing, server backoff or send retries.

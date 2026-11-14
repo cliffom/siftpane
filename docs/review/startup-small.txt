@@ -12,9 +12,9 @@
 │                                                          │
 │                                                          │
 │                                                          │
-│ ··· UNREAD HERE ···                                      │
-│ ● unread here  ✎ draft                                   │
-│ p choose   / search                                      │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Restoring saved conversations
- Tab focus · / search · i write · ? help
+ Restoring saved conversations                       ? help

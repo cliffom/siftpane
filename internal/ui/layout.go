@@ -27,7 +27,7 @@ const (
 	compactHeight          = 22
 	composerRows           = 3
 	compactComposerRows    = 2
-	chromeRows             = 4 // Header, blank separator, status, shortcuts.
+	chromeRows             = 3 // Header, blank separator, status with help entry.
 	frameRows              = 2 // Top and bottom shared frame.
 	frameColumns           = 2
 	composerBorderRows     = 2
@@ -36,6 +36,7 @@ const (
 	composerPaddingColumns = 2
 	minInputColumns        = 5
 	helpInsetColumns       = 4 // Transient frame and text padding.
+	helpFooterRows         = 1 // Scroll position and controls, outside scrollable text.
 	focusedTitleColumns    = 4 // Two brackets and surrounding spaces.
 	scrollPageDivisor      = 3
 	minScrollRows          = 3
@@ -46,7 +47,7 @@ const (
 	modalMinRows           = 10
 	modalReservedRows      = 8 // Frame, input, scope hint, action, coverage, state, directory keys.
 	sidebarRestorationRows = 1 // Keep loading/recovery visible even when the list fills.
-	sidebarActivityRows    = 3
+	sidebarMarkerColumns   = 4 // Gap, unread slot, gap, draft slot.
 	sidebarSelectionRows   = 8
 )
 

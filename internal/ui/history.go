@@ -50,7 +50,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 		}
 	}
 	if d := m.deliveries[m.key()]; !m.stopped && (d == nil || d.State == core.DeliverySent) {
-		m.status = "Refreshed · local unread only · polling included conversations"
+		m.status = "Refreshed"
 	}
 	return m, m.profileCmd()
 }

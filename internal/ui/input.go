@@ -28,6 +28,16 @@ func (m *Model) quitKey() tea.Cmd {
 
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
+	if m.help {
+		m.helpKey(k)
+		return m, nil
+	}
+	if k == keyHelpGlobal {
+		m.quitConfirm = false
+		m.retryConfirm = false
+		m.help, m.helpScroll = true, 0
+		return m, nil
+	}
 	if k != keyRetry {
 		m.retryConfirm = false
 	}
@@ -35,30 +45,9 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	if k == keyQuit {
-		m.rememberDraft()
-		dirty := false
-		for _, s := range m.drafts {
-			if s != "" {
-				dirty = true
-			}
-		}
-		for _, d := range m.deliveries {
-			if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
-				dirty = true
-			}
-		}
-		if dirty && !m.quitConfirm {
-			m.quitConfirm = true
-			m.status = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
-			return m, nil
-		}
-		return m, tea.Quit
+		return m, m.confirmQuit()
 	}
 	m.quitConfirm = false
-	if m.help {
-		m.help = false
-		return m, nil
-	}
 	if m.mode != pickerClosed {
 		return m, m.pickerKey(v)
 	}
@@ -93,7 +82,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyQuitQuiet:
 		return m, m.quitKey()
 	case keyHelp:
-		m.help = true
+		m.help, m.helpScroll = true, 0
 	case keyInclude:
 		return m, m.openPicker(pickerInclude)
 	case keySearch:
@@ -221,4 +210,25 @@ func (m *Model) restoreFailedDraft() {
 		delete(m.deliveries, m.key())
 		m.status = "Restored failed text for editing; uncertain sends may already exist in Slack"
 	}
+}
+
+func (m *Model) confirmQuit() tea.Cmd {
+	m.rememberDraft()
+	dirty := false
+	for _, s := range m.drafts {
+		if s != "" {
+			dirty = true
+		}
+	}
+	for _, d := range m.deliveries {
+		if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
+			dirty = true
+		}
+	}
+	if dirty && !m.quitConfirm {
+		m.quitConfirm = true
+		m.status = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
+		return nil
+	}
+	return tea.Quit
 }

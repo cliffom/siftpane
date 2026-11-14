@@ -11,10 +11,10 @@
 │                                                          │
 │                                                          │
 │                                                          │
+│                                                          │
 │ ╭ [Thread reply] ──────────────────────────────────────╮ │
 │ │ › Thanks, Maya. I'll review the keyboard flow this   │ │
 │ │   afternoon.                                         │ │
-│ ╰ Ctrl+S send · Esc navigate ──────────────────────────╯ │
+│ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversat…
- Ctrl+S send · Enter newline · Esc navigate · Ctrl+K search
+ Refreshed                                          F1 help

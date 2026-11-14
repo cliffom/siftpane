@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you
+
+╭ [#╭ [Keyboard guide] ╌╌╌╌╌╌╌╌╌╌╌╌╮───╮
+│ Ch╎ NAVIGATE                     ╎er…│
+│▸ Y╎ Tab  switch sidebar /        ╎   │
+│  T╎ messages                     ╎e  │
+│  b╎ j/k or ↑/↓  move / select    ╎   │
+│   ╎ PgUp/PgDn  scroll history    ╎   │
+│ ╭ ╎ G / End  newest + local read ╎─╮ │
+│ │ ╎ i / Enter  compose           ╎ │ │
+│ │ ╎ 1–7/72 ↑/↓ · Esc close       ╎ │ │
+│ ╰─╰╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╯─╯ │
+╰──────────────────────────────────────╯
+ Refreshed                       ? help

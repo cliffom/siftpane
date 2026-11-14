@@ -22,6 +22,7 @@ const (
 	keyNewest          = "end"
 	keyQuitQuiet       = "q"
 	keyHelp            = "?"
+	keyHelpGlobal      = "f1"
 	keyInclude         = "p"
 	keySearch          = "/"
 	keyWrite           = "i"
@@ -42,6 +43,8 @@ func keyLabel(k string) string {
 		return "Ctrl+" + strings.ToUpper(strings.TrimPrefix(k, "ctrl+"))
 	}
 	switch k {
+	case keyHelpGlobal:
+		return "F1"
 	case keyEscape:
 		return "Esc"
 	case keyFocus:

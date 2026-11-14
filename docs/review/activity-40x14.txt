@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you
+
+╭ [Messages] ──────────────────────────╮
+│ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
+│  #shipping                        ●  │
+│▸ #studio                            ✎│
+│ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
+│  @Maya Chen                       ●  │
+│  @Maya, Leo, you                  ● ✎│
+│                                      │
+│                                      │
+│                                      │
+╰──────────────────────────────────────╯
+ Refreshed                       ? help

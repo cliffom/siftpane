@@ -86,7 +86,7 @@ go run ./cmd/siftpane --snapshot load-error --width 60 --height 20
 go run ./cmd/siftpane --demo
 ```
 
-Check borders/corners, display-cell width, wrapping, the first visible author, amber title isolation, drafts, pending/failed/retry states, and the short help row. Follow [design guidelines](DESIGN.md). Refresh affected captures in `docs/review/` when the appearance changes; don't update a capture to conceal a regression.
+Check borders/corners, display-cell width, wrapping, the first visible author, amber title isolation, drafts, pending/failed/retry states, and the status/help entry plus scrollable help modal. Follow [design guidelines](DESIGN.md). Refresh affected captures in `docs/review/` when the appearance changes; don't update a capture to conceal a regression.
 
 CI runs `make check` on Linux with the minimum Go version and the current stable Go version. Its action revisions are pinned. A local success does not establish that hosted CI or real Slack verification passed; report those separately in [the verification record](VERIFICATION.md).
 

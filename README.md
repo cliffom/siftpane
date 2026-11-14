@@ -46,7 +46,7 @@ The live integration is implemented and tested with a fake Slack server. **App i
 | `Esc` | Keep your draft and return to navigation |
 | `t` | Open the selected message's thread |
 | `o` | Load older messages or the next thread page |
-| `?` | Open the full keyboard guide |
+| `?` / `F1` | Open scrollable keyboard help (`F1` also works while composing) |
 | `q` | Quit; warns if you have unsent text |
 
 Search opens over a dimmed main view. `Enter` explicitly includes and opens an excluded result; typing or completing a name changes no inclusion. Supported terminals can also deliver `Cmd+K`; see [terminal compatibility](docs/TERMINALS.md#command-k).

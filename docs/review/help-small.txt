@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Ch╭ [Keyboard guide] ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╮   │
+│  M╎ NAVIGATE                                         ╎   │
+│  I╎ Tab  switch sidebar / messages                   ╎   │
+│   ╎ j/k or ↑/↓  move / select                        ╎   │
+│  L╎ PgUp/PgDn  scroll history                        ╎   │
+│  T╎ G / End  newest + local read                     ╎   │
+│   ╎ i / Enter  compose                               ╎   │
+│▸ Y╎ t  open selected thread                          ╎   │
+│  T╎ Esc  leave thread / focus sidebar                ╎und│
+│  t╎ o  older history / next reply page               ╎   │
+│   ╎ R  refresh / retry saved metadata                ╎   │
+│ ╭ ╎ m  mark read locally                             ╎─╮ │
+│ │ ╎ 1–11/50 ↑/↓ · Esc close                          ╎ │ │
+│ │ ╰╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╯ │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Refreshed                                           ? help

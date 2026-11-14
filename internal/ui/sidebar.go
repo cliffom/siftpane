@@ -52,12 +52,6 @@ func (m *Model) sidebar(w, h int) []string {
 	} else if len(cs) == 0 {
 		rows = append(rows, " Nothing included yet.", " "+keyLabel(keyInclude)+"  choose conversations")
 	}
-	for len(rows) < h-sidebarActivityRows {
-		rows = append(rows, "")
-	}
-	if len(rows) <= h-sidebarActivityRows {
-		rows = append(rows, muted.Render(" ··· UNREAD HERE ···"), muted.Render(" ● unread here  ✎ draft"), muted.Render(" "+keyLabel(keyInclude)+" choose   "+keyLabel(keySearch)+" search"))
-	}
 	return padRows(rows, w, h)
 }
 
@@ -79,13 +73,18 @@ func (m *Model) conversationRow(c core.Conversation, w int) string {
 	if c.ID == m.active {
 		prefix = "▸ "
 	}
-	text := prefix + slack.Safe(c.Label())
+	// Fixed trailing slots keep local activity visible even for truncated names.
+	markers := " "
 	if m.unread[c.ID] {
-		text += " ●"
+		markers = "●"
 	}
+	markers += " "
 	if m.drafts[c.ID] != "" {
-		text += " ✎"
+		markers += "✎"
+	} else {
+		markers += " "
 	}
+	text := fit(prefix+slack.Safe(c.Label()), w-sidebarMarkerColumns) + " " + markers
 	if c.ID == m.active {
 		return selected.Render(fit(text, w))
 	}

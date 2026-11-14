@@ -7,10 +7,10 @@ Siftpane is a calm, keyboard-driven window into conversations the user explicitl
 - A single header row: `siftpane` at left; workspace name and authenticated `@username` right-aligned. Retain one blank row below it. No tagline, duplicate read-state/focus description, or padding row below the footer.
 - A shared-edge main frame with a left sidebar titled **Messages**. Do not restore the redundant `INCLUDED #/#` row.
 - **CHANNELS included/total** and **PEOPLE** use dashed horizontal separators. Count only public/private channel metadata already loaded for the denominator; never imply a complete workspace count before discovery finishes.
-- A quiet **UNREAD HERE** group explains local dots and drafts. Do not imply Slack-synchronized counts or read positions.
+- Reserve trailing sidebar columns for local unread dots and retained-draft markers, truncating names before those slots. Explain the symbols in help rather than a permanent sidebar legend. Do not imply Slack-synchronized counts or read positions.
 - The message region has one muted context row for topic/purpose, conversation type, or known group size. Keep the actual conversation title prominent.
-- The composer is inset, rounded, and solid on all four sides in every state. It has a `›` prompt, a clear title, and a bottom shortcut hint. Focus accents its frame; it does not change its border type.
-- A concise status row and one contextual shortcut row finish the screen. Keep common actions here; put the complete guide behind `?`.
+- The composer is inset, rounded, and solid on all four sides in every state. It has a `›` prompt and a clear title. Keep its bottom edge quiet except for pending/failed delivery recovery. Focus accents its frame; it does not change its border type.
+- One concise status row finishes the screen with a right-aligned help entry (`?` in navigation, `F1` in composing/pickers). Do not repeat routine hotkey lists in the sidebar, composer or footer. Recovery/discard warnings take precedence over the help entry.
 
 ## Borders and color
 
@@ -47,6 +47,10 @@ Review messages, channels, composing, threads, picker, and help. Include long/mu
 ## Project artwork
 
 The [project icon](BRANDING.md) combines a retro terminal and original conversation bubbles, inspired by Bambustand. Use the saved PNG for project documentation and the Slack app avatar; do not substitute Slack’s mark for Siftpane’s identity.
+
+## Help modal
+
+`?` in navigation or `F1` anywhere opens an opaque centered keyboard guide over dimmed context, using a dashed outline and bracketed amber title. Keep the status row readable. Wrap a single-column guide to the available width; reserve a fixed scroll-position/control row. Arrow keys or `j/k` scroll, `PgUp/PgDn` page, and `End`/`G` reaches the end. Any other key dismisses and is consumed, including send/quit/search keys. Pasted text is ignored. Dismissal preserves the prior conversation, thread, selection, focus and draft, including an underlying picker. `?` remains ordinary composer text. Review full guide reachability at the minimum viewport and after resize.
 
 Layout measurements and defaults are owned by `internal/ui/layout.go`; palette values remain attached to named styles in `view.go`. Shortcut identifiers and display labels are owned by `keys.go` so handlers and hints share one source. Keep focus/picker state distinct from display copy and offline snapshot identifiers. Follow the [value policy](DEVELOPMENT.md#values-states-and-settings) when extending these definitions; a matching number alone is not a reason to share two unrelated layout measurements.
 

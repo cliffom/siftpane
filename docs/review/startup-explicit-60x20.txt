@@ -4,17 +4,17 @@
 │ CHANNELS 4/6 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
 │  #design                                                 │
 │▸ #newly-included                                         │
-│  #shipping ●                                             │
+│  #shipping                                            ●  │
 │  #studio                                                 │
 │ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
-│  @Maya Chen ●                                            │
+│  @Maya Chen                                           ●  │
 │  @Maya, Leo, you                                         │
 │ Loading 5 saved conversations…                           │
 │                                                          │
 │                                                          │
-│ ··· UNREAD HERE ···                                      │
-│ ● unread here  ✎ draft                                   │
-│ p choose   / search                                      │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Included. Only chosen conversations are refreshed.
- Tab focus · / search · i write · ? help
+ Included. Only chosen conversations are refreshed.  ? help
