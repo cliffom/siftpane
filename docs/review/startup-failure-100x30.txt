@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you
+
+╭ [Messages] ───────────┬ #design ─────────────────────────────────────────────────────────────────╮
+│ CHANNELS 23/25 ╌╌╌╌╌╌╌│ Channel · Typography, spacing, and interaction details                   │
+│▸ #design              │ No messages yet. i to write the first one.                               │
+│  #extra-00            │                                                                          │
+│  #extra-01            │                                                                          │
+│  #extra-02            │                                                                          │
+│  #extra-03            │                                                                          │
+│  #extra-04            │                                                                          │
+│  #extra-05            │                                                                          │
+│  #extra-06            │                                                                          │
+│  #extra-07            │                                                                          │
+│  #extra-08            │                                                                          │
+│  #extra-09            │                                                                          │
+│  #extra-10            │                                                                          │
+│  #extra-11            │                                                                          │
+│  #extra-12            │                                                                          │
+│  #extra-13            │                                                                          │
+│  #extra-14            │                                                                          │
+│  #extra-15            │                                                                          │
+│  #extra-16            │                                                                          │
+│  #extra-17            │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│  #extra-18            │ │ › Write a message…                                                   │ │
+│  #extra-19            │ │                                                                      │ │
+│  #shipping ●          │ │                                                                      │ │
+│ Unavailable · R retry │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Refreshed · local unread only · polling included conversations
+ Tab focus · / search · i write · t thread · ? help

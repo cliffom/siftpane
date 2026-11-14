@@ -71,6 +71,11 @@ func (m *Model) restoreDraft() { m.composer.SetValue(m.drafts[m.key()]); m.compo
 // Sidebar and keyboard navigation share one grouped, deterministic order.
 func (m *Model) selected() []core.Conversation {
 	cs := core.Filter(m.directory, "", m.included, true)
+	sortConversations(cs)
+	return cs
+}
+
+func sortConversations(cs []core.Conversation) {
 	sort.Slice(cs, func(i, j int) bool {
 		a, b := cs[i], cs[j]
 		if isPerson(a) != isPerson(b) {
@@ -82,7 +87,6 @@ func (m *Model) selected() []core.Conversation {
 		}
 		return a.ID < b.ID
 	})
-	return cs
 }
 
 func isPerson(c core.Conversation) bool {
@@ -153,8 +157,32 @@ func (m *Model) toggle(cid string) {
 		}
 		m.included[cid] = true
 		m.addContext(cid)
+		m.publishStartupConversation(cid)
 		m.status = "Included. Only chosen conversations are refreshed."
 	}
 	m.save()
 	m.saveMetadata()
+}
+
+// Explicit user actions publish their target without exposing unrelated pending
+// metadata or thawing the rest of the startup list.
+func (m *Model) publishStartupConversation(cid string) {
+	if !m.startupRestoring || !m.included[cid] {
+		return
+	}
+	for _, c := range m.directory {
+		if c.ID != cid {
+			continue
+		}
+		for i, old := range m.startupSidebar {
+			if old.ID == cid {
+				m.startupSidebar[i] = c
+				sortConversations(m.startupSidebar)
+				return
+			}
+		}
+		m.startupSidebar = append(m.startupSidebar, c)
+		sortConversations(m.startupSidebar)
+		return
+	}
 }

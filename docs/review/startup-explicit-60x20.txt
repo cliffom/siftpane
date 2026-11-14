@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [Messages] ──────────────────────────────────────────────╮
+│ CHANNELS 4/6 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
+│  #design                                                 │
+│▸ #newly-included                                         │
+│  #shipping ●                                             │
+│  #studio                                                 │
+│ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
+│  @Maya Chen ●                                            │
+│  @Maya, Leo, you                                         │
+│ Loading 5 saved conversations…                           │
+│                                                          │
+│                                                          │
+│ ··· UNREAD HERE ···                                      │
+│ ● unread here  ✎ draft                                   │
+│ p choose   / search                                      │
+╰──────────────────────────────────────────────────────────╯
+ Included. Only chosen conversations are refreshed.
+ Tab focus · / search · i write · ? help

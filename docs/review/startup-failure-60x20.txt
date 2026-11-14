@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [Messages] ──────────────────────────────────────────────╮
+│ CHANNELS 23/25 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
+│▸ #design                                                 │
+│  #extra-00                                               │
+│  #extra-01                                               │
+│  #extra-02                                               │
+│  #extra-03                                               │
+│  #extra-04                                               │
+│  #extra-05                                               │
+│  #extra-06                                               │
+│  #extra-07                                               │
+│  #extra-08                                               │
+│  #extra-09                                               │
+│  #extra-10                                               │
+│ Unavailable · R retry                                    │
+╰──────────────────────────────────────────────────────────╯
+ Refreshed · local unread only · polling included conversat…
+ Tab focus · / search · i write · ? help

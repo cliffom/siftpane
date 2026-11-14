@@ -9,6 +9,11 @@ import (
 
 func (m *Model) sidebar(w, h int) []string {
 	rows := []string{}
+	state := m.restorationState()
+	listHeight := h
+	if state != "" {
+		listHeight = max(0, h-sidebarRestorationRows)
+	}
 	cs := m.sidebarConversations()
 	activeIndex := 0
 	for i, c := range cs {
@@ -16,7 +21,7 @@ func (m *Model) sidebar(w, h int) []string {
 			activeIndex = i
 		}
 	}
-	start := max(0, activeIndex-max(1, h-sidebarSelectionRows))
+	start := max(0, activeIndex-max(1, listHeight-sidebarSelectionRows))
 	includedChannels, totalChannels := m.channelCounts()
 	lastKind := ""
 	for i := start; i < len(cs); i++ {
@@ -24,6 +29,13 @@ func (m *Model) sidebar(w, h int) []string {
 		kind := "CHANNELS"
 		if isPerson(c) {
 			kind = "PEOPLE"
+		}
+		needed := 1
+		if lastKind != kind {
+			needed++
+		}
+		if len(rows)+needed > listHeight {
+			break
 		}
 		if lastKind != kind {
 			label := kind
@@ -35,8 +47,8 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 		rows = append(rows, m.conversationRow(c, w))
 	}
-	if text := m.restorationState(); text != "" {
-		rows = append(rows, muted.Render(" "+text))
+	if state != "" {
+		rows = append(rows, muted.Render(" "+state))
 	} else if len(cs) == 0 {
 		rows = append(rows, " Nothing included yet.", " "+keyLabel(keyInclude)+"  choose conversations")
 	}
