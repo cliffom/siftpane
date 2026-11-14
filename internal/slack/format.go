@@ -61,6 +61,14 @@ func Readable(s string) string {
 // Body returns readable text with fallbacks for unsupported message content.
 func Body(m core.Message) string {
 	s := Readable(m.Text)
+	needsSlackLink := false
+	// Text already represents ordinary rich-text blocks. Other block types may
+	// contain controls or media that the terminal cannot display.
+	for _, block := range m.Blocks {
+		if block["type"] != "rich_text" {
+			needsSlackLink = true
+		}
+	}
 	for _, a := range m.Attachments {
 		t := a.Fallback
 		if t == "" {
@@ -68,21 +76,26 @@ func Body(m core.Message) string {
 		}
 		if t != "" {
 			s += "\n" + Readable(t)
+		} else {
+			needsSlackLink = true
 		}
 	}
 	for _, f := range m.Files {
 		s += "\n[File: " + Safe(f.Title) + "] " + Safe(f.URL)
+		if strings.TrimSpace(f.URL) == "" {
+			needsSlackLink = true
+		}
 	}
 	if len(m.Blocks) > 0 && strings.TrimSpace(s) == "" {
 		s = "[Rich content — open in Slack]"
+		needsSlackLink = true
 	}
 	if strings.TrimSpace(s) == "" {
 		s = "[" + Safe(m.Subtype) + " message — open in Slack]"
+		needsSlackLink = true
 	}
-	if len(m.Files) > 0 || len(m.Blocks) > 0 || len(m.Attachments) > 0 || m.Subtype != "" {
-		if m.Link != "" {
-			s += "\n↗ " + Safe(m.Link)
-		}
+	if needsSlackLink && m.Link != "" {
+		s += "\n↗ " + Safe(m.Link)
 	}
 	return strings.TrimSpace(s)
 }
