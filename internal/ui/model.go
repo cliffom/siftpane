@@ -13,11 +13,6 @@ import (
 	"github.com/cliffom/siftpane/internal/store"
 )
 
-const (
-	cacheLimit     = 300
-	selectionLimit = 32
-)
-
 type timeline struct {
 	After              string
 	Messages           []core.Message
@@ -74,7 +69,9 @@ type Model struct {
 	unread     map[string]bool
 	latest     map[string]string
 
-	active, thread, focus, mode string
+	active, thread string
+	focus          focusPane
+	mode           pickerMode
 
 	picker    textinput.Model
 	pickIndex int
@@ -100,23 +97,23 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	}
 	t := textarea.New()
 	t.Placeholder = "Write a message…"
-	t.SetPromptFunc(2, func(info textarea.PromptInfo) string {
+	t.SetPromptFunc(composerPromptColumns, func(info textarea.PromptInfo) string {
 		if info.LineNumber == 0 {
 			return "› "
 		}
 		return "  "
 	})
 	t.ShowLineNumbers = false
-	t.CharLimit = 12000
-	t.MaxHeight = 1000
+	t.CharLimit = composerRuneLimit
+	t.MaxHeight = composerLineLimit
 	t.MaxWidth = 0
-	t.SetHeight(3)
-	t.SetWidth(60)
+	t.SetHeight(composerRows)
+	t.SetWidth(initialComposerColumns)
 	t.SetVirtualCursor(true)
 	search := textinput.New()
 	search.Prompt = " / "
 	search.Placeholder = "Search conversations"
-	search.CharLimit = 160
+	search.CharLimit = pickerRuneLimit
 	m := &Model{
 		service:     s,
 		identity:    id,
@@ -134,10 +131,10 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		latest:      map[string]string{},
 		composer:    t,
 		picker:      search,
-		width:       100,
-		height:      30,
-		focus:       "channels",
-		status:      "Choose your conversations with p · local read state",
+		width:       DefaultWidth,
+		height:      DefaultHeight,
+		focus:       focusChannels,
+		status:      "Choose your conversations with " + keyLabel(keyInclude) + " · local read state",
 	}
 	for cid, v := range m.included {
 		if v {
@@ -148,7 +145,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		m.active = "Cstudio"
 		m.unread["Cshipping"] = true
 		m.unread["Dmaya"] = true
-		m.status = "Offline demo · p choose · / switch · i compose · ? help"
+		m.status = "Offline demo · " + keyLabel(keyInclude) + " choose · " + keyLabel(keySearch) + " switch · " + keyLabel(keyWrite) + " compose · " + keyLabel(keyHelp) + " help"
 	}
 	m.restoreDraft()
 	return m
@@ -194,15 +191,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateKey(v)
 	}
 	// Textarea cursor blink and paste messages continue through Bubble Tea commands.
-	if d := m.deliveries[m.key()]; d != nil && d.State == "pending" && m.focus == "compose" {
+	if d := m.deliveries[m.key()]; d != nil && d.State == core.DeliveryPending && m.focus == focusCompose {
 		return m, nil
 	}
-	if m.mode != "" {
+	if m.mode != pickerClosed {
 		var c tea.Cmd
 		m.picker, c = m.picker.Update(msg)
 		return m, c
 	}
-	if m.focus == "compose" {
+	if m.focus == focusCompose {
 		var c tea.Cmd
 		m.composer, c = m.composer.Update(msg)
 		m.rememberDraft()

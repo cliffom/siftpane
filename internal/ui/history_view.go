@@ -112,10 +112,12 @@ func messageRows(msg core.Message, w int, focused bool) []string {
 	}
 	rows = append(rows, ansi.Truncate(head, w, "…"))
 	body := slack.Body(msg)
-	wrapped := strings.Split(ansi.Wrap(body, max(1, w-2), ""), "\n")
+	wrapped := strings.Split(ansi.Wrap(body, max(1, w-messagePaddingColumns), ""), "\n")
 	for _, line := range wrapped {
 		rows = append(rows, "  "+line)
 	}
 	rows = append(rows, "")
 	return rows
 }
+
+const messagePaddingColumns = 2 // History text inset in display cells.

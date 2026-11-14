@@ -18,25 +18,26 @@ func (m *Model) send(retry bool) tea.Cmd {
 	key := m.key()
 	d := m.deliveries[key]
 	if retry {
-		if d == nil || d.State != "failed" {
+		if d == nil || d.State != core.DeliveryFailed {
 			return nil
 		}
 		if d.Uncertain && !m.retryConfirm {
 			m.retryConfirm = true
-			m.status = "Delivery unknown. Check Slack before retrying. Press r again to risk a duplicate."
+			m.status = "Delivery unknown. Check Slack before retrying. Press " + keyLabel(keyRetry) + " again to risk a duplicate."
 			return nil
 		}
 	}
 	if !retry {
-		if d != nil && (d.State == "pending" || d.State == "failed") {
-			m.status = "Resolve the current delivery first: Esc then r retries; x restores it for editing."
+		if d != nil && (d.State == core.DeliveryPending || d.State == core.DeliveryFailed) {
+			m.status = "Resolve the current delivery first: " + keyLabel(keyEscape) + " then " + keyLabel(keyRetry) + " retries; " + keyLabel(keyEditFailed) + " restores it for editing."
 			return nil
 		}
 		body := m.composer.Value()
 		if strings.TrimSpace(body) == "" {
 			return nil
 		}
-		id := make([]byte, 16)
+		// UUIDv4: 16 bytes; version nibble 0100 and variant bits 10 (RFC 9562).
+		id := make([]byte, sendIDBytes)
 		if _, err := rand.Read(id); err != nil {
 			m.status = "Cannot create send ID; draft kept"
 			return nil
@@ -63,9 +64,9 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 	uncertain := core.UncertainDelivery(v.Err)
 	d.Finish(v.Err, uncertain)
 	if v.Err != nil {
-		m.status = "Send failed: " + v.Err.Error() + " · text kept · Esc then r retry"
+		m.status = "Send failed: " + v.Err.Error() + " · text kept · " + keyLabel(keyEscape) + " then " + keyLabel(keyRetry) + " retry"
 		if uncertain {
-			m.status = "Delivery unknown; text kept. Check Slack before r retry."
+			m.status = "Delivery unknown; text kept. Check Slack before " + keyLabel(keyRetry) + " retry."
 		}
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
@@ -91,3 +92,5 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 	m.status = "Message sent"
 	return m, nil
 }
+
+const sendIDBytes = 16 // UUIDv4 size in bytes.

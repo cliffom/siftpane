@@ -17,6 +17,32 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+// Local operational policy for internal-app traffic; server Retry-After wins.
+const (
+	apiBaseURL         = "https://slack.com/api/"
+	requestTimeout     = 20 * time.Second
+	methodInterval     = 1300 * time.Millisecond
+	userLookupInterval = 650 * time.Millisecond
+	directoryInterval  = 3100 * time.Millisecond
+	fallbackRetryAfter = 30 * time.Second
+	responseByteLimit  = 4 << 20 // Bound decoded response input to 4 MiB.
+	errorCodeByteLimit = 80
+	authorCacheEntries = 512
+	directoryPageItems = 30
+	historyPageItems   = 50
+)
+
+// Documented method identifiers belong to the transport, not core domain state.
+const (
+	methodIdentity     = "auth.test"
+	methodUser         = "users.info"
+	methodDirectory    = "conversations.list"
+	methodHistory      = "conversations.history"
+	methodReplies      = "conversations.replies"
+	methodSend         = "chat.postMessage"
+	methodConversation = "conversations.info"
+)
+
 // APIError reports a sanitized Slack failure, retry delay, and delivery uncertainty.
 type APIError struct {
 	Code       string
@@ -52,7 +78,7 @@ type Client struct {
 
 // New constructs a user-token client without making network requests.
 func New(token string) *Client {
-	return &Client{token: token, base: "https://slack.com/api/", http: &http.Client{Timeout: 20 * time.Second}, next: map[string]time.Time{}, names: map[string]string{}}
+	return &Client{token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]string{}}
 }
 
 // Pacing is per method and workspace. A 429 blocks that method, including manual calls.
@@ -61,12 +87,12 @@ func (c *Client) wait(ctx context.Context, method string) error {
 		c.mu.Lock()
 		delay := time.Until(c.next[method])
 		if delay <= 0 {
-			gap := 1300 * time.Millisecond
-			if method == "users.info" {
-				gap = 650 * time.Millisecond
+			gap := methodInterval
+			if method == methodUser {
+				gap = userLookupInterval
 			}
-			if method == "conversations.list" {
-				gap = 3100 * time.Millisecond
+			if method == methodDirectory {
+				gap = directoryInterval
 			}
 			c.next[method] = time.Now().Add(gap)
 			c.mu.Unlock()
@@ -87,7 +113,7 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 	if err := c.wait(ctx, method); err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, "POST", c.base+method, strings.NewReader(v.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.base+method, strings.NewReader(v.Encode()))
 	if err != nil {
 		return errors.New("cannot create Slack request")
 	}
@@ -95,16 +121,16 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r, err := c.http.Do(req)
 	if err != nil {
-		return &APIError{Code: "connection failed; refresh will reconnect", Ambiguous: method == "chat.postMessage"}
+		return &APIError{Code: "connection failed; refresh will reconnect", Ambiguous: method == methodSend}
 	}
 	defer func() {
 		// Closing an already-read response cannot change its API result.
 		_ = r.Body.Close()
 	}()
-	if r.StatusCode == 429 {
+	if r.StatusCode == http.StatusTooManyRequests {
 		n, err := strconv.Atoi(r.Header.Get("Retry-After"))
 		if err != nil || n < 1 {
-			n = 30
+			n = int(fallbackRetryAfter / time.Second)
 		}
 		d := time.Duration(n) * time.Second
 		c.mu.Lock()
@@ -115,29 +141,29 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 		c.mu.Unlock()
 		return &APIError{Code: "ratelimited", RetryAfter: d}
 	}
-	if r.StatusCode != 200 {
-		return &APIError{Code: fmt.Sprintf("HTTP %d", r.StatusCode), Ambiguous: method == "chat.postMessage"}
+	if r.StatusCode != http.StatusOK {
+		return &APIError{Code: fmt.Sprintf("HTTP %d", r.StatusCode), Ambiguous: method == methodSend}
 	}
-	b, err := io.ReadAll(io.LimitReader(r.Body, 4<<20))
+	b, err := io.ReadAll(io.LimitReader(r.Body, responseByteLimit))
 	if err != nil {
-		return &APIError{Code: "incomplete response", Ambiguous: method == "chat.postMessage"}
+		return &APIError{Code: "incomplete response", Ambiguous: method == methodSend}
 	}
 	var envelope struct {
 		OK    bool   `json:"ok"`
 		Error string `json:"error"`
 	}
 	if json.Unmarshal(b, &envelope) != nil {
-		return &APIError{Code: "invalid response", Ambiguous: method == "chat.postMessage"}
+		return &APIError{Code: "invalid response", Ambiguous: method == methodSend}
 	}
 	if !envelope.OK {
 		code := envelope.Error // Slack error codes only, never server payloads.
-		if len(code) > 80 || strings.ContainsAny(code, " \n\r\x1b") {
+		if len(code) > errorCodeByteLimit || strings.ContainsAny(code, " \n\r\x1b") {
 			code = "request_failed"
 		}
 		return &APIError{Code: code, Ambiguous: code == "internal_error" || code == "fatal_error" || code == "request_timeout" || code == "service_unavailable"}
 	}
 	if err = json.Unmarshal(b, out); err != nil {
-		return &APIError{Code: "invalid payload", Ambiguous: method == "chat.postMessage"}
+		return &APIError{Code: "invalid payload", Ambiguous: method == methodSend}
 	}
 	return nil
 }
@@ -151,7 +177,7 @@ func (c *Client) Identity(ctx context.Context) (core.Identity, error) {
 		Username string `json:"user"`
 		BotID    string `json:"bot_id"`
 	}
-	err := c.call(ctx, "auth.test", url.Values{}, &r)
+	err := c.call(ctx, methodIdentity, url.Values{}, &r)
 	if err != nil {
 		return core.Identity{}, err
 	}
@@ -180,7 +206,7 @@ func (c *Client) name(ctx context.Context, id string) string {
 			} `json:"profile"`
 		} `json:"user"`
 	}
-	if c.call(ctx, "users.info", url.Values{"user": {id}}, &r) != nil {
+	if c.call(ctx, methodUser, url.Values{"user": {id}}, &r) != nil {
 		return id
 	}
 	n = r.User.Profile.Display
@@ -194,7 +220,7 @@ func (c *Client) name(ctx context.Context, id string) string {
 		n = id
 	}
 	c.mu.Lock()
-	if len(c.names) >= 512 {
+	if len(c.names) >= authorCacheEntries {
 		c.names = map[string]string{}
 	}
 	c.names[id] = n
@@ -222,22 +248,22 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 			Next string `json:"next_cursor"`
 		} `json:"response_metadata"`
 	}
-	err := c.call(ctx, "conversations.list", url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {"true"}, "limit": {"30"}, "cursor": {cursor}}, &r)
+	err := c.call(ctx, methodDirectory, url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {"true"}, "limit": {strconv.Itoa(directoryPageItems)}, "cursor": {cursor}}, &r)
 	if err != nil {
 		return core.DirectoryPage{}, err
 	}
 	p := core.DirectoryPage{Next: r.Meta.Next}
 	for _, v := range r.Channels {
-		kind := "channel"
+		kind := core.ConversationChannel
 		name := v.Name
 		if v.Private {
-			kind = "private"
+			kind = core.ConversationPrivate
 		}
 		if v.MPIM {
-			kind = "group"
+			kind = core.ConversationGroup
 		}
 		if v.IM {
-			kind = "dm"
+			kind = core.ConversationDM
 			name = c.name(ctx, v.User)
 		}
 		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
@@ -247,8 +273,8 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 
 // History fetches one bounded history or reply page and resolves its authors.
 func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
-	method := "conversations.history"
-	v := url.Values{"channel": {q.Conversation}, "limit": {"50"}, "cursor": {q.Cursor}}
+	method := methodHistory
+	v := url.Values{paramChannel: {q.Conversation}, "limit": {strconv.Itoa(historyPageItems)}, "cursor": {q.Cursor}}
 	if q.After != "" {
 		v.Set("oldest", q.After)
 	}
@@ -256,7 +282,7 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 		v.Set("latest", q.Before)
 	}
 	if q.Thread != "" {
-		method = "conversations.replies"
+		method = methodReplies
 		v.Set("ts", q.Thread)
 	}
 	var r struct {
@@ -281,7 +307,7 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 
 // Send posts once as the authenticated user; it never retries a write.
 func (c *Client) Send(ctx context.Context, o core.Outgoing) (core.Message, error) {
-	v := url.Values{"channel": {o.Conversation}, "text": {o.Text}, "unfurl_links": {"false"}, "unfurl_media": {"false"}, "client_msg_id": {o.ID}}
+	v := url.Values{paramChannel: {o.Conversation}, "text": {o.Text}, "unfurl_links": {"false"}, "unfurl_media": {"false"}, "client_msg_id": {o.ID}}
 	if o.Thread != "" {
 		v.Set("thread_ts", o.Thread)
 	}
@@ -289,7 +315,7 @@ func (c *Client) Send(ctx context.Context, o core.Outgoing) (core.Message, error
 		TS      string       `json:"ts"`
 		Message core.Message `json:"message"`
 	}
-	if err := c.call(ctx, "chat.postMessage", v, &r); err != nil {
+	if err := c.call(ctx, methodSend, v, &r); err != nil {
 		return core.Message{}, err
 	}
 	r.Message.TS = r.TS
@@ -316,21 +342,24 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 			Members int `json:"num_members"`
 		} `json:"channel"`
 	}
-	if err := c.call(ctx, "conversations.info", url.Values{"channel": {id}, "include_num_members": {"true"}}, &r); err != nil {
+	if err := c.call(ctx, methodConversation, url.Values{paramChannel: {id}, "include_num_members": {"true"}}, &r); err != nil {
 		return core.Conversation{}, err
 	}
 	v := r.Channel
-	kind := "channel"
+	kind := core.ConversationChannel
 	name := v.Name
 	if v.Private {
-		kind = "private"
+		kind = core.ConversationPrivate
 	}
 	if v.MPIM {
-		kind = "group"
+		kind = core.ConversationGroup
 	}
 	if v.IM {
-		kind = "dm"
+		kind = core.ConversationDM
 		name = c.name(ctx, v.User)
 	}
 	return core.Conversation{ID: v.ID, Name: name, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members}, nil
 }
+
+// paramChannel is the shared Web API conversation parameter.
+const paramChannel = "channel"

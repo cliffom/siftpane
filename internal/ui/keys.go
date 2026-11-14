@@ -1,0 +1,62 @@
+package ui
+
+import "strings"
+
+// Key identifiers use Bubble Tea names; presentation labels derive from them.
+const (
+	keyQuit            = "ctrl+c"
+	keySend            = "ctrl+s"
+	keySwitch          = "ctrl+k"
+	keyPickerDown      = "ctrl+n"
+	keyPickerUp        = "ctrl+p"
+	keyDirectoryNext   = "ctrl+l"
+	keyDirectoryReload = "ctrl+r"
+	keyEscape          = "esc"
+	keyFocus           = "tab"
+	keyCompose         = "enter"
+	keyDown            = "down"
+	keyUp              = "up"
+	keyPageUp          = "pgup"
+	keyPageDown        = "pgdown"
+	keyNewest          = "end"
+	keyQuitQuiet       = "q"
+	keyHelp            = "?"
+	keyInclude         = "p"
+	keySearch          = "/"
+	keyWrite           = "i"
+	keyNext            = "j"
+	keyPrevious        = "k"
+	keyLast            = "G"
+	keyOlder           = "o"
+	keyRefresh         = "R"
+	keyRead            = "m"
+	keyThread          = "t"
+	keyCopy            = "y"
+	keyRetry           = "r"
+	keyEditFailed      = "x"
+)
+
+func keyLabel(k string) string {
+	if strings.HasPrefix(k, "ctrl+") {
+		return "Ctrl+" + strings.ToUpper(strings.TrimPrefix(k, "ctrl+"))
+	}
+	switch k {
+	case keyEscape:
+		return "Esc"
+	case keyFocus:
+		return "Tab"
+	case keyCompose:
+		return "Enter"
+	case keyPageUp:
+		return "PgUp"
+	case keyPageDown:
+		return "PgDn"
+	case keyNewest:
+		return "End"
+	case keyUp:
+		return "↑"
+	case keyDown:
+		return "↓"
+	}
+	return k
+}

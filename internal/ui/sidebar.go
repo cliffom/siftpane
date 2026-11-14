@@ -16,13 +16,13 @@ func (m *Model) sidebar(w, h int) []string {
 			activeIndex = i
 		}
 	}
-	start := max(0, activeIndex-max(1, h-8))
+	start := max(0, activeIndex-max(1, h-sidebarSelectionRows))
 	includedChannels, totalChannels := m.channelCounts()
 	lastKind := ""
 	for i := start; i < len(cs); i++ {
 		c := cs[i]
 		kind := "CHANNELS"
-		if c.Kind == "dm" || c.Kind == "group" {
+		if c.Kind == core.ConversationDM || c.Kind == core.ConversationGroup {
 			kind = "PEOPLE"
 		}
 		if lastKind != kind {
@@ -36,13 +36,13 @@ func (m *Model) sidebar(w, h int) []string {
 		rows = append(rows, m.conversationRow(c, w))
 	}
 	if len(cs) == 0 {
-		rows = append(rows, " Nothing included yet.", " p  choose conversations")
+		rows = append(rows, " Nothing included yet.", " "+keyLabel(keyInclude)+"  choose conversations")
 	}
-	for len(rows) < h-3 {
+	for len(rows) < h-sidebarActivityRows {
 		rows = append(rows, "")
 	}
-	if len(rows) <= h-3 {
-		rows = append(rows, muted.Render(" ··· UNREAD HERE ···"), muted.Render(" ● unread here  ✎ draft"), muted.Render(" p choose   / switch"))
+	if len(rows) <= h-sidebarActivityRows {
+		rows = append(rows, muted.Render(" ··· UNREAD HERE ···"), muted.Render(" ● unread here  ✎ draft"), muted.Render(" "+keyLabel(keyInclude)+" choose   "+keyLabel(keySearch)+" switch"))
 	}
 	return padRows(rows, w, h)
 }
@@ -50,7 +50,7 @@ func (m *Model) sidebar(w, h int) []string {
 func (m *Model) channelCounts() (int, int) {
 	includedChannels, totalChannels := 0, 0
 	for _, c := range m.directory {
-		if c.Kind == "channel" || c.Kind == "private" {
+		if c.Kind == core.ConversationChannel || c.Kind == core.ConversationPrivate {
 			totalChannels++
 			if m.included[c.ID] {
 				includedChannels++

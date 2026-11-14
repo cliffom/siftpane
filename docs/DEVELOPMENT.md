@@ -22,7 +22,7 @@ make demo      # Offline interactive review
 go tool -modfile=tools/go.mod golangci-lint run ./...
 ```
 
-[.golangci.yml](../.golangci.yml) is the source of truth. The enabled checks cover errors and HTTP body cleanup, vet/static analysis, unused code, cognitive complexity, idiomatic exported APIs and names, import hygiene, and formatting. Tests have the same rules; there are no blanket test or legacy-code exclusions. Cognitive complexity is limited to 30 per function. Split a function around meaningful operations rather than weakening the threshold.
+[.golangci.yml](../.golangci.yml) is the source of truth. The enabled checks cover errors and HTTP body cleanup, vet/static analysis, unused code, cognitive complexity, idiomatic exported APIs and names, import hygiene, and formatting. Production code and tests run through the same gate; there are no repository test or legacy-code exclusions. Individual analyzer limitations are documented below. Cognitive complexity is limited to 30 per function. Split a function around meaningful operations rather than weakening the threshold.
 
 Use `//nolint:<specific-linter> // reason` only for a justified false positive that cannot be expressed clearly in code. Fix findings first; do not add general suppressions or exclusions to make a failing check pass. Deliberately ignored cleanup errors use an explicit assignment with a nearby reason. Preserve the primary write/sync error when cleanup also fails.
 
@@ -36,6 +36,30 @@ Use `//nolint:<specific-linter> // reason` only for a justified false positive t
 - Only the event loop mutates UI state. Commands capture immutable request data and return typed messages. Rendering performs no I/O and makes no state changes. Shared service caches and rate-limit clocks are synchronized.
 - Use small consumer-facing interfaces and concrete types internally. Keep changes within existing packages unless a new responsibility justifies a boundary. Avoid generic `utils`, `helpers`, `common`, or one-type-per-package structures.
 - Keep dependency versions in the modules and checksums in their sum files. Update application and tooling dependencies separately and deliberately; do not use `@latest` in committed automation. After updates, run `make check` and inspect module diffs.
+
+## Values, states, and settings
+
+Name behavioral values before using them in handlers or adapters. Keep definitions with the smallest owning responsibility; there is no application-wide constants/settings package. Preserve existing wire values, preference keys, timings, capacities, keybindings, and appearance when doing cleanup. A constant is not automatically a new configurable option.
+
+| Value category | Owner and convention |
+| --- | --- |
+| Domain states | `core.ConversationKind` and `core.DeliveryState` with typed constants in `internal/core/values.go`. Use these constants across adapters, fixtures, and UI; convert to strings only for text/serialization boundaries. Delivery's zero value means idle. |
+| UI states | Private `focusPane` and `pickerMode` types in `internal/ui/modes.go`; `pickerClosed` is the zero value. Snapshot CLI identifiers have a separate `SnapshotMode` type. Never use snapshot identifiers as navigation state. |
+| Operational bounds | `internal/ui/limits.go` owns session/cache/input limits and polling. Slack transport policy lives in `internal/slack/client.go`; CLI credential identifiers and authentication timeout live in `cmd/siftpane`. Use `time.Duration` expressions with explicit units and names/comments indicating messages, entries, bytes, runes, or ticks. |
+| Presentation | `internal/ui/layout.go` owns viewport defaults, breakpoints, and row/column reservations. Compose related dimensions from those reservations. Named styles in `view.go` own the palette. `keys.go` owns Bubble Tea key identifiers and derives display labels used by help/status/composer text. |
+| Runtime settings and defaults | Flags in the CLI and workspace preferences in `store` are runtime inputs. Defaults remain in the owning package; share viewport defaults with the CLI. Do not persist immutable policy or copy credentials into preferences. |
+| Protocol identifiers | Keep Web API methods and shared parameter identifiers in the Slack adapter; use standard-library HTTP method/status constants. JSON struct tags must remain literal tags. One-use parameter keys, regular expressions, formatting verbs, UUID bit masks/slices, and timestamp layouts can remain local where the protocol meaning is clear and documented. |
+| Fixture and ordinary text | Demo names, seed spacing, and thread placement belong to `internal/demo/fixtures.go`; offline UI setup/snapshot text remains explicit fixture data in the UI review harness. Keep ordinary messages/errors/help copy at the rendering or failure site. Share repeated fixture identities within their package/test file, not through production domain constants. |
+
+Use names for policy, not aliases such as `two` or `defaultValue`. Small structural arithmetic (zero/one, indices, a shared edge) can stay inline when its meaning is immediate. Name larger layout reservations rather than reusing an unrelated constant that happens to have the same value. Derive limit messages, help labels, and calculations from their source definitions. Tests for the current policy should use those definitions; compatibility tests deliberately assert independent old wire values or fixed expectations so a mistaken change cannot update both sides of an assertion.
+
+The pinned [golangci-lint checks](https://golangci-lint.run/docs/linters/configuration/) enforce part of this policy through `make lint` and therefore `make check`/CI:
+
+- `goconst` reports strings of at least three characters repeated three times within a package, including calls and test files. Resolve findings with meaningful ownership; do not move fixture text into a global constants package.
+- `mnd` checks numeric arguments, conditions, and returns. Its upstream implementation ignores 0/1, tests, `time.Date`, and numeric parsing/formatting calls. No repository file exclusions or blanket suppressions are added. Assignment/operation-wide checks are deliberately not enabled: protocol bit operations, slice offsets, and fixture arithmetic need semantic review rather than arbitrary number aliases.
+- Existing `durationcheck` checks duration arithmetic; type checking keeps runtime strings from being passed as domain states without conversion. Go still accepts untyped string literals for a defined string type, so reviewers must reject ad hoc state literals, unjustified conversions, unnamed one-off policy, and duplicated sources of truth. Linters cannot determine whether a value belongs to protocol, fixture, presentation, defaults, or runtime configuration.
+
+To verify enforcement after a tooling change, introduce a temporary package with a string repeated three times and a condition comparing against an unnamed number, run the configured lint gate, confirm both `goconst` and `mnd` diagnostics, and remove the probe before running `make check`. Do not weaken thresholds or exclude files to conceal violations.
 
 ## Organization
 

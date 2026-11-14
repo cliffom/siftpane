@@ -33,9 +33,9 @@ func Safe(s string) string {
 // Readable renders Slack mentions, links, and entities as safe terminal text.
 func Readable(s string) string {
 	s = angleRE.ReplaceAllStringFunc(s, func(v string) string {
-		parts := strings.SplitN(v[1:len(v)-1], "|", 2)
+		parts := strings.SplitN(v[1:len(v)-1], "|", linkParts)
 		a := parts[0]
-		if len(parts) == 2 {
+		if len(parts) == linkParts {
 			if strings.HasPrefix(a, "http") {
 				return parts[1] + " (" + a + ")"
 			}
@@ -99,3 +99,6 @@ func Body(m core.Message) string {
 	}
 	return strings.TrimSpace(s)
 }
+
+// A Slack link has a target and an optional label separated by one pipe.
+const linkParts = 2

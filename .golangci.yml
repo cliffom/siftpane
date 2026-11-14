@@ -12,6 +12,8 @@ linters:
     - durationcheck
     - errcheck
     - errorlint
+    - goconst
+    - mnd
     - gocognit
     - gocritic
     - govet
@@ -24,6 +26,13 @@ linters:
     - unconvert
     - unused
   settings:
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+      ignore-tests: false
+      ignore-calls: false
+    mnd:
+      checks: [argument, condition, return]
     errcheck:
       check-type-assertions: true
     nolintlint:

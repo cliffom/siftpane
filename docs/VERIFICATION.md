@@ -34,3 +34,13 @@ With an approved internal app, verify:
 5. Exercise permission denial, revoked/expired credentials, intermittent network failure, and server rate limits. Inspect Slack before retrying any ambiguous send.
 
 Potential external blockers are workspace app approval, user-scope restrictions, conversation membership/posting policy, and OS keyring availability. The app makes no attempt to bypass them. Socket Mode is not configured, and there is no claim of receiving a complete Slack client event stream.
+
+## Issue #4: owned values and typed states
+
+Verified locally on 2026-11-14. `make fmt` and `make check` passed, including the pinned `goconst`/`mnd` checks, vet, race-enabled tests, build, and both modules' hygiene checks. Additional regression tests cover delivery transitions and original-attempt retention, exact serialized domain values and round trips, kind searching, navigation/picker draft retention, selection-limit feedback, and unchanged transport pacing/page sizes. No Slack credentials or live endpoints were used.
+
+A temporary package with a string repeated three times and an unnamed numeric condition was rejected by the configured `make lint` gate with `goconst` and `mnd` diagnostics; the probe was removed. The checks' scope and upstream limitations are recorded in the [value policy](DEVELOPMENT.md#values-states-and-settings).
+
+All 25 offline snapshots (messages, compose, picker, thread, help at 120×36, 100×30, 80×24, 60×20, 40×14) matched baseline `c9520e1` byte-for-byte. The 100×30 messages and 60×20 composing/thread layouts were inspected as text. Existing review captures remain unchanged because appearance is unchanged. This pass adds no terminal font/color, clipboard, keyring, or live Slack verification; prior limitations still apply. Hosted CI is reported separately in the PR.
+
+No dedicated release or version change is needed: this is a behavior-preserving refactor and contributor-policy update. The repository has no published tags/releases or authoritative application version to advance at the time of this assessment.

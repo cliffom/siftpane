@@ -2,6 +2,7 @@
 
 - Read [development standards](docs/DEVELOPMENT.md), [architecture](docs/ARCHITECTURE.md), and [UI/UX guidelines](docs/DESIGN.md) before changing the relevant code.
 - Keep README.md for human installation and everyday use. Put engineering, setup details, and design decisions in docs/ and link to them here; do not duplicate manuals in this file.
+- Use owned, named behavioral values and typed domain/UI states; follow the mandatory [value policy](docs/DEVELOPMENT.md#values-states-and-settings) and [architecture ownership](docs/ARCHITECTURE.md). Derive labels and calculations from the same definitions.
 - Use idiomatic Go with small, cohesive packages. Keep UI state on the Bubble Tea event loop, external calls in commands, and rendering free of I/O and mutations.
 - Run `make fmt` after Go edits and `make check` before finishing. The pinned tooling checks production code and tests; fix findings rather than weakening lint/format rules. Explain any narrow suppression.
 - Preserve explicit conversation selection, workspace isolation, cancellation, bounded polling/cache, draft retention, and pending/failed/retry behavior. Never silently discard composed text or automatically retry a send.

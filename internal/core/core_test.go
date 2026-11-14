@@ -7,7 +7,7 @@ import (
 )
 
 func TestExplicitFilter(t *testing.T) {
-	cs := []Conversation{{ID: "C", Name: "design", Kind: "channel"}, {ID: "D", Name: "Dora", Kind: "dm"}}
+	cs := []Conversation{{ID: "C", Name: "design", Kind: ConversationChannel}, {ID: "D", Name: "Dora", Kind: ConversationDM}}
 	included := map[string]bool{"D": true}
 	if got := Filter(cs, "D", included, true); len(got) != 1 || got[0].ID != "D" {
 		t.Fatal(got)

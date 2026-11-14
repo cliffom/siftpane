@@ -7,10 +7,10 @@ import (
 )
 
 func (m *Model) choices() []core.Conversation {
-	return core.Filter(m.directory, m.picker.Value(), m.included, m.mode == "switch")
+	return core.Filter(m.directory, m.picker.Value(), m.included, m.mode == pickerSwitch)
 }
 
-func (m *Model) openPicker(mode string) tea.Cmd {
+func (m *Model) openPicker(mode pickerMode) tea.Cmd {
 	m.rememberDraft()
 	m.mode = mode
 	m.pickIndex = 0
@@ -22,37 +22,37 @@ func (m *Model) openPicker(mode string) tea.Cmd {
 func (m *Model) pickerKey(v tea.KeyPressMsg) tea.Cmd {
 	cs := m.choices()
 	switch v.String() {
-	case "esc":
-		m.mode = ""
+	case keyEscape:
+		m.mode = pickerClosed
 		m.picker.Blur()
 		return nil
-	case "down", "ctrl+n":
+	case keyDown, keyPickerDown:
 		m.pickIndex = min(len(cs)-1, m.pickIndex+1)
 		return nil
-	case "up", "ctrl+p":
+	case keyUp, keyPickerUp:
 		m.pickIndex = max(0, m.pickIndex-1)
 		return nil
-	case "ctrl+l":
+	case keyDirectoryNext:
 		if m.directoryNext != "" {
 			return m.directoryCmd(m.directoryNext)
 		}
 		return nil
-	case "ctrl+r":
+	case keyDirectoryReload:
 		m.directoryNext = ""
 		return m.directoryCmd("")
-	case "tab":
-		if m.mode == "pick" && len(cs) > 0 {
+	case keyFocus:
+		if m.mode == pickerInclude && len(cs) > 0 {
 			m.toggle(cs[max(0, min(m.pickIndex, len(cs)-1))].ID)
 		}
 		return nil
-	case "enter":
+	case keyCompose:
 		if len(cs) > 0 {
 			c := cs[max(0, min(m.pickIndex, len(cs)-1))]
 			if !m.included[c.ID] {
 				m.toggle(c.ID)
 			}
 			if m.included[c.ID] {
-				m.mode = ""
+				m.mode = pickerClosed
 				m.picker.Blur()
 				return m.selectConversation(c.ID)
 			}

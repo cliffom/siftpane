@@ -22,7 +22,7 @@ func TestDistinctConversationFixturesAndParticipants(t *testing.T) {
 		var body strings.Builder
 		for _, m := range p.Messages {
 			body.WriteString(m.Text)
-			if c.Kind == "dm" && m.Author != "You" && m.Author != c.Name {
+			if c.Kind == core.ConversationDM && m.Author != "You" && m.Author != c.Name {
 				t.Fatalf("unexpected DM participant: %s in %s", m.Author, c.Name)
 			}
 		}

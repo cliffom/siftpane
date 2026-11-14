@@ -28,3 +28,9 @@ The app name and right-aligned workspace plus authenticated `@username` from `au
 Current dependency APIs were checked against upstream Bubble Tea v2 documentation and installed module source/type documentation. Versions are pinned in `go.mod`/`go.sum`. No third-party Slack SDK is needed for these few HTTP methods.
 
 The UI is organized by responsibility: `model.go` defines lifecycle/state, `commands.go` captures asynchronous requests, `state.go` manages local selection/cache/drafts, `input.go` and `picker.go` handle keys, and `history.go`, `delivery.go`, and `updates.go` apply typed results. Rendering is divided among layout, sidebar, composer, history, and dialog files. `snapshot.go` is an explicit offline review harness, separate from the pure `View` path. Shared rules live in [development standards](DEVELOPMENT.md) and [UI/UX guidelines](DESIGN.md).
+
+## Value ownership
+
+`core` owns the string-backed conversation kinds and delivery states shared by both services and the UI. Their textual values remain compatible; the preference schema is unchanged. UI focus and picker modes have separate private types, and offline snapshot mode identifiers are a distinct public boundary. The event loop continues to own all runtime state.
+
+Immutable session limits, transport policy, CLI defaults, and layout/key presentation definitions stay in their owning packages and files, as specified by the [value policy](DEVELOPMENT.md#values-states-and-settings). They do not become mutable settings. The existing thread scheduling cadence is named without changing its behavior; scheduling fixes remain separate work. Named durations and capacities explain the resource bound, while server backoff and runtime cancellation retain priority.

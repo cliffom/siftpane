@@ -5,6 +5,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/slack"
 )
 
@@ -12,13 +13,13 @@ func (m *Model) quitKey() tea.Cmd {
 	m.rememberDraft()
 	for _, s := range m.drafts {
 		if s != "" {
-			m.status = "Unsent drafts in memory. Use Ctrl+C twice to exit."
+			m.status = "Unsent drafts in memory. Use " + keyLabel(keyQuit) + " twice to exit."
 			return nil
 		}
 	}
 	for _, d := range m.deliveries {
-		if d.State == "pending" || d.State == "failed" {
-			m.status = "Unresolved send. Use Ctrl+C twice to exit."
+		if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
+			m.status = "Unresolved send. Use " + keyLabel(keyQuit) + " twice to exit."
 			return nil
 		}
 	}
@@ -27,13 +28,13 @@ func (m *Model) quitKey() tea.Cmd {
 
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
-	if k != "r" {
+	if k != keyRetry {
 		m.retryConfirm = false
 	}
-	if v.Key().IsRepeat && (k == "r" || k == "ctrl+s" || k == "ctrl+c") {
+	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit) {
 		return m, nil
 	}
-	if k == "ctrl+c" {
+	if k == keyQuit {
 		m.rememberDraft()
 		dirty := false
 		for _, s := range m.drafts {
@@ -42,13 +43,13 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		for _, d := range m.deliveries {
-			if d.State == "pending" || d.State == "failed" {
+			if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
 				dirty = true
 			}
 		}
 		if dirty && !m.quitConfirm {
 			m.quitConfirm = true
-			m.status = "Unsent text is in memory. Ctrl+C again exits and discards it; any other key cancels."
+			m.status = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
 			return m, nil
 		}
 		return m, tea.Quit
@@ -58,24 +59,24 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.help = false
 		return m, nil
 	}
-	if m.mode != "" {
+	if m.mode != pickerClosed {
 		return m, m.pickerKey(v)
 	}
-	if k == "ctrl+k" {
-		return m, m.openPicker("switch")
+	if k == keySwitch {
+		return m, m.openPicker(pickerSwitch)
 	}
-	if m.focus == "compose" {
-		if k == "esc" {
+	if m.focus == focusCompose {
+		if k == keyEscape {
 			m.rememberDraft()
-			m.focus = "messages"
+			m.focus = focusMessages
 			m.composer.Blur()
 			return m, nil
 		}
-		if k == "ctrl+s" {
+		if k == keySend {
 			m.rememberDraft()
 			return m, m.send(false)
 		}
-		if d := m.deliveries[m.key()]; d != nil && d.State == "pending" {
+		if d := m.deliveries[m.key()]; d != nil && d.State == core.DeliveryPending {
 			m.status = "Sending… composer locked until acknowledgement; text kept"
 			return m, nil
 		}
@@ -89,26 +90,26 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	switch k {
-	case "q":
+	case keyQuitQuiet:
 		return m, m.quitKey()
-	case "?":
+	case keyHelp:
 		m.help = true
-	case "p":
-		return m, m.openPicker("pick")
-	case "/":
-		return m, m.openPicker("switch")
-	case "tab":
-		if m.focus == "channels" {
-			m.focus = "messages"
+	case keyInclude:
+		return m, m.openPicker(pickerInclude)
+	case keySearch:
+		return m, m.openPicker(pickerSwitch)
+	case keyFocus:
+		if m.focus == focusChannels {
+			m.focus = focusMessages
 		} else {
-			m.focus = "channels"
+			m.focus = focusChannels
 		}
-	case "i", "enter":
+	case keyWrite, keyCompose:
 		if m.active != "" {
-			m.focus = "compose"
+			m.focus = focusCompose
 			return m, m.composer.Focus()
 		}
-	case "esc":
+	case keyEscape:
 		if m.thread != "" {
 			m.rememberDraft()
 			m.thread = ""
@@ -116,35 +117,35 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 			m.restoreDraft()
 			return m, m.fetch(m.key(), false)
 		}
-		m.focus = "channels"
-	case "j", "down", "k", "up":
+		m.focus = focusChannels
+	case keyNext, keyDown, keyPrevious, keyUp:
 		return m, m.moveSelection(k)
-	case "pgup":
-		m.scroll = max(0, m.scroll) + max(3, m.height/3)
-	case "pgdown":
-		m.scroll = max(0, m.scroll-max(3, m.height/3))
+	case keyPageUp:
+		m.scroll = max(0, m.scroll) + max(minScrollRows, m.height/scrollPageDivisor)
+	case keyPageDown:
+		m.scroll = max(0, m.scroll-max(minScrollRows, m.height/scrollPageDivisor))
 		if m.scroll == 0 {
 			m.read(m.active)
 		}
-	case "G", "end":
+	case keyLast, keyNewest:
 		m.scroll = 0
 		t := m.line(m.key())
 		m.index = max(0, len(t.Messages)-1)
 		m.read(m.active)
-	case "o":
+	case keyOlder:
 		return m, m.fetch(m.key(), true)
-	case "R":
+	case keyRefresh:
 		return m, m.fetch(m.key(), false)
-	case "m":
+	case keyRead:
 		m.read(m.active)
 		m.status = "Marked read locally; Slack read position unchanged"
-	case "t":
+	case keyThread:
 		return m, m.openThread()
-	case "y":
+	case keyCopy:
 		return m, m.copyMessage()
-	case "r":
+	case keyRetry:
 		return m, m.send(true)
-	case "x":
+	case keyEditFailed:
 		m.restoreFailedDraft()
 	}
 	return m, nil
@@ -152,10 +153,10 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 
 func (m *Model) moveSelection(k string) tea.Cmd {
 	delta := 1
-	if k == "k" || k == "up" {
+	if k == keyPrevious || k == keyUp {
 		delta = -1
 	}
-	if m.focus == "channels" {
+	if m.focus == focusChannels {
 		cs := m.selected()
 		if len(cs) > 0 {
 			idx := 0
@@ -166,7 +167,7 @@ func (m *Model) moveSelection(k string) tea.Cmd {
 			}
 			idx = (idx + delta + len(cs)) % len(cs)
 			cmd := m.selectConversation(cs[idx].ID)
-			m.focus = "channels"
+			m.focus = focusChannels
 			return cmd
 		}
 	} else {
@@ -202,7 +203,7 @@ func (m *Model) copyMessage() tea.Cmd {
 }
 
 func (m *Model) restoreFailedDraft() {
-	if d := m.deliveries[m.key()]; d != nil && d.State == "failed" {
+	if d := m.deliveries[m.key()]; d != nil && d.State == core.DeliveryFailed {
 		s := m.composer.Value()
 		if s != "" && s != d.Text {
 			s += "\n" + d.Text

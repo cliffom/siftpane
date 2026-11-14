@@ -13,6 +13,12 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+const (
+	directoryPageItems = 4
+	historyPageItems   = 15
+	activityEveryPolls = 8
+)
+
 // Service implements core.Service entirely in memory, with no credential access.
 type Service struct {
 	mu            sync.Mutex
@@ -27,7 +33,7 @@ type Service struct {
 // New seeds distinct conversation histories, threads, and simulated activity.
 func New() *Service {
 	s := &Service{activity: map[string]core.Message{}, messages: map[string][]core.Message{}, sent: map[string]core.Message{}, failed: map[string]bool{}}
-	s.conversations = []core.Conversation{{ID: "Cstudio", Name: "studio", Kind: "channel"}, {ID: "Cshipping", Name: "shipping", Kind: "channel"}, {ID: "Cdesign", Name: "design", Kind: "channel"}, {ID: "Dmaya", Name: "Maya Chen", Kind: "dm"}, {ID: "Dleo", Name: "Leo Park", Kind: "dm"}, {ID: "Gcrew", Name: "Maya, Leo, you", Kind: "group"}, {ID: "Cquiet", Name: "quiet-corner", Kind: "private"}, {ID: "Crandom", Name: "off-topic", Kind: "channel"}}
+	s.conversations = []core.Conversation{{ID: "Cstudio", Name: "studio", Kind: core.ConversationChannel}, {ID: "Cshipping", Name: "shipping", Kind: core.ConversationChannel}, {ID: "Cdesign", Name: "design", Kind: core.ConversationChannel}, {ID: "Dmaya", Name: fixtureMaya, Kind: core.ConversationDM}, {ID: "Dleo", Name: fixtureLeo, Kind: core.ConversationDM}, {ID: "Gcrew", Name: "Maya, Leo, you", Kind: core.ConversationGroup}, {ID: "Cquiet", Name: "quiet-corner", Kind: core.ConversationPrivate}, {ID: "Crandom", Name: "off-topic", Kind: core.ConversationChannel}}
 	seeds := fixtures()
 	base := time.Date(2026, 11, 13, 9, 0, 0, 0, time.Local).Unix()
 	for ci := range s.conversations {
@@ -42,16 +48,16 @@ func New() *Service {
 		}
 		texts = append(texts, f.recent...)
 		for i, text := range texts {
-			ts := fmt.Sprintf("%d.000001", base+int64(i*180))
+			ts := fmt.Sprintf(fixtureTimestampFormat, base+int64(i*fixtureMessageSeconds))
 			author := f.authors[i%len(f.authors)]
-			user := map[string]string{"Maya Chen": "U0", "Leo Park": "U1", "You": "U2", "Nora Ellis": "U3"}[author]
+			user := map[string]string{fixtureMaya: "U0", fixtureLeo: "U1", fixtureYou: "U2", fixtureNora: "U3"}[author]
 			m := core.Message{TS: ts, User: user, Author: author, Text: text}
-			if i == 31 {
-				m.Replies = 3
+			if i == fixtureThreadIndex {
+				m.Replies = len(f.thread) - 1
 				m.Text = f.thread[0]
 				replies := []core.Message{m}
-				for n := 1; n < 4; n++ {
-					replies = append(replies, core.Message{TS: fmt.Sprintf("%d.000001", base+31*180+int64(n*20)), Author: f.authors[n%len(f.authors)], Text: f.thread[n], Thread: ts})
+				for n := 1; n < len(f.thread); n++ {
+					replies = append(replies, core.Message{TS: fmt.Sprintf(fixtureTimestampFormat, base+fixtureThreadIndex*fixtureMessageSeconds+int64(n*fixtureReplySeconds)), Author: f.authors[n%len(f.authors)], Text: f.thread[n], Thread: ts})
 				}
 				s.messages[c.ID+"/"+ts] = replies
 			}
@@ -73,7 +79,7 @@ func (s *Service) Directory(_ context.Context, cursor string) (core.DirectoryPag
 	if err != nil {
 		return core.DirectoryPage{}, err
 	}
-	end := min(offset+4, len(s.conversations))
+	end := min(offset+directoryPageItems, len(s.conversations))
 	p := core.DirectoryPage{Conversations: s.conversations[offset:end]}
 	if end < len(s.conversations) {
 		p.Next = strconv.Itoa(end)
@@ -92,9 +98,9 @@ func (s *Service) History(_ context.Context, q core.Query) (core.Page, error) {
 	ms := s.messages[key]
 	if q.Cursor == "" && q.Thread == "" && q.Before == "" {
 		s.polls++
-		if s.polls%8 == 0 {
+		if s.polls%activityEveryPolls == 0 {
 			m := s.activity[q.Conversation]
-			m.TS = fmt.Sprintf("%d.000001", time.Now().Unix())
+			m.TS = fmt.Sprintf(fixtureTimestampFormat, time.Now().Unix())
 			s.messages[key] = append(ms, m)
 			ms = s.messages[key]
 		}
@@ -131,14 +137,14 @@ func (s *Service) History(_ context.Context, q core.Query) (core.Page, error) {
 	}
 	end := len(ms) - offset
 	if q.Thread != "" {
-		end = min(len(ms), offset+15)
+		end = min(len(ms), offset+historyPageItems)
 		p := core.Page{Messages: append([]core.Message{}, ms[offset:end]...), More: end < len(ms)}
 		if p.More {
 			p.Next = strconv.Itoa(end)
 		}
 		return p, nil
 	}
-	start := max(0, end-15)
+	start := max(0, end-historyPageItems)
 	p := core.Page{Messages: append([]core.Message{}, ms[start:end]...), More: start > 0}
 	if p.More {
 		p.Next = strconv.Itoa(offset + end - start)
@@ -157,7 +163,7 @@ func (s *Service) Send(_ context.Context, o core.Outgoing) (core.Message, error)
 		s.failed[o.ID] = true
 		return core.Message{}, sendFailure{}
 	}
-	m := core.Message{TS: fmt.Sprintf("%d.%06d", time.Now().Unix(), time.Now().Nanosecond()/1000), User: "U2", Author: "You", Text: o.Text, Thread: o.Thread, ClientID: o.ID}
+	m := core.Message{TS: fmt.Sprintf("%d.%06d", time.Now().Unix(), time.Now().Nanosecond()/int(time.Microsecond)), User: "U2", Author: fixtureYou, Text: o.Text, Thread: o.Thread, ClientID: o.ID}
 	key := o.Conversation
 	if o.Thread != "" {
 		key += "/" + o.Thread
