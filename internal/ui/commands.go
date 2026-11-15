@@ -52,6 +52,7 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		q.Target = m.openTargets[key]
 		q.After = ""
 	}
+	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {
 		p, err := svc.History(ctx, q)
@@ -59,7 +60,7 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		if q.Target != "" && q.Thread != "" {
 			after = q.Target
 		}
-		return historyResult{Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: after, Target: q.Target}
+		return historyResult{CacheEpoch: epoch, Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: after, Target: q.Target}
 	}
 }
 
@@ -79,7 +80,7 @@ func (m *Model) conversationCmd(cid string) tea.Cmd {
 func (m *Model) refresh() tea.Cmd {
 	m.profileAttempted = map[string]bool{}
 	m.discoveryNext = time.Time{}
-	cmds := []tea.Cmd{m.fetch(m.key(), false), m.profileCmd(), m.checkMentions(time.Now())}
+	cmds := []tea.Cmd{m.fetch(m.key(), false), m.profileCmd(), m.checkMentions(time.Now()), m.retryFollowed()}
 	for cid := range m.metadataFailed {
 		cmds = append(cmds, m.conversationCmd(cid))
 	}

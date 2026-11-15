@@ -106,8 +106,7 @@ func (m *Model) updateProfile(v profileResult) (tea.Model, tea.Cmd) {
 	}
 	m.profileKey = ""
 	if slack.IsAuth(v.Err) {
-		m.stopped = true
-		m.setStatus("Credentials expired/revoked. Drafts kept; replace user token and restart.", statusRoutine)
+		m.stopReads()
 		return m, nil
 	}
 	if errors.Is(v.Err, context.Canceled) {

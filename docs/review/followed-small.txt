@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [#studio / Thread] ──────────────────────────────────────╮
+│ Locally followed thread · f unfollow                     │
+│  You  Nov 13 10:33                                       │
+│  And dotted grouping inside the sidebar. No boxes around │
+│  individual messages.                                    │
+│                                                          │
+│  Nora Ellis  Nov 13 10:34                                │
+│  Agreed. Keep the messages at the center.                │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│ ╭ Thread reply ────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ 1 local threads · 04:00                             ? help

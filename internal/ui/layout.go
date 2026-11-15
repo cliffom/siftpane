@@ -117,6 +117,9 @@ func (m *Model) title() string {
 }
 
 func (m *Model) conversationContext() string {
+	if _, followed := m.attention.Followed[m.key()]; followed {
+		return "Locally followed thread · " + keyLabel(keyFollow) + " unfollow"
+	}
 	for _, c := range m.directory {
 		if c.ID == m.active {
 			kind := "Channel"

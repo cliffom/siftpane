@@ -78,7 +78,10 @@ func (m *Model) conversationRow(c core.Conversation, w int) string {
 	label := slack.Safe(c.Label())
 	reason := ""
 	if ts := m.attention.Pending[c.ID]; len(ts) > 0 {
-		reason = " · " + string(ts[0].Reason)
+		reason = " · " + string(m.attention.Reason(c.ID))
+		if len(ts) > 1 {
+			reason += fmt.Sprintf("+%d", len(ts)-1)
+		}
 	}
 	text := fit(prefix+label, max(0, w-sidebarMarkerColumns-ansi.StringWidth(reason))) + reason + " " + markers
 

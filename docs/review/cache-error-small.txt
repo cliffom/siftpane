@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you
+
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Channel · Daily collaboration, fewer interruptions       │
+│  Maya Chen  Nov 13 10:36                                 │
+│  I'll check the composer at 60 columns after lunch.      │
+│                                                          │
+│  Leo Park  Nov 13 10:39                                  │
+│  The focused header is much easier to spot now.          │
+│                                                          │
+│▸ You  Nov 13 10:42                                       │
+│  Thanks, everyone. Let's leave some breathing room around│
+│  the input.                                              │
+│                                                          │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Cached, refresh failed · R retry                    ? help

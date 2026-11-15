@@ -46,6 +46,9 @@ func (m *Model) View() tea.View {
 	if m.quitConfirm {
 		statusText = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
 	}
+	if m.messageCacheErr != "" && !m.quitConfirm && !m.stopped {
+		statusText = m.messageCacheErr
+	}
 	if m.profileCacheErr != "" && !m.quitConfirm {
 		statusText = "Name cache not saved: " + m.profileCacheErr
 	}
@@ -64,7 +67,7 @@ func (m *Model) View() tea.View {
 	statusContent := " " + slack.Safe(statusText)
 	status := fit(muted.Render(statusContent), statusColumns) + muted.Render(hint)
 	// Action feedback gets the full row when the help entry would clip it.
-	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" ||
+	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" || m.messageCacheErr != "" ||
 		(m.statusKind == statusAction && ansi.StringWidth(statusContent) > statusColumns) {
 		status = fit(muted.Render(statusContent), w)
 	}

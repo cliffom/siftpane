@@ -67,7 +67,7 @@ func (m *Model) initAttention() {
 	for cid := range a.Pending {
 		m.included[cid] = true
 	}
-	if a.Enabled {
+	if a.SearchEnabled() {
 		m.discoveryPhase = discoveryIncomplete
 	}
 }
@@ -111,6 +111,11 @@ func (m *Model) toggle(cid string) {
 	a := m.attention.Clone()
 	if a.Kept[cid] {
 		delete(a.Kept, cid)
+		for key, f := range a.Followed {
+			if f.Conversation == cid {
+				delete(a.Followed, key)
+			}
+		}
 	} else {
 		if len(a.Kept) >= selectionLimit {
 			m.setStatus(fmt.Sprintf("Limit: %d kept conversations. Remove one first.", selectionLimit), statusAction)
@@ -121,12 +126,19 @@ func (m *Model) toggle(cid string) {
 	if !m.persistAttention(a) {
 		return
 	}
+	if !a.Kept[cid] {
+		m.cancelFollowed()
+	}
 	if !a.Kept[cid] && len(a.Pending[cid]) == 0 {
 		m.toggleIncluded(cid)
 	} else if !m.included[cid] {
 		m.toggleIncluded(cid)
 	}
 	m.syncAttentionInclusion()
+	if !a.Kept[cid] {
+		delete(m.persisted, cid)
+		m.saveMessages()
+	}
 	m.save()
 	m.setStatus("Kept preference saved; attention requires explicit dismissal", statusAction)
 }
@@ -254,6 +266,9 @@ func (m *Model) toggleMentions() tea.Cmd {
 	m.mentionConfirm = false
 	a := m.attention.Clone()
 	a.Enabled = !a.Enabled
+	if a.Enabled {
+		a.Checkpoint = time.Time{}
+	}
 	if !m.persistAttention(a) {
 		return nil
 	}
@@ -262,17 +277,22 @@ func (m *Model) toggleMentions() tea.Cmd {
 		m.discoveryCancel()
 	}
 	m.finishDiscovery()
-	if !a.Enabled {
+	if !a.SearchEnabled() {
 		m.discoveryPhase = discoveryDisabled
 		m.setStatus("Mention discovery disabled; existing attention retained", statusAction)
 		return nil
 	}
-	m.setStatus("Direct mentions enabled; search coverage can be incomplete", statusAction)
+	m.discoveryNext = time.Time{}
+	text := "Direct mentions disabled · broadcasts unchanged"
+	if a.Enabled {
+		text = "Direct mentions enabled · limited search"
+	}
+	m.setStatus(text, statusAction)
 	return m.checkMentions(time.Now())
 }
 
 func (m *Model) checkMentions(now time.Time) tea.Cmd {
-	if !m.attention.Enabled || m.attentionErr != "" || m.stopped || m.discoveryBusy {
+	if !m.attention.SearchEnabled() || m.attentionErr != "" || m.stopped || m.discoveryBusy {
 		return nil
 	}
 	if !m.discoveryNext.IsZero() && now.Before(m.discoveryNext) {
@@ -307,7 +327,8 @@ func (m *Model) checkMentions(now time.Time) tea.Cmd {
 	ctx, cancel := context.WithCancel(m.ctx)
 	m.discoveryCancel = cancel
 	m.discoveryCtx = ctx
-	return m.mentionCmd(core.MentionQuery{User: m.identity.User, From: from, Until: now, Page: 1})
+	m.discoverySources = m.searchSources()
+	return m.mentionCmd(core.MentionQuery{Reason: m.discoverySources[0], User: m.identity.User, From: from, Until: now, Page: 1})
 }
 
 func (m *Model) mentionCmd(q core.MentionQuery) tea.Cmd {
@@ -323,16 +344,23 @@ func (m *Model) mentionCmd(q core.MentionQuery) tea.Cmd {
 }
 
 func (m *Model) updateMentions(v mentionResult) (tea.Model, tea.Cmd) {
-	if v.Generation != m.discoveryGeneration || !m.attention.Enabled || !m.discoveryBusy || v.Query.Page != m.discoveryPage {
+	if v.Generation != m.discoveryGeneration || !m.attention.SearchEnabled() || !m.discoveryBusy || v.Query.Page != m.discoveryPage {
 		return m, nil
 	}
+	reason := v.Query.Reason
+	if reason == "" {
+		reason = core.AttentionMention
+	}
+	if len(m.discoverySources) > 0 && reason != m.discoverySources[0] {
+		return m, nil
+	}
+
 	if v.Err != nil {
 		m.finishDiscovery()
 		m.discoveryPhase = discoveryFailed
 		m.discoveryErr = v.Err.Error()
 		if slack.IsAuth(v.Err) {
-			m.stopped = true
-			m.setStatus("Credentials expired · login & restart", statusAction)
+			m.stopReads()
 		}
 		return m, nil
 	}
@@ -345,7 +373,17 @@ func (m *Model) updateMentions(v mentionResult) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	a := m.attention.Clone()
-	a.Prune(v.Query.From)
+	floor := v.Query.From
+	for _, f := range a.Followed {
+		bound := f.Checkpoint
+		if minimum := v.Query.Until.Add(-core.AttentionLookback); bound.Before(minimum) {
+			bound = minimum
+		}
+		if bound.Before(floor) {
+			floor = bound
+		}
+	}
+	a.Prune(floor)
 	for _, match := range v.Page.Matches {
 		if err := a.Add(match.Conversation.ID, match.Trigger); err != nil {
 			m.finishDiscovery()
@@ -354,7 +392,7 @@ func (m *Model) updateMentions(v mentionResult) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	}
-	if !v.Page.More {
+	if !v.Page.More && len(m.discoverySources) <= 1 {
 		a.Checkpoint = v.Query.Until
 		a.LastCheck = v.Query.Until
 	}
@@ -375,6 +413,13 @@ func (m *Model) updateMentions(v mentionResult) (tea.Model, tea.Cmd) {
 		q := v.Query
 		q.Page++
 		m.discoveryPage = q.Page
+		return m, m.mentionCmd(q)
+	}
+	if !v.Page.More && len(m.discoverySources) > 1 {
+		m.discoverySources = m.discoverySources[1:]
+		q := v.Query
+		q.Reason, q.Page = m.discoverySources[0], 1
+		m.discoveryPage, m.discoveryTotal = 1, 0
 		return m, m.mentionCmd(q)
 	}
 	m.finishDiscovery()
@@ -403,21 +448,21 @@ func (m *Model) discoveryStatus() string {
 	if m.attentionErr != "" {
 		return "Attention state unavailable · recover saved file"
 	}
-	if !m.attention.Enabled {
+	if !m.attention.SearchEnabled() {
 		return "Mentions off · " + keyLabel(keyMentions) + " enable"
 	}
 	if m.discoveryPhase == discoveryChecking {
-		return "Checking direct mentions…"
+		return "Checking attention search" + m.gapMarker() + "…"
 	}
 	if m.discoveryErr != "" {
-		return "Mentions failed · " + keyLabel(keyRefresh) + " retry · " + m.discoveryErr
+		return "Search failed" + m.gapMarker() + " · " + keyLabel(keyRefresh) + " retry · " + m.discoveryErr
 	}
 	if m.attention.LastCheck.IsZero() {
-		return "Mentions not checked · " + keyLabel(keyRefresh) + " retry"
+		return "Search not checked" + m.gapMarker() + " · " + keyLabel(keyRefresh) + " retry"
 	}
-	text := "Mentions " + m.attention.LastCheck.Local().Format("15:04") + " · limited search"
+	text := "Search " + m.attention.LastCheck.Local().Format(statusTimeFormat) + " · limited search"
 	if m.attention.Gap != nil {
-		text = "Mentions " + m.attention.LastCheck.Local().Format("15:04") + " · gap/limited"
+		text = "Search " + m.attention.LastCheck.Local().Format(statusTimeFormat) + " · gap/limited"
 		if m.width >= sidebarBreakpoint {
 			text += " · " + m.attention.Gap.From.Local().Format("Jan 02") + "–" + m.attention.Gap.Until.Local().Format("Jan 02") + " · " + keyLabel(keyAcknowledgeGap) + " acknowledge"
 		}
@@ -451,6 +496,7 @@ func (m *Model) fetchTrigger(t core.AttentionTrigger) tea.Cmd {
 	line.Err = nil
 	m.openTargets[key] = t.TS
 	q := core.Query{Conversation: m.active, Thread: m.thread, Target: t.TS}
+	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[m.active], m.service, m.generations[m.active]
 	return func() tea.Msg {
 		p, err := svc.History(ctx, q)
@@ -458,7 +504,7 @@ func (m *Model) fetchTrigger(t core.AttentionTrigger) tea.Cmd {
 		if q.Thread != "" {
 			after = q.Target
 		}
-		return historyResult{Key: key, Generation: gen, Page: p, Err: err, QueryAfter: after, Target: q.Target}
+		return historyResult{CacheEpoch: epoch, Key: key, Generation: gen, Page: p, Err: err, QueryAfter: after, Target: q.Target}
 	}
 }
 
@@ -493,4 +539,55 @@ func (m *Model) acknowledgeGap() {
 	}
 	m.gapConfirmation = nil
 	m.setStatus("Gaps acknowledged · limited search", statusAction)
+}
+
+func (m *Model) searchSources() []core.AttentionReason {
+	sources := []core.AttentionReason{}
+	if m.attention.Enabled {
+		sources = append(sources, core.AttentionMention)
+	}
+	if m.attention.ChannelEnabled {
+		sources = append(sources, core.AttentionChannel)
+	}
+	if m.attention.HereEnabled {
+		sources = append(sources, core.AttentionHere)
+	}
+	return sources
+}
+
+func (m *Model) toggleBroadcast(k string) tea.Cmd {
+	reason := broadcastReason(k)
+	if reason == "" {
+		return nil
+	}
+	a := m.attention.Clone()
+	enabled := &a.ChannelEnabled
+	label := "@channel"
+	if k == keyHere {
+		enabled, label = &a.HereEnabled, "@here"
+	}
+	if !*enabled && m.broadcastConfirm != reason {
+		m.broadcastConfirm = reason
+		m.setStatus(k+" again: unkept "+label+" · search:read", statusAction)
+		return nil
+	}
+	m.broadcastConfirm = ""
+	*enabled = !*enabled
+	// A new source must revisit the supported interval; handled identities stay durable.
+	if *enabled {
+		a.Checkpoint = time.Time{}
+	}
+	if !m.persistAttention(a) {
+		return nil
+	}
+	m.discoveryGeneration++
+	m.finishDiscovery()
+	m.discoveryNext = time.Time{}
+	m.discoveryPhase = discoveryDisabled
+	state := "disabled"
+	if *enabled {
+		state = "enabled"
+	}
+	m.setStatus(label+" "+state+" · direct mentions independent", statusAction)
+	return m.checkMentions(time.Now())
 }

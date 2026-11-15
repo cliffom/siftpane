@@ -33,10 +33,10 @@ func TestHistoryPaginationAndThreadParams(t *testing.T) {
 		if r.Header.Get("Authorization") != "Bearer xoxp-test" {
 			t.Error("missing auth")
 		}
-		if r.Form.Get(paramChannel) != "C1" || r.Form.Get("cursor") != "page2" || r.Form.Get("limit") != "50" {
+		if r.Form.Get(paramChannel) != "C1" || r.Form.Get(paramCursor) != "page2" || r.Form.Get("limit") != "50" {
 			t.Error(r.Form)
 		}
-		if r.URL.Path == "/conversations.replies" && (r.Form.Get("ts") != "10.1" || r.Form.Get("oldest") != "12.1") {
+		if r.URL.Path == "/conversations.replies" && (r.Form.Get("ts") != "10.1" || r.Form.Get(paramOldest) != "12.1") {
 			t.Error(r.Form)
 		}
 		writeResponse(t, w, `{"ok":true,"messages":[{"ts":"14.1","text":"body"}],"has_more":true,"response_metadata":{"next_cursor":"page3"}}`)
@@ -55,7 +55,7 @@ func TestDirectoryPassesCursorAndEmptyPage(t *testing.T) {
 			t.Errorf(parseRequestFailure, err)
 			return
 		}
-		if r.Form.Get("limit") != "30" || r.Form.Get("cursor") != "next" || r.Form.Get("types") != "public_channel,private_channel,im,mpim" {
+		if r.Form.Get("limit") != "30" || r.Form.Get(paramCursor) != "next" || r.Form.Get("types") != "public_channel,private_channel,im,mpim" {
 			t.Error(r.Form)
 		}
 		writeResponse(t, w, `{"ok":true,"channels":[],"response_metadata":{"next_cursor":"still-more"}}`)

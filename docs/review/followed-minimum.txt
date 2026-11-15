@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you
+
+╭ [#studio / Thread] ──────────────────╮
+│ Locally followed thread · f unfollow │
+│  Nora Ellis  Nov 13 10:34            │
+│  Agreed. Keep the messages at the    │
+│  center.                             │
+│                                      │
+│ ╭ Thread reply ────────────────────╮ │
+│ │ › Write a message…               │ │
+│ │                                  │ │
+│ ╰──────────────────────────────────╯ │
+╰──────────────────────────────────────╯
+ 1 local threads · 04:00         ? help

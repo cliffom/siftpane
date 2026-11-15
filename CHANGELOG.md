@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 — Unreleased
+
+- Add independent opt-in `@channel` (`B`) and `@here` (`H`) attention search, preserving direct mention controls and durable message deduplication across sources.
+- Locally follow an opened thread with `f`. Recover future replies from others across restart using bounded replies scans, exact targets, durable completion, and visible incomplete/gap/error status. This does not mirror Slack subscriptions.
+- Opt into private account-isolated recent Kept history caching with `Ctrl+B` twice; `Ctrl+X` clears disk content. Show cached/refreshing/error state while fetching live pages. Drafts and outbox remain memory-only.
+- New sources have offline validation only; live Slack broadcast and local-follow acceptance remains outstanding. Existing search filters/indexing/collapsing limits still apply.
+
 ## 0.5.0 — 2026-11-15
 
 - Add Needs Attention and Kept, with explicit temporary add/open (`Ctrl+T` in a picker), keep (`K`), dismiss (`d`) and next-attention (`n`). Preserve existing included conversations as Kept. Reading and replying never dismiss.

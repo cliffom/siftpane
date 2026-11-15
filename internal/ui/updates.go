@@ -13,7 +13,7 @@ import (
 
 func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 	pickedID := m.pickedID()
-	if !m.included[v.ID] || m.generations[v.ID] != v.Generation {
+	if m.stopped || !m.included[v.ID] || m.generations[v.ID] != v.Generation {
 		return m, nil
 	}
 	delete(m.metadataBusy, v.ID)
@@ -24,8 +24,11 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 	if v.Err != nil {
 		m.metadataFailed[v.ID] = true
 		m.setStatus("Saved conversation "+v.ID+" unavailable: "+v.Err.Error(), statusRoutine)
+		if slack.IsAccess(v.Err) {
+			m.purgeConversationCache(v.ID)
+		}
 		if slack.IsAuth(v.Err) {
-			m.stopped = true
+			m.stopReads()
 		}
 		return m, nil
 	}
@@ -54,7 +57,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 	if v.Err != nil {
 		m.setStatus(v.Err.Error(), statusRoutine)
 		if slack.IsAuth(v.Err) {
-			m.stopped = true
+			m.stopReads()
 		}
 		return m, nil
 	}
@@ -91,7 +94,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
-	cmds := []tea.Cmd{tick(), m.checkMentions(time.Now())}
+	cmds := []tea.Cmd{tick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
 	cs := m.pollingConversations()
 	if !m.stopped && len(cs) > 0 {
 		// Keep the first visible page ahead of background timeline reads.

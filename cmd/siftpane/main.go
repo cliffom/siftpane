@@ -101,7 +101,7 @@ func run() error {
 			return fmt.Errorf("snapshot requires at least %d columns and %d rows", ui.MinWidth, ui.MinHeight)
 		}
 		switch ui.SnapshotMode(*snapshot) {
-		case ui.SnapshotAttention, ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp, ui.SnapshotStartup, ui.SnapshotLoading, ui.SnapshotLoadError:
+		case ui.SnapshotCached, ui.SnapshotCacheError, ui.SnapshotCoverage, ui.SnapshotFollowed, ui.SnapshotAttention, ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp, ui.SnapshotStartup, ui.SnapshotLoading, ui.SnapshotLoadError:
 		default:
 			return fmt.Errorf("unknown snapshot view")
 		}

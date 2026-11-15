@@ -103,3 +103,87 @@ func TestMessageTimePreservesPrecision(t *testing.T) {
 		}
 	}
 }
+
+func TestAutomaticAttentionIdentityAcrossSources(t *testing.T) {
+	a := NewAttention(nil)
+	for _, reason := range []AttentionReason{AttentionReply, AttentionHere, AttentionChannel, AttentionMention} {
+		trigger, err := MessageTrigger(identityTestTS, identityTestRoot, reason)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = a.Add(identityTestConversation, trigger); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(a.Pending[identityTestConversation]) != 1 || a.Pending[identityTestConversation][0].Reason != AttentionMention {
+		t.Fatal("duplicate or weaker reason", a.Pending)
+	}
+	a.Dismiss("identity-conversation")
+	trigger, err := MessageTrigger(identityTestTS, identityTestRoot, AttentionReply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = a.Add(identityTestConversation, trigger); err != nil {
+		t.Fatal(err)
+	}
+	if len(a.Pending) != 0 {
+		t.Fatal("another source resurrected handled message")
+	}
+	a.Followed = map[string]FollowedThread{"thread": {Root: identityTestRoot}}
+	b := a.Clone()
+	delete(b.Followed, "thread")
+	if len(a.Followed) != 1 {
+		t.Fatal("clone mutated original follows")
+	}
+}
+
+const (
+	identityTestTS           = "1794672000.000001"
+	identityTestRoot         = "1794671000.000001"
+	identityTestConversation = "identity-conversation"
+)
+
+func TestPrunedAutomaticIdentityCannotReturnFromOlderSourceWindow(t *testing.T) {
+	a := NewAttention(nil)
+	trigger, err := MessageTrigger(identityTestTS, identityTestRoot, AttentionReply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = a.Add(identityTestConversation, trigger); err != nil {
+		t.Fatal(err)
+	}
+	a.Dismiss(identityTestConversation)
+	a.Prune(trigger.At.Add(time.Microsecond))
+	if len(a.Handled) != 0 {
+		t.Fatal("handled identity not pruned")
+	}
+	trigger.Reason = AttentionChannel
+	if err = a.Add(identityTestConversation, trigger); err != nil {
+		t.Fatal(err)
+	}
+	if len(a.Pending) != 0 {
+		t.Fatal("older in-flight source replay resurrected pruned identity")
+	}
+}
+
+func TestDuplicateSourceEnrichesMissingThreadWithoutWeakeningReason(t *testing.T) {
+	a := NewAttention(nil)
+	direct, err := MessageTrigger(identityTestTS, "", AttentionMention)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = a.Add(identityTestConversation, direct); err != nil {
+		t.Fatal(err)
+	}
+	reply, err := MessageTrigger(identityTestTS, identityTestRoot, AttentionReply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = a.Add(identityTestConversation, reply); err != nil {
+		t.Fatal(err)
+	}
+	pending := a.Pending[identityTestConversation]
+	if len(pending) != 1 || pending[0].Thread != identityTestRoot || pending[0].Reason != AttentionMention {
+		t.Fatal("duplicate discarded exact thread target or stronger label")
+	}
+}

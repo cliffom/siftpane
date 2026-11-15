@@ -155,6 +155,8 @@ func (m *Model) read(cid string) {
 func (m *Model) toggleIncluded(cid string) {
 	if m.included[cid] {
 		delete(m.included, cid)
+		delete(m.persisted, cid)
+		m.saveMessages()
 		if f := m.cancels[cid]; f != nil {
 			f()
 		}

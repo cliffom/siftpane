@@ -16,6 +16,14 @@ const (
 	AttentionManual AttentionReason = "temporary"
 	// AttentionMention is a message directly mentioning the authenticated person.
 	AttentionMention AttentionReason = "mention"
+	// AttentionChannel identifies an explicit @channel broadcast.
+	AttentionChannel AttentionReason = "@channel"
+	// AttentionHere identifies an explicit @here broadcast.
+	AttentionHere AttentionReason = "@here"
+	// AttentionReply identifies another person's reply to a locally followed thread.
+	AttentionReply AttentionReason = "reply"
+	// FollowedThreads bounds explicit local subscriptions per account.
+	FollowedThreads = 32
 	// AttentionConversations bounds active attention independently of Kept.
 	AttentionConversations = 128
 	// AttentionTriggers bounds active and handled identities together per account.
@@ -44,6 +52,10 @@ type AttentionGap struct {
 // AttentionState contains durable account-local preferences and minimal identities.
 // Bodies and display names never belong in this state.
 type AttentionState struct {
+	ChannelEnabled       bool                          `json:"channel_enabled,omitempty"`
+	HereEnabled          bool                          `json:"here_enabled,omitempty"`
+	Followed             map[string]FollowedThread     `json:"followed,omitempty"`
+	MessageCache         bool                          `json:"message_cache,omitempty"`
 	GapAcknowledgedUntil time.Time                     `json:"gap_acknowledged_until"`
 	Gap                  *AttentionGap                 `json:"gap,omitempty"`
 	Kept                 map[string]bool               `json:"kept"`
@@ -73,6 +85,7 @@ func (a AttentionState) Clone() AttentionState {
 		gap := *a.Gap
 		b.Gap = &gap
 	}
+	b.Followed = maps.Clone(a.Followed)
 	b.Kept = maps.Clone(a.Kept)
 	b.Handled = maps.Clone(a.Handled)
 	b.Pending = make(map[string][]AttentionTrigger, len(a.Pending))
@@ -84,11 +97,22 @@ func (a AttentionState) Clone() AttentionState {
 
 // Add deduplicates replay and groups attention by conversation; it never dismisses.
 func (a *AttentionState) Add(cid string, t AttentionTrigger) error {
+	// Concurrent source commands may have captured an older replay window before
+	// another completed result pruned identities. Never accept replay behind it.
+	if t.Reason != AttentionManual && t.At.Before(a.Floor) {
+		return nil
+	}
 	if _, ok := a.Handled[cid+"/"+t.ID]; ok {
 		return nil
 	}
-	for _, old := range a.Pending[cid] {
+	for i, old := range a.Pending[cid] {
 		if old.ID == t.ID {
+			if old.Thread == "" && t.Thread != "" {
+				a.Pending[cid][i].Thread = t.Thread
+			}
+			if attentionPriority(t.Reason) < attentionPriority(old.Reason) {
+				a.Pending[cid][i].Reason = t.Reason
+			}
 			return nil
 		}
 	}
@@ -136,6 +160,7 @@ func (a *AttentionState) Prune(floor time.Time) {
 
 // MentionQuery is an immutable bounded discovery request, independent of Kept.
 type MentionQuery struct {
+	Reason      AttentionReason
 	User        string
 	From, Until time.Time
 	Page        int
@@ -173,4 +198,48 @@ func (a *AttentionState) RecordGap(from, until time.Time) {
 	if until.After(a.Gap.Until) {
 		a.Gap.Until = until
 	}
+}
+
+// FollowedThread retains only explicit local scope and completed coverage.
+// It does not mirror Slack's followed-thread list or notification preferences.
+type FollowedThread struct {
+	Conversation string    `json:"conversation"`
+	Root         string    `json:"root"`
+	Checkpoint   time.Time `json:"checkpoint"`
+	LastCheck    time.Time `json:"last_check"`
+}
+
+// SearchEnabled reports whether any independent search source is opted in.
+func (a AttentionState) SearchEnabled() bool { return a.Enabled || a.ChannelEnabled || a.HereEnabled }
+
+// MessageTrigger uses the existing mention identity for all automatic sources,
+// preserving 0.5 handled identities when a message matches several sources.
+func MessageTrigger(ts, root string, reason AttentionReason) (AttentionTrigger, error) {
+	at, err := MessageTime(ts)
+	if err != nil {
+		return AttentionTrigger{}, err
+	}
+	return AttentionTrigger{ID: "mention:" + ts, TS: ts, Thread: root, Reason: reason, At: at}, nil
+}
+
+func attentionPriority(reason AttentionReason) int {
+	order := [...]AttentionReason{AttentionMention, AttentionChannel, AttentionHere, AttentionReply, AttentionManual}
+	for i, candidate := range order {
+		if candidate == reason {
+			return i
+		}
+	}
+	return len(order)
+}
+
+// Reason returns the strongest pending reason for the grouped conversation.
+// Opening order still uses the oldest trigger, independently of its display label.
+func (a AttentionState) Reason(cid string) AttentionReason {
+	var best AttentionReason
+	for _, t := range a.Pending[cid] {
+		if best == "" || attentionPriority(t.Reason) < attentionPriority(best) {
+			best = t.Reason
+		}
+	}
+	return best
 }

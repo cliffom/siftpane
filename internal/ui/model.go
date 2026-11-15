@@ -17,11 +17,14 @@ type timeline struct {
 	After              string
 	Messages           []core.Message
 	Next               string
+	Cached             bool
+	Saved              time.Time
 	More, Loaded, Busy bool
 	Err                error
 	Touched            uint64
 }
 type historyResult struct {
+	CacheEpoch uint64
 	Target     string
 	QueryAfter string
 	Key        string
@@ -49,6 +52,21 @@ type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
+	broadcastConfirm    core.AttentionReason
+	discoverySources    []core.AttentionReason
+	followBusy          bool
+	followKey           string
+	followGeneration    uint64
+	followCancel        context.CancelFunc
+	followCtx           context.Context
+	followNext          map[string]time.Time
+	followErrors        map[string]string
+	followPage          int
+	followIndex         int
+	messageCacheErr     string
+	cacheConfirm        bool
+	cacheEpoch          uint64
+	persisted           map[string]store.MessageHistory
 	attention           core.AttentionState
 	attentionErr        string
 	opened              map[string]bool
@@ -153,6 +171,9 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	search.CharLimit = pickerRuneLimit
 	search.SetVirtualCursor(true)
 	m := &Model{
+		followNext:       map[string]time.Time{},
+		followErrors:     map[string]string{},
+		persisted:        map[string]store.MessageHistory{},
 		profiles:         map[string]core.Profile{},
 		profileAttempted: map[string]bool{},
 
@@ -206,6 +227,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 			m.replaceConversation(c)
 		}
 	}
+	m.restoreMessages()
 	if cs := m.selected(); len(cs) > 0 {
 		for _, c := range cs {
 			if m.attention.Kept[c.ID] {
@@ -220,13 +242,16 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		m.unread["Dmaya"] = true
 		m.setStatus("Offline demo", statusRoutine)
 	}
+	if line := m.cache[m.key()]; line != nil && line.Cached {
+		m.index = max(0, len(line.Messages)-1)
+	}
 	m.restoreDraft()
 	return m
 }
 
 // Init starts metadata discovery and the bounded refresh scheduler.
 func (m *Model) Init() tea.Cmd {
-	cmds := []tea.Cmd{m.directoryCmd(""), tick(), m.checkMentions(time.Now())}
+	cmds := []tea.Cmd{m.directoryCmd(""), tick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
 	for cid, included := range m.included {
 		if included {
 			cmds = append(cmds, m.conversationCmd(cid))
@@ -254,6 +279,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateDirectory(v)
 	case mentionResult:
 		return m.updateMentions(v)
+	case followedResult:
+		return m.updateFollowed(v)
 	case historyResult:
 		return m.updateHistory(v)
 	case profileResult:
