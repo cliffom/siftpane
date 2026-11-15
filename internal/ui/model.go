@@ -22,6 +22,7 @@ type timeline struct {
 	Touched            uint64
 }
 type historyResult struct {
+	Target     string
 	QueryAfter string
 	Key        string
 	Generation uint64
@@ -48,6 +49,23 @@ type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
+	attention           core.AttentionState
+	attentionErr        string
+	opened              map[string]bool
+	discoveryMetadata   map[string]bool
+	openTargets         map[string]string
+	mentionConfirm      bool
+	discoveryPhase      discoveryPhase
+	discoveryBusy       bool
+	discoveryTotal      int
+	discoveryPage       int
+	discoveryErr        string
+	gapConfirmation     *core.AttentionGap
+	discoveryNext       time.Time
+	discoveryGeneration uint64
+	discoveryCtx        context.Context
+	discoveryCancel     context.CancelFunc
+
 	profileCacheErr         string
 	profiles                map[string]core.Profile
 	profileAttempted        map[string]bool
@@ -77,6 +95,7 @@ type Model struct {
 	contexts        map[string]context.Context
 	cancels         map[string]context.CancelFunc
 	generations     map[string]uint64
+	readGeneration  uint64
 	cache           map[string]*timeline
 	clock           uint64
 
@@ -109,7 +128,7 @@ type Model struct {
 func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store, isDemo bool) *Model {
 	p := st.Workspace(id.Workspace)
 	if isDemo && len(p.Included) == 0 {
-		for _, cid := range []string{"Cstudio", "Cshipping", "Cdesign", "Dmaya", "Gcrew"} {
+		for _, cid := range []string{"Cstudio", demoShippingConversation, "Cdesign", "Dmaya", "Gcrew"} {
 			p.Included[cid] = true
 		}
 	}
@@ -160,6 +179,16 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		focus:          focusChannels,
 		status:         "Choose your conversations with " + keyLabel(keyInclude) + " · local read state",
 	}
+	m.initAttention()
+	if m.attentionErr == "" {
+		if err := m.store.SaveAttention(m.identity, m.attention); err != nil {
+			m.attentionErr = err.Error()
+			m.setStatus("Cannot save attention: "+err.Error(), statusAction)
+		}
+	}
+	for cid := range m.attention.Pending {
+		m.directory = append(m.directory, core.Conversation{ID: cid, Name: cid, Kind: core.ConversationChannel})
+	}
 	for cid, v := range m.included {
 		if v {
 			m.addContext(cid)
@@ -174,15 +203,20 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 	}
 	for _, c := range st.Conversations(id) {
 		if m.included[c.ID] {
-			m.directory = append(m.directory, c)
+			m.replaceConversation(c)
 		}
 	}
 	if cs := m.selected(); len(cs) > 0 {
-		m.active = cs[0].ID
+		for _, c := range cs {
+			if m.attention.Kept[c.ID] {
+				m.active = c.ID
+				break
+			}
+		}
 	}
 	if isDemo {
 		m.active = "Cstudio"
-		m.unread["Cshipping"] = true
+		m.unread[demoShippingConversation] = true
 		m.unread["Dmaya"] = true
 		m.setStatus("Offline demo", statusRoutine)
 	}
@@ -192,7 +226,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 
 // Init starts metadata discovery and the bounded refresh scheduler.
 func (m *Model) Init() tea.Cmd {
-	cmds := []tea.Cmd{m.directoryCmd(""), tick()}
+	cmds := []tea.Cmd{m.directoryCmd(""), tick(), m.checkMentions(time.Now())}
 	for cid, included := range m.included {
 		if included {
 			cmds = append(cmds, m.conversationCmd(cid))
@@ -218,6 +252,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateConversation(v)
 	case directoryResult:
 		return m.updateDirectory(v)
+	case mentionResult:
+		return m.updateMentions(v)
 	case historyResult:
 		return m.updateHistory(v)
 	case profileResult:

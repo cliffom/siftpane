@@ -2,9 +2,9 @@
 
 ╭ [#studio] ───────────────────────────────────────────────╮
 │ Channel · Daily collaboration, fewer interruptions       │
-│▸ Name U1  Nov 13 09:00                                   │
-│  Messages arrive before names finish loading. Hello @Name│
-│  U2.                                                     │
+│  Leo Park  Nov 13 09:00                                  │
+│  Messages arrive before names finish loading. Hello @You.│
+│                                                          │
 │                                                          │
 │                                                          │
 │                                                          │

@@ -17,6 +17,7 @@ oauth_config:
       - mpim:read
       - mpim:history
       - users:read
+      - search:read
       - chat:write
 settings:
   org_deploy_enabled: false

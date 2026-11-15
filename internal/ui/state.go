@@ -13,7 +13,8 @@ import (
 
 func (m *Model) addContext(cid string) {
 	m.contexts[cid], m.cancels[cid] = context.WithCancel(m.ctx)
-	m.generations[cid]++
+	m.readGeneration++
+	m.generations[cid] = m.readGeneration
 }
 
 func (m *Model) key() string {
@@ -72,6 +73,19 @@ func (m *Model) restoreDraft() { m.composer.SetValue(m.drafts[m.key()]); m.compo
 func (m *Model) selected() []core.Conversation {
 	cs := core.Filter(m.directory, "", m.included, true)
 	sortConversations(cs)
+	sort.SliceStable(cs, func(i, j int) bool {
+		a, b := m.attention.Pending[cs[i].ID], m.attention.Pending[cs[j].ID]
+		if (len(a) > 0) != (len(b) > 0) {
+			return len(a) > 0
+		}
+		if len(a) > 0 {
+			if !a[0].At.Equal(b[0].At) {
+				return a[0].At.Before(b[0].At)
+			}
+			return cs[i].ID < cs[j].ID
+		}
+		return false
+	})
 	return cs
 }
 
@@ -96,7 +110,13 @@ func isPerson(c core.Conversation) bool {
 func (m *Model) saveMetadata() {
 	m.syncProfiles()
 	m.metadataErr = ""
-	if err := m.store.SaveConversations(m.identity, m.selected()); err != nil {
+	cs := []core.Conversation{}
+	for _, c := range m.selected() {
+		if m.canRead(c.ID) {
+			cs = append(cs, c)
+		}
+	}
+	if err := m.store.SaveConversations(m.identity, cs); err != nil {
 		m.metadataErr = err.Error()
 	}
 }
@@ -104,6 +124,7 @@ func (m *Model) saveMetadata() {
 func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.cancelProfileLookup()
 	m.rememberDraft()
+	m.opened[cid] = true
 	m.active = cid
 	m.thread = ""
 	m.index = 0
@@ -112,6 +133,14 @@ func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.composer.Blur()
 	m.restoreDraft()
 	m.read(cid)
+	if ts := m.attention.Pending[cid]; len(ts) > 0 {
+		t := ts[0]
+		if t.TS != "" {
+			m.thread = t.Thread
+			m.restoreDraft()
+			return tea.Batch(m.fetchTrigger(t), m.profileCmd())
+		}
+	}
 	return tea.Batch(m.fetch(cid, false), m.profileCmd())
 }
 
@@ -123,7 +152,7 @@ func (m *Model) read(cid string) {
 	}
 }
 
-func (m *Model) toggle(cid string) {
+func (m *Model) toggleIncluded(cid string) {
 	if m.included[cid] {
 		delete(m.included, cid)
 		if f := m.cancels[cid]; f != nil {
@@ -132,6 +161,17 @@ func (m *Model) toggle(cid string) {
 		if profileCID, _ := split(m.profileKey); profileCID == cid {
 			m.cancelProfileLookup()
 		}
+		if m.discoveryMetadata[cid] {
+			cs := m.directory[:0]
+			for _, c := range m.directory {
+				if c.ID != cid {
+					cs = append(cs, c)
+				}
+			}
+			m.directory = cs
+			delete(m.discoveryMetadata, cid)
+		}
+		delete(m.opened, cid)
 		delete(m.contexts, cid)
 		delete(m.metadataBusy, cid)
 		if len(m.metadataBusy) == 0 {
@@ -147,7 +187,7 @@ func (m *Model) toggle(cid string) {
 				delete(m.cache, k)
 			}
 		}
-		m.generations[cid]++
+		delete(m.generations, cid)
 		if m.active == cid {
 			m.rememberDraft()
 			m.active = ""
@@ -156,7 +196,7 @@ func (m *Model) toggle(cid string) {
 		}
 		m.setStatus("Removed locally; Slack membership unchanged. Draft retained for this session.", statusAction)
 	} else {
-		if len(m.included) >= selectionLimit {
+		if len(m.attention.Kept) > selectionLimit {
 			m.setStatus(fmt.Sprintf("Limit: %d included conversations. Remove one first.", selectionLimit), statusAction)
 			return
 		}

@@ -47,7 +47,7 @@ func TestStartupMetadataOrderAndEarlyHistory(t *testing.T) {
 			if step < len(order)-1 && len(m.sidebarConversations()) != 0 {
 				t.Fatal("uncached sidebar published partial batch")
 			}
-			if strings.Count(sidebar, "CHANNELS") > 1 || strings.Count(sidebar, "PEOPLE") > 1 {
+			if strings.Count(sidebar, "KEPT") > 1 || strings.Count(sidebar, "NEEDS ATTENTION") > 1 {
 				t.Fatal(sidebar)
 			}
 		}
@@ -62,7 +62,7 @@ func TestStartupMetadataOrderAndEarlyHistory(t *testing.T) {
 }
 
 func TestCachedStartupLoadsHistoryBeforeMetadataAndKeepsIdentity(t *testing.T) {
-	st, err := store.Open(filepath.Join(t.TempDir(), "config.json"))
+	st, err := store.Open(filepath.Join(t.TempDir(), testConfigName))
 	if err != nil {
 		t.Fatal(err)
 	}

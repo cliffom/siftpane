@@ -3,9 +3,11 @@ package ui
 import (
 	"sort"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/slack"
 )
 
@@ -39,7 +41,7 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 	m.directory = append(m.directory, v.Conversation)
 	m.saveMetadata()
 	m.reselectChoice(pickedID)
-	if m.active == "" {
+	if m.active == "" && m.attention.Kept[v.ID] {
 		return m, m.selectConversation(v.ID)
 	}
 	return m, nil
@@ -59,6 +61,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 	m.directoryLoaded = true
 	m.directoryNext = v.Page.Next
 	for _, c := range v.Page.Conversations {
+		delete(m.discoveryMetadata, c.ID)
 		found := false
 		for i, old := range m.directory {
 			if old.ID == c.ID {
@@ -78,16 +81,18 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 	m.saveMetadata()
 	if m.active == "" {
 		cs := m.selected()
-		if len(cs) > 0 {
-			return m, m.selectConversation(cs[0].ID)
+		for _, c := range cs {
+			if m.attention.Kept[c.ID] {
+				return m, m.selectConversation(c.ID)
+			}
 		}
 	}
 	return m, nil
 }
 
 func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
-	cmds := []tea.Cmd{tick()}
-	cs := m.selected()
+	cmds := []tea.Cmd{tick(), m.checkMentions(time.Now())}
+	cs := m.pollingConversations()
 	if !m.stopped && len(cs) > 0 {
 		// Keep the first visible page ahead of background timeline reads.
 		if line := m.cache[m.key()]; m.active != "" && m.thread == "" && (line == nil || (!line.Loaded && line.Err == nil)) {
@@ -110,4 +115,17 @@ func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, tea.Batch(cmds...)
+}
+
+// Only conversations eligible for history consume a turn. Sidebar-only search
+// discoveries remain visible without slowing Kept or explicitly opened entries.
+func (m *Model) pollingConversations() []core.Conversation {
+	cs := m.selected()
+	out := cs[:0]
+	for _, c := range cs {
+		if m.canRead(c.ID) {
+			out = append(out, c)
+		}
+	}
+	return out
 }

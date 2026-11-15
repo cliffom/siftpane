@@ -1,14 +1,14 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ [Messages] ───────────┬ #newly-included ─────────────────────────────────────────────────────────╮
-│ CHANNELS 4/6 ╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
 │  #design              │                                                                          │
 │▸ #newly-included      │                                                                          │
 │  #shipping         ●  │                                                                          │
 │  #studio              │                                                                          │
-│ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
 │  @Maya Chen        ●  │                                                                          │
 │  @Maya, Leo, you      │                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
@@ -27,4 +27,4 @@
 │                       │ │                                                                      │ │
 │                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Included. Only chosen conversations are refreshed.                                          ? help
+ Kept preference saved; attention requires explicit dismissal                                ? help

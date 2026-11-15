@@ -8,7 +8,7 @@
 │   │ PgUp/PgDn  scroll history    │   │
 │ ╭ │ G / End  newest + local read │─╮ │
 │ │ │ i / Enter  compose           │ │ │
-│ │ │ 1–7/72 ↑/↓ · Esc close       │ │ │
+│ │ │ 1–7/95 ↑/↓ · Esc close       │ │ │
 │ ╰─╰──────────────────────────────╯─╯ │
 ╰──────────────────────────────────────╯
  Refreshed                       ? help

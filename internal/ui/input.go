@@ -28,6 +28,16 @@ func (m *Model) quitKey() tea.Cmd {
 
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
+	// Ignore held-key events before they can alter navigation confirmations.
+	if v.Key().IsRepeat && k == keyMentions && m.mode == pickerClosed && m.focus != focusCompose && !m.help {
+		return m, nil
+	}
+	if k != keyAcknowledgeGap {
+		m.gapConfirmation = nil
+	}
+	if k != keyMentions {
+		m.mentionConfirm = false
+	}
 	if m.help {
 		return m, m.helpKey(k)
 	}
@@ -43,7 +53,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if k != keyRetry {
 		m.retryConfirm = false
 	}
-	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit) {
+	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit || k == keyAcknowledgeGap) {
 		return m, nil
 	}
 	if k == keyQuit {
@@ -81,6 +91,16 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	switch k {
+	case keyAcknowledgeGap:
+		m.acknowledgeGap()
+	case keyKeep:
+		m.keepActive()
+	case keyDismiss:
+		return m, m.dismissActive()
+	case keyAttention:
+		return m, m.nextAttention()
+	case keyMentions:
+		return m, m.toggleMentions()
 	case keyQuitQuiet:
 		return m, m.quitKey()
 	case keyHelp:
@@ -120,6 +140,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 			m.read(m.active)
 		}
 	case keyLast, keyNewest:
+		delete(m.openTargets, m.key())
 		m.scroll = 0
 		t := m.line(m.key())
 		m.index = max(0, len(t.Messages)-1)

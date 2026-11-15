@@ -48,7 +48,7 @@ const (
 	modalReservedRows      = 8 // Frame, input, scope hint, action, coverage, state, directory keys.
 	sidebarRestorationRows = 1 // Keep recovery visible even when the list fills.
 	sidebarMarkerColumns   = 4 // Gap, unread slot, gap, draft slot.
-	sidebarSelectionRows   = 8
+	sidebarSelectionRows   = 2 // At most two lifecycle group headings.
 )
 
 func fit(s string, w int) string {

@@ -1,7 +1,7 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ [Messages] ───────────┬ #design ─────────────────────────────────────────────────────────────────╮
-│ CHANNELS 23/25 ╌╌╌╌╌╌╌│ Channel · Typography, spacing, and interaction details                   │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Typography, spacing, and interaction details                   │
 │▸ #design              │ No messages yet. i to write the first one.                               │
 │  #extra-00            │                                                                          │
 │  #extra-01            │                                                                          │

@@ -34,6 +34,10 @@ const (
 
 // Documented method identifiers belong to the transport, not core domain state.
 const (
+	wireTrue           = "true"
+	wireFalse          = "false"
+	paramText          = "text"
+	paramLatest        = "latest"
 	methodIdentity     = "auth.test"
 	methodUser         = "users.info"
 	methodDirectory    = "conversations.list"
@@ -94,6 +98,9 @@ func (c *Client) wait(ctx context.Context, method string) error {
 			}
 			if method == methodDirectory {
 				gap = directoryInterval
+			}
+			if method == methodMentions {
+				gap = mentionInterval
 			}
 			c.next[method] = time.Now().Add(gap)
 			c.mu.Unlock()
@@ -208,7 +215,7 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 			Next string `json:"next_cursor"`
 		} `json:"response_metadata"`
 	}
-	err := c.call(ctx, methodDirectory, url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {"true"}, "limit": {strconv.Itoa(directoryPageItems)}, "cursor": {cursor}}, &r)
+	err := c.call(ctx, methodDirectory, url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {wireTrue}, "limit": {strconv.Itoa(directoryPageItems)}, "cursor": {cursor}}, &r)
 	if err != nil {
 		return core.DirectoryPage{}, err
 	}
@@ -240,11 +247,19 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 	method := methodHistory
 	v := url.Values{paramChannel: {q.Conversation}, "limit": {strconv.Itoa(historyPageItems)}, "cursor": {q.Cursor}}
+	if q.Target != "" {
+		v.Set(paramLatest, q.Target)
+		v.Set("inclusive", wireTrue)
+		if q.Thread != "" {
+			v.Del(paramLatest)
+			v.Set("oldest", q.Target)
+		}
+	}
 	if q.After != "" {
 		v.Set("oldest", q.After)
 	}
 	if q.Before != "" {
-		v.Set("latest", q.Before)
+		v.Set(paramLatest, q.Before)
 	}
 	if q.Thread != "" {
 		method = methodReplies
@@ -270,7 +285,7 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 
 // Send posts once as the authenticated user; it never retries a write.
 func (c *Client) Send(ctx context.Context, o core.Outgoing) (core.Message, error) {
-	v := url.Values{paramChannel: {o.Conversation}, "text": {o.Text}, "unfurl_links": {"false"}, "unfurl_media": {"false"}, "client_msg_id": {o.ID}}
+	v := url.Values{paramChannel: {o.Conversation}, paramText: {o.Text}, "unfurl_links": {wireFalse}, "unfurl_media": {wireFalse}, "client_msg_id": {o.ID}}
 	if o.Thread != "" {
 		v.Set("thread_ts", o.Thread)
 	}
@@ -305,7 +320,7 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 			Members int `json:"num_members"`
 		} `json:"channel"`
 	}
-	if err := c.call(ctx, methodConversation, url.Values{paramChannel: {id}, "include_num_members": {"true"}}, &r); err != nil {
+	if err := c.call(ctx, methodConversation, url.Values{paramChannel: {id}, "include_num_members": {wireTrue}}, &r); err != nil {
 		return core.Conversation{}, err
 	}
 	v := r.Channel

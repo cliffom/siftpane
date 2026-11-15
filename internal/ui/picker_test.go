@@ -20,18 +20,18 @@ func TestSearchCompletionRequiresExplicitInclusion(t *testing.T) {
 	m.openPicker(pickerSwitch)
 	m.Update(tea.PasteMsg{Content: "@LEO.P"})
 	cs := m.choices()
-	if len(cs) != 1 || cs[0].ID != "Dleo" || m.included["Dleo"] {
+	if len(cs) != 1 || cs[0].ID != demoLeoDM || m.included[demoLeoDM] {
 		t.Fatal("search must find excluded DM without including it", cs)
 	}
 	m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
-	if m.picker.Value() != "@leo.park" || m.included["Dleo"] || m.contexts["Dleo"] != nil {
+	if m.picker.Value() != "@leo.park" || m.included[demoLeoDM] || m.contexts[demoLeoDM] != nil {
 		t.Fatal("completion changed inclusion or lost handle")
 	}
 	if !strings.Contains(m.choiceAction(m.choices(), m.pickIndex), "include & open") {
 		t.Fatal("new inclusion must be explicit")
 	}
 	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if cmd == nil || !m.included["Dleo"] || m.active != "Dleo" || m.mode != pickerClosed {
+	if cmd == nil || !m.included[demoLeoDM] || m.active != demoLeoDM || m.mode != pickerClosed {
 		t.Fatal("explicit Enter did not include and open")
 	}
 }
@@ -176,10 +176,12 @@ func TestSearchEmptyAndInclusionLimit(t *testing.T) {
 	}
 	m.picker.SetValue("@leo")
 	for len(m.included) < selectionLimit {
-		m.included[strings.Repeat("c", len(m.included))] = true
+		cid := strings.Repeat("c", len(m.included))
+		m.included[cid] = true
+		m.attention.Kept[cid] = true
 	}
 	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if m.mode != pickerSwitch || m.included["Dleo"] || !strings.Contains(m.choiceAction(m.choices(), m.pickIndex), "Limit:") {
+	if m.mode != pickerSwitch || m.included[demoLeoDM] || !strings.Contains(m.choiceAction(m.choices(), m.pickIndex), "Limit:") {
 		t.Fatal("search bypassed inclusion limit or hid recovery")
 	}
 }

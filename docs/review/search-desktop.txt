@@ -1,13 +1,13 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
-│ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │  Leo Park  Nov 13 10:27                                                  │
 │  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
 │▸ #studio              │                                                                          │
-│ PEOPLE ╌╌╌╌╌╭ [Search conversations] ──────────────────────────────────────────────╮             │
-│  @Maya Chen │ / @leo                                                               │             │
-│  @Maya, Leo,│ @ people · # channels                                                │             │
+│  @Maya Chen ╭ [Search conversations] ──────────────────────────────────────────────╮             │
+│  @Maya, Leo,│ / @leo                                                               │             │
+│             │ @ people · # channels                                                │             │
 │             │▸ [+] @Leo Park · dm @leo.park                                        │             │
 │             │  [✓] @Maya, Leo, you · group                                         │             │
 │             │                                                                      │             │
@@ -18,7 +18,7 @@
 │             │                                                                      │             │
 │             │ Enter include & open @Leo Park                                       │             │
 │             │ 8 loaded · directory complete                                        │             │
-│             │ Tab complete · Esc close                                             │e input.     │
+│             │ Ctrl+T temporary · Tab complete                                      │e input.     │
 │             │ Ctrl+L more · Ctrl+R reload                                          │             │
 │             ╰──────────────────────────────────────────────────────────────────────╯             │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │

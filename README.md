@@ -2,7 +2,7 @@
 
 # Siftpane
 
-A focused Slack client for your terminal. Choose the channels, DMs, and group DMs you want to keep close, then read and reply with the keyboard. Siftpane only refreshes conversations you include.
+A focused Slack client for your terminal. Choose the channels, DMs, and group DMs you want to keep close, then read and reply with the keyboard. Keep conversations close or bring them in temporarily, then dismiss handled attention. Optional direct-mention discovery can surface accessible conversations outside Kept.
 
 ## Try it
 
@@ -29,15 +29,18 @@ Siftpane currently supports one workspace through your own internal Slack app.
 
 1. Follow the [Slack setup guide](docs/SLACK.md) to create and install the app using the supplied [manifest](slack-app-manifest.yaml).
 2. Run `./bin/siftpane --login` and paste your **User OAuth Token** into the hidden prompt. Siftpane saves it in your OS credential store.
-3. Run `./bin/siftpane`, press `p`, and choose which conversations to include. Nothing is included automatically.
+3. Run `./bin/siftpane`, press `p`, and choose which conversations to keep. Nothing is kept automatically. Use `Ctrl+T` in the picker for a temporary conversation.
 
-The live integration is implemented and tested with a fake Slack server. **App installation and live workspace messaging still need verification with authorized credentials.**
+Read-only live mention discovery and exact thread opening have been exercised, and the operator confirmed live acceptance for 0.5.0. See the [verification record](docs/VERIFICATION.md) for the evidence and remaining coverage limitations.
 
 ## Find your way around
 
 | Key | Action |
 | --- | --- |
-| `p` | Choose conversations; `Tab` includes or removes an item |
+| `p` | Choose conversations; `Tab` keeps or unkeeps an item |
+| Picker `Ctrl+T` | Temporarily add and open |
+| `K` / `d` / `n` | Keep / dismiss attention / next attention |
+| `M` twice | Enable optional direct mentions; one `M` disables |
 | `/` or `Ctrl+K` | Search existing conversations by `@person` or `#channel`; `Tab` completes |
 | `Tab` | Switch sidebar/message focus |
 | `j/k` or arrows | Move through conversations or messages |
@@ -56,8 +59,8 @@ Drafts stay with their conversation or thread while you switch, but remain in me
 ## What to expect
 
 - Updates arrive through bounded polling, so activity may appear after a delay. Unread dots and the `Siftpane *` window title mean **unread here**, independently of Slack's read position. The title depends on [terminal/multiplexer support](docs/TERMINALS.md#unread-window-title).
-- Removing a conversation stops its local refresh and notifications without leaving it in Slack.
-- Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Channel, people and resolved author names are cached separately for faster startup. Messages appear before remaining names finish loading. Tokens and message bodies never go into preferences or the metadata cache.
+- Dismissing an unkept attention entry stops its local refresh without leaving it in Slack. Drafts and unresolved sends must be recovered first.
+- Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Channel, people and resolved author names are cached separately for faster startup. Messages appear before remaining names finish loading. Handled attention identities persist separately so replay does not resurrect dismissed activity. Tokens and message bodies never go into preferences or the metadata cache.
 - Ordinary terminals work without patches. Rounded Unicode frames, bracketed amber focus titles, and a compact layout keep messages readable. See [terminal compatibility](docs/TERMINALS.md).
 - This version handles text messaging and threads. It does not include calls, huddles, file uploads, AI features, or a multi-workspace interface.
 

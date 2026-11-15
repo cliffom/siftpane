@@ -49,7 +49,11 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 			m.index = max(0, len(t.Messages)-1)
 		}
 	}
-	if d := m.deliveries[m.key()]; !m.stopped && (d == nil || d.State == core.DeliverySent) {
+	if cmd := m.selectTriggerResult(v, t); cmd != nil {
+		return m, cmd
+	}
+
+	if d := m.deliveries[m.key()]; !m.stopped && m.statusKind != statusAction && (d == nil || d.State == core.DeliverySent) {
 		m.setStatus("Refreshed", statusRoutine)
 	}
 	return m, m.profileCmd()
@@ -72,6 +76,12 @@ func (m *Model) observeActivity(cid, ts string) {
 }
 
 func (t *timeline) applyPage(v historyResult, thread string) {
+	// An explicit anchor starts a new bounded window. Merging it into a full
+	// newer thread cache would immediately evict the requested older message.
+	if v.Target != "" {
+		t.Messages = nil
+		t.Loaded = false
+	}
 	previous := t.Loaded
 	// Refresh replaces the observed range so edits/deletions within it are reflected.
 	if !v.Older && thread == "" && !v.Page.More {
@@ -110,4 +120,25 @@ func (t *timeline) applyPage(v historyResult, thread string) {
 		t.After = v.QueryAfter
 	}
 	t.Loaded = true
+}
+
+func (m *Model) selectTriggerResult(v historyResult, t *timeline) tea.Cmd {
+	target := m.openTargets[v.Key]
+	if target == "" || v.Key != m.key() {
+		return nil
+	}
+	for i, msg := range t.Messages {
+		if msg.TS == target {
+			m.index = i
+			m.scroll = -1
+			delete(m.openTargets, v.Key)
+			return nil
+		}
+	}
+	if v.Target != target {
+		return m.fetchTrigger(core.AttentionTrigger{TS: target})
+	}
+	m.scroll = -1
+	m.setStatus("Trigger unavailable in returned context · inspect Slack or R retry", statusAction)
+	return nil
 }

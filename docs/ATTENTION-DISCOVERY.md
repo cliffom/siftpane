@@ -1,84 +1,71 @@
-# Attention discovery feasibility (#14)
+# Attention discovery decision and evidence (#14)
 
-Status: **proposed; live gate open**, 2026-11-15. This record advances [#14](https://github.com/cliffom/siftpane/issues/14), the first gate of [milestone 1](https://github.com/cliffom/siftpane/milestone/1). It does not establish a verified discovery mechanism or complete #14. No approved test installation has been established in this session, no Slack requests were made, and no scopes or subscriptions changed. Documentation review is evidence about the API contract, not evidence about this installation's coverage.
+Status: **bounded search source; operator-confirmed release acceptance**, 2026-11-15. [Milestone 1](https://github.com/cliffom/siftpane/milestone/1) orders #14 (discovery decision), #15 (manual lifecycle), then #16 (integration/live acceptance). The operator confirmed the outstanding live acceptance as “verified” in the release conversation. This resolves PR #18's draft release gate; no case-by-case operator fixture log or timings were supplied, so the assistant's observations below remain separately attributed. GitHub issue/milestone state is managed separately from publishing this release.
 
-The milestone orders #14 → #15 → #16. Finish the live decision before treating the manual lifecycle contract (#15) or direct-mention integration (#16) as accepted. The proposed contracts below make that decision reviewable without changing today's inclusion-only read boundary.
+## Documented basis
 
-## Candidate and documented constraints
-
-Evaluate documented user-token `search.messages` first. It can query messages outside Siftpane's included list without enumerating every channel. This is a candidate, not a claim of complete personal-mention delivery.
-
-| Mechanism | Official evidence checked on 2026-11-15 | Consequence |
+| Mechanism | Official evidence checked on 2026-11-15 | Decision |
 | --- | --- | --- |
-| [Message search](https://docs.slack.dev/reference/methods/search.messages/) | User `search:read`; Tier 2; timestamp sorting; page/count pagination (maximum 100 each), and a documented cursor option. Saved Slack UI filters affect results; nearby matches can collapse. | Test pagination and exact trigger recovery, including adjacent mentions. A successful empty response alone cannot prove complete coverage. |
-| [Search scope](https://docs.slack.dev/reference/scopes/search.read/) | `search:read` is a legacy user scope. | Confirm it can actually be granted to this internal app; existing history scopes do not grant search. |
-| [Real-time Search](https://docs.slack.dev/apis/web-api/real-time-search-api/) | The guide describes use exclusively in apps using AI features and in response to user interactions; granular scopes differ from legacy search. | Siftpane has no AI feature. Do not silently substitute this API for background discovery; establish suitability first. |
-| [Message events](https://docs.slack.dev/reference/events/message/) and [Events API](https://docs.slack.dev/apis/events-api/) | History-scoped message families exist; delivery is best effort with bounded retries. | Test user-subscription visibility separately from bot visibility. Events alone do not demonstrate recovery while a desktop client is closed. |
-| [App mentions](https://docs.slack.dev/reference/events/app_mention/) | This event describes mentions of the app's bot user. | Reject as a source for mentions of the authenticated person. |
+| [Message search](https://docs.slack.dev/reference/methods/search.messages/) | User `search:read`, Tier 2, timestamp sorting, page/count and cursor options. Saved Slack UI filters affect results; nearby matches can collapse. | Use exact-token search as an opt-in, explicitly limited source. Do not equate a successful empty page with complete mention delivery. |
+| [Search scope](https://docs.slack.dev/reference/scopes/search.read/) | Legacy user scope, distinct from history scopes. | Added to the internal app grant and checked-in manifest; reinstall existing installations. |
+| [Real-time Search](https://docs.slack.dev/apis/web-api/real-time-search-api/) | Described for apps using AI features and in response to user interactions. | No silent substitution for this non-AI background client. |
+| [Message events](https://docs.slack.dev/reference/events/message/) / [Events API](https://docs.slack.dev/apis/events-api/) | History-scoped families, best-effort delivery and bounded retries. | No subscriptions yet. Test user visibility and historical recovery before selecting events. |
+| [App mentions](https://docs.slack.dev/reference/events/app_mention/) | Mentions of the app's bot user. | Not a personal-mention source. |
 
-No default-manifest change is justified yet. If legacy search passes, its incremental permission is user `search:read`; current metadata/history scopes remain necessary for opening context. No new posting permission is needed for discovery. If events prove necessary, verify user `message.channels`/`message.groups` coverage, and require a demonstrated historical gap-recovery mechanism before choosing them. Socket Mode would also require app-level `connections:write`, envelope acknowledgements and reconnection handling; it is not an offline inbox. An always-on receiver would add infrastructure and needs a separate concrete design.
+Search detection is independent of Slack's notifications, mute/presence and read settings. Broadcasts and followed-thread replies without direct mentions are not enabled sources. If controlled tests show that search collapsing/filters prevent the milestone's required new-mention behavior, bring user events and a demonstrated historical gap-recovery mechanism forward. Socket Mode alone is not a closed-client inbox; an always-on receiver would require its own concrete design. Current subscriptions and Socket Mode remain off.
 
-Search may identify relevant activity; it does not reproduce Slack's notification, presence, mute, or read settings. Broadcasts and followed-thread replies are assessment cases for the next milestone, not implicitly enabled sources.
+## Actual read-only observations
 
-## Reproducible live experiment
+The user approved all conversations for read-only testing and refreshed the installation with `search:read`. Authentication succeeded using the existing OS credential store. Secrets and message bodies were never logged or committed. No messages, membership changes, read-position writes, app configuration changes through APIs, or credential-store writes were performed by the probes.
 
-Use an approved internal test app and synthetic conversations controlled by the operator. Keep tokens in the existing OS credential store or explicit environment override; never paste them into this record, shell arguments, captures or logs. Do not use a connected Slack connector as proof of Siftpane's own grant. The operator creates fixtures in Slack; the discovery experiment is read-only. No automated messages or membership changes are part of this plan.
+- Exact `<@USER_ID>` search over the preceding seven days returned 35 exact matches across two pages (`count=20`), with 35 distinct conversation/message identities. Replaying page one preserved its identities. Comparing the local Kept IDs found 32 matches outside Kept. Three matches had private-conversation metadata; this alone does **not** establish private-channel/thread coverage, since group DMs can be private too.
+- The `to:me` candidate reported 96 results; neither of its first two results contained the exact mention token. The implementation therefore validates the raw exact token and does not use `to:me` as a synonym for mentions.
+- Search matches carried thread roots in permalink query parameters rather than top-level `thread_ts`. A bounded public-thread reply request returned the exact searched message. No private-thread sample was available for that pass.
+- A later run through the actual Go `Client.Mentions` adapter returned 37 exact matches, including 34 thread targets. `Client.History` with its new target anchor returned the exact selected trigger. A discovered identity was dismissed, atomically saved in a private temporary account-state file, reloaded and replayed without resurrection. That temporary directory was removed afterward. This is read-only adapter/store evidence, not a complete interactive TUI acceptance pass.
 
-1. Confirm workspace/user identity with `auth.test` and inspect the installation's granted scopes. Obtain administrator approval and reinstall the test app with `search:read` if required. Record grant success or refusal without recording credentials. Leave the shipping manifest unchanged until a mechanism is selected.
-2. Prepare unkept public and private channels the person can access, a thread in each, and a public channel the person has not joined. Keep a private inaccessible channel as a negative control. Identify fixtures with synthetic labels and keep an operator-only mapping to Slack IDs/timestamps. Include ordinary chatter and a mention of a different person as negative controls.
-3. Using the documented search call generator or a local client that reads the credential securely, compare queries containing the exact `<@USER_ID>` token and `to:me`, bounded by `after:YYYY-MM-DD before:YYYY-MM-DD`. These are **query candidates requiring verification**, not an asserted API mention syntax. [Slack's search guide](https://slack.com/help/articles/202528808-Search-in-Slack) documents date and thread modifiers. Use `sort=timestamp`, `sort_dir=asc`, `highlight=false`, `count=2`, `page=1`, then successive pages. Confirm which returned messages actually contain the exact mention token; name matches or contextual neighbors are not direct mentions.
-4. Have the operator create separated and adjacent direct mentions in each accessible test channel/thread, using at least five matches to force pages. Include two mentions within seconds of one another. Verify exact conversation/message identities and whether a reply's root can be recovered from search or a bounded documented context request. If roots or collapsed matches cannot be recovered, record failure of exact-target coverage rather than substituting a nearby message.
-5. Close Siftpane, have the operator create new mentions, and repeat the bounded search after reopening. Record elapsed indexing time and repeat after 1, 5 and 15 minutes. Repeat with restrictive saved Slack search filters and with them cleared. A filter-dependent miss must remain a declared coverage limitation; decide whether it fails milestone acceptance.
-6. Replay all pages, restart between pages, insert activity during pagination, and retry a deliberately interrupted page. Compare identities, not result counts alone. Test the documented cursor path separately if page movement loses matches. Record the actual response pagination shape; do not assume the older example establishes cursor behavior.
-7. Have the operator revoke access to a test private channel, then retry discovery and context opening. Separately revoke the test grant. Confirm denied/stale context is actionable, old results are not treated as current access, automatic checking stops on expired authentication, and no membership repair is attempted.
-8. Inspect rate headers during normal bounded requests. Do not flood Slack to force `429`. If no live rate limit occurs, record it as unobserved and use offline transport tests for `Retry-After`, cancellation and no checkpoint advancement. [Slack's rate-limit guide](https://docs.slack.dev/apis/web-api/rate-limits/) specifies honoring the response delay.
-9. Separately assess `@channel`, `@here`, and replies to a followed thread without a direct mention. Record whether search or approved user events observe them; do not equate observed broadcast text with Slack notification eligibility. Do not infer followed-thread state from ordinary message events.
+Counts describe those observations, not complete workspace coverage or stable fixture expectations. Differences across runs are not proof of controlled new activity. No claim is made that all matching messages were returned, that indexing completed within a guaranteed latency, or that any controlled mention was received while the client was closed.
 
-Record each run below using fixture aliases, times, page counts, result identities as aliases, filter state, permission outcome and observed delays. Keep message bodies, tokens, real channel names and private permalinks out of committed evidence.
+The following matrix records **assistant-run observations before the operator confirmation**. The operator confirmation did not include case-by-case results.
 
-| Case | Required observation | Current result |
-| --- | --- | --- |
-| Public/private direct mention; root and thread | Exact trigger and usable root/context in an unkept conversation | Not run |
-| Accessible nonmember public channel | Search visibility versus history/open permission | Not run |
-| Adjacent mentions and multiple pages | No silently lost newer trigger after dismiss/replay | Not run |
-| Closed-client catch-up and indexing delay | Recover synthetic mentions inside the proposed window | Not run |
-| Saved filters and negative controls | Exclusions visible; other-user/chatter results rejected | Not run |
-| Interrupted pages, overlap and restart | No skipped checkpoint interval or duplicate attention | Not run |
-| Access/grant revocation | Explicit recovery; no unauthorized context requests | Not run |
-| Server rate limit | Delay honored, or explicitly unobserved live | Not run |
-| Broadcasts/followed-thread replies | Document coverage separately from direct mentions | Not run |
-
-## Proposed bounded catch-up contract
-
-These are implementation proposals to validate, not current defaults or demonstrated guarantees. Keep eventual named values in the Slack transport, UI limits and store owners described in [development standards](DEVELOPMENT.md#values-states-and-settings).
-
-- Start with a seven-day initial lookback and a seven-day maximum catch-up window. A longer absence displays an explicit uncovered interval; it does not silently advance past it as if checked. Search retention, saved filters and indexing can reduce coverage further.
-- Capture a fixed scan interval at check start, ending at the preceding UTC midnight; scan the current UTC day separately as provisional. Use documented calendar-date bounds padded by a day on each side, then filter by exact message timestamps locally. Validate Slack's date/timezone interpretation at midnight boundaries before acceptance. Recheck at least the previous two days on every cycle for delayed indexing. Older late-indexed messages remain an explicit limitation; do not claim exhaustive delivery.
-- Try at most ten pages of 100 results per check, one request at a time, with a three-minute check interval, at least 3.1 seconds between search starts, existing HTTP timeouts, and authoritative server backoff. A full final page, inconsistent paging, malformed response, cancellation or budget exhaustion means incomplete coverage. Preserve the previous committed checkpoint and expose manual retry. Dense windows can be split by day on subsequent checks; if one day still exceeds the budget, report the unresolved gap rather than skip it.
-- Commit a completed historical interval only after every page is validated and its accepted identities are durably stored. Keep successful partial entries visible and deduplicate their replay; never advance a checkpoint merely to the newest result seen. A persistence failure is a failed check. A provisional current-day check can record its successful check time, but cannot close that day or imply complete coverage.
-- Cap active attention at 128 conversations and 1,000 trigger identities per account. Capacity exhaustion must retain the old checkpoint and report incomplete coverage. Durable handled identities must outlive the replay window; prune them only when that interval cannot be replayed. A seven-day lookback floor must remain enforced after pruning. Restarting, re-enabling discovery or losing a checkpoint must not quietly expand the replay window and resurrect pruned dismissals.
-
-Calendar search and mutable indexes cannot establish archive completeness. The live decision must explicitly say whether this bounded, delayed source satisfies the milestone. If it does not, select and validate another documented mechanism before integrating it.
-
-## Proposed lifecycle handoff to #15
-
-Keep transport-independent identity and lifecycle types in `core`, persistence in `store`, and event-loop-owned selection/draft/delivery in `ui`. Discovery should use a separate optional service capability with context cancellation, independent of directory search and `Service.History`. Demo and automated tests remain offline.
-
-| Identity/state | Proposed contract |
+| Case | Assistant-run evidence / earlier validation gaps |
 | --- | --- |
-| Account | Workspace ID + authenticated user ID from `auth.test`; no display names or token hashes as logical identity. Existing inclusion preferences are only workspace-keyed, so migration must explicitly seed the current account as Kept without sharing new dismissals/checkpoints with another account. |
-| Trigger | Account + conversation ID + message timestamp + typed source reason. Preserve timestamp precision; never use floating point or display text as identity. Root timestamp is a separate opening target, not a substitute for the reply identity. |
-| Manual temporary add | Locally generated stable identity; an explicit re-add makes a new trigger. Searching, completing and opening an existing result never creates a subscription implicitly. |
-| Attention | One row per conversation with aggregated reasons and an exact selected trigger. Kept membership is independent; a kept conversation with attention must not acquire a duplicate sidebar row. |
-| Dismissal | Persist handled trigger identities atomically before hiding attention. A subsequent distinct direct mention can return it; chatter cannot. Dismiss only the observed set, so a concurrently arriving new trigger survives. Read, reply and reaction do not dismiss. |
-| Text safety | Refuse dismissal while any conversation/thread draft or pending/failed/uncertain delivery needs recovery. Provide explicit keep/open/recovery, never silently hide text, cancel a send as if retracted, or automatically retry it. |
-| Selection/context | Opening a trigger fetches only bounded context for that explicitly opened target. Cancel removed generations and ignore late results. Keep current selection/drafts stable during unrelated discovery completions. Access loss leaves an actionable unavailable target. |
-| Persistence | Separate versioned account-isolated durable state, independent of disposable message/name caches. Store IDs, reasons, timestamps, enabled source and checkpoints, never bodies or credentials. Private atomic writes; corrupt state must not be silently reset. |
-| Navigation | Next-attention order is deterministic (trigger timestamp then conversation ID), independent of completion order. Exact keys and row presentation belong to #15's design and viewport review. |
-| Freshness | Typed disabled/checking/current/incomplete/failed/auth-stopped states. Last successful check, last completed interval and known gaps are distinct; an empty list is not a success signal. Keep manual use and existing results available on failure. |
+| Public direct mention and exact thread opening | Existing-message search and production adapter context observed; controlled fixture still needed |
+| Private-channel/root/thread coverage | Private-conversation search observed; private-channel and private-thread fixtures not established |
+| Unkept conversation | Existing matches outside Kept observed |
+| Pagination and duplicate replay | Two live pages and stable first-page replay; deterministic offline interruption/budget/changed-total tests |
+| Adjacent new mentions after dismissal | Not exercised live; documented collapsing remains a feasibility risk |
+| Closed-client catch-up / indexing latency | Historical mentions returned; controlled close/receive/reopen sequence not run |
+| Saved filters and access/grant revocation | Not exercised live; offline failure/cancellation/late-result handling covered |
+| Server rate limit | No live `429` observed; offline transport tests cover delay/cancellation |
+| Broadcasts / followed-thread reply coverage | No controlled fixtures; subscription/notification equivalence unverified |
+| Respond/dismiss/restart/new mention | Durable discovered-identity reload/replay observed; interactive response and controlled second mention outstanding |
 
-## Decision and next step
+## Implemented bounded contract
 
-**No mechanism selected as verified.** The next required input is an approved internal installation and an operator able to create synthetic fixtures and grant/revoke test access. Complete the matrix, settle query/pagination/context recovery and the supported window, then amend this record with observed evidence and an explicit search/events decision. If events are needed, bring subscriptions and gap recovery into #16 rather than describing polling as equivalent.
+The optional `Mentions` capability is separate from directory search and `Service.History`. Discovery starts disabled; `M` twice explicitly enables it after disclosing accessible unkept mention access and `search:read`. An intervening key cancels confirmation. The preference is account-isolated. Disabling cancels the scan, invalidates late generations and retains entries. Discovery never enumerates all channels or reads an unopened unkept history.
 
-After that decision, #15 implements and validates the manual lifecycle; #16 integrates the selected source and performs the milestone's live close/mention/reopen/respond/dismiss/restart/new-mention acceptance pass. Keep #14, #15 and #16 open until their actual acceptance criteria pass. This documentation-only preparation needs no dedicated version bump under [release policy](RELEASING.md); the current published version remains 0.4.0.
+- Initial and maximum catch-up: seven days. Incremental scans revisit two days before the last completed checkpoint, bounded by a monotonic persisted replay floor. A longer absence produces a durable visible catch-up gap. Success/restart cannot clear it; confirmed `Ctrl+G` acknowledgement records that the user accepts the warning, without checking the missing interval. Search date bounds are padded by a day, followed by exact local timestamp filtering; midnight/timezone edge coverage remains a live test item.
+- One request at a time, 100 results per page, ten pages per check, three minutes between checks, at least 3.1 seconds between search starts. Server `Retry-After` is authoritative. Requests remain cancelable and use existing HTTP timeouts.
+- Accepted identities persist page by page. Only a validated terminal page and successful save advance the completed interval/last-success time. Malformed/changed pagination, page exhaustion, failure or capacity limits keep the preceding completion and partial entries visible. `R` retries. A full page can still be terminal when consistent paging metadata says so.
+- Active attention is capped at 128 conversations; active plus handled identities at 1,000 per account. Handled records expire only behind the replay floor. Pending entries remain until explicit dismissal. Never expand backward over pruned identities after restart/re-enable. Capacity exhaustion is an incomplete check, not permission to drop entries.
+- The footer labels successful checks **limited search**, and separately shows checking, failure/retry and known gaps. Local success cannot overcome saved filters, retention, indexing beyond the overlap, old edits or result collapsing. Dense intervals exceeding the budget remain incomplete; automatic day splitting is not implemented.
+
+## Identity and manual lifecycle contract
+
+`core` owns the typed reason and lifecycle state; `store` owns a separate versioned workspace/user-isolated durable file; `ui` owns selection, commands and cancellation. See [architecture](ARCHITECTURE.md#attention-ownership) and [privacy](CONFIGURATION.md#durable-attention-state).
+
+Existing included IDs migrate to Kept. A direct trigger uses its source reason/message timestamp inside a conversation and account; the root timestamp is a separate opening target. Timestamp parsing never uses floating point. A manual temporary add has a fresh random stable ID and explicit creation time, so a deliberate re-add is new activity. Repeated triggers group by conversation; a Kept conversation with attention appears once. Ordering uses the oldest pending trigger time then conversation ID, independent of asynchronous completion order.
+
+`K` keeps explicitly; `d` saves handled identities before hiding observed triggers; `n` opens the next exact trigger. Read/reply does not dismiss. A distinct later mention can return the conversation. Any retained conversation/thread draft or pending/failed/uncertain send blocks dismissal until recovery. Failed persistence leaves the entry visible. Context access failure remains actionable; removal cancels reads and ignores late generations. Cache eviction cannot discard durable dismissal state. No automatic send retries or Slack membership/read-state changes are introduced.
+
+## Reproducible live protocol
+
+Use synthetic fixture labels and keep the mapping to real IDs/timestamps private. Keep credentials in the OS store or explicit override, never shell arguments, logs or chat. An operator creates the fixtures; probes remain read-only unless the user explicitly authorizes a send.
+
+1. In accessible public and private test channels, create separated and adjacent direct mentions, including replies; include other-user mentions/chatter as negative controls. Include an accessible nonmember public channel and an inaccessible private-channel control.
+2. Verify exact-token search, forced multi-page results and exact targets, with saved UI filters both restrictive and cleared. Check midnight/date-bound behavior. If nearby newer mentions are hidden after dismissal, record a feasibility failure; do not silently accept a nearby substitute.
+3. Close Siftpane, receive a mention, reopen and check indexing at 1, 5 and 15 minutes. Open/respond, dismiss, restart and verify suppression; then receive a new mention and confirm return. Record response/send identity separately from read-only proof.
+4. Interrupt a page, restart/replay, and insert activity during paging. Confirm partial entries survive but completion cannot skip the failed interval. Test access and grant revocation without trying to repair membership.
+5. Observe normal rate headers; do not flood Slack to provoke `429`. Record unobserved live backoff separately from deterministic offline tests. Assess `@channel`, `@here` and followed-thread-only replies separately from personal mentions.
+
+The operator confirmation allows the reviewed 0.5.0 implementation to proceed through the release workflow. The documented search limits and the distinction between observed, offline-tested and operator-confirmed behavior still apply. This release operation does not separately close or edit #14/#15/#16 or milestone #1.

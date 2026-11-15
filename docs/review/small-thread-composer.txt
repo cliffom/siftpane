@@ -13,8 +13,8 @@
 │                                                          │
 │                                                          │
 │ ╭ [Thread reply] ──────────────────────────────────────╮ │
-│ │ › Thanks, Maya. I'll review the keyboard flow this   │ │
-│ │   afternoon.                                         │ │
+│ │ › A retained thread draft.                           │ │
+│ │                                                      │ │
 │ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
  Refreshed                                          F1 help

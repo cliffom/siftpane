@@ -24,7 +24,7 @@ func (m *Model) directoryCmd(cursor string) tea.Cmd {
 
 func (m *Model) fetch(key string, older bool) tea.Cmd {
 	cid, thread := split(key)
-	if !m.included[cid] || m.stopped {
+	if !m.canRead(cid) || m.stopped {
 		return nil
 	}
 	t := m.line(key)
@@ -48,10 +48,18 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 			q.Before = t.Messages[0].TS
 		}
 	}
+	if !older && m.openTargets[key] != "" {
+		q.Target = m.openTargets[key]
+		q.After = ""
+	}
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {
 		p, err := svc.History(ctx, q)
-		return historyResult{Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: q.After}
+		after := q.After
+		if q.Target != "" && q.Thread != "" {
+			after = q.Target
+		}
+		return historyResult{Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: after, Target: q.Target}
 	}
 }
 
@@ -70,7 +78,8 @@ func (m *Model) conversationCmd(cid string) tea.Cmd {
 
 func (m *Model) refresh() tea.Cmd {
 	m.profileAttempted = map[string]bool{}
-	cmds := []tea.Cmd{m.fetch(m.key(), false), m.profileCmd()}
+	m.discoveryNext = time.Time{}
+	cmds := []tea.Cmd{m.fetch(m.key(), false), m.profileCmd(), m.checkMentions(time.Now())}
 	for cid := range m.metadataFailed {
 		cmds = append(cmds, m.conversationCmd(cid))
 	}

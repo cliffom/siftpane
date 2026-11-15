@@ -1,12 +1,11 @@
  siftpane                           Fieldwork · demo · @you
 
 ╭ [Messages] ──────────────────────────────────────────────╮
-│ CHANNELS 4/6 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
 │  #design                                                 │
 │▸ #newly-included                                         │
 │  #shipping                                            ●  │
 │  #studio                                                 │
-│ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│
 │  @Maya Chen                                           ●  │
 │  @Maya, Leo, you                                         │
 │                                                          │
@@ -16,5 +15,6 @@
 │                                                          │
 │                                                          │
 │                                                          │
+│                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Included. Only chosen conversations are refreshed.  ? help
+ Kept preference saved; attention requires explicit dismiss…

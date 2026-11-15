@@ -33,6 +33,8 @@ func (m *Model) closePicker() tea.Cmd {
 func (m *Model) pickerKey(v tea.KeyPressMsg) tea.Cmd {
 	cs := m.choices()
 	switch v.String() {
+	case keyTemporary:
+		return m.temporaryChoice(cs)
 	case keyEscape:
 		return m.closePicker()
 	case keySwitch, keyCommandSwitch:

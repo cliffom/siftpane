@@ -74,7 +74,7 @@ type DirectoryPage struct {
 }
 type (
 	// Query identifies a timeline and optional cursor or exclusive timestamp bounds.
-	Query struct{ Conversation, Thread, Cursor, Before, After string }
+	Query struct{ Conversation, Thread, Cursor, Before, After, Target string }
 	// Outgoing is an immutable send attempt with a stable client ID.
 	Outgoing struct{ Conversation, Thread, Text, ID string }
 	// Service is the context-aware boundary shared by Slack and the offline demo.

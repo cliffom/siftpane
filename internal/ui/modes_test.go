@@ -38,7 +38,9 @@ func TestNavigationModesRetainDraft(t *testing.T) {
 func TestSelectionLimitUsesSameValueInStatus(t *testing.T) {
 	m := fixture(t)
 	for len(m.included) < selectionLimit {
-		m.included[fmt.Sprint("extra", len(m.included))] = true
+		cid := fmt.Sprint("extra", len(m.included))
+		m.included[cid] = true
+		m.attention.Kept[cid] = true
 	}
 	m.toggle("overflow")
 	if m.included["overflow"] || !strings.Contains(m.status, fmt.Sprint(selectionLimit)) {
