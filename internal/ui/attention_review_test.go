@@ -306,3 +306,62 @@ func TestAcknowledgedGapDoesNotResurrectDuringFailedScanReplay(t *testing.T) {
 		t.Fatal("newly uncovered time did not warn separately")
 	}
 }
+
+func TestMentionKeyRepeatCannotConfirmOrToggleDiscovery(t *testing.T) {
+	m := fixture(t)
+	repeat := tea.KeyPressMsg{Code: 'M', Text: "M", IsRepeat: true}
+	m.Update(key(keyMentions))
+	if !m.mentionConfirm || m.attention.Enabled {
+		t.Fatal("first physical press did not disclose access")
+	}
+	generation := m.discoveryGeneration
+	for range 3 {
+		if _, cmd := m.Update(repeat); cmd != nil || m.attention.Enabled || !m.mentionConfirm || m.discoveryGeneration != generation {
+			t.Fatal("repeat confirmed unkept mention access")
+		}
+	}
+	if _, cmd := m.Update(key(keyMentions)); cmd == nil || !m.attention.Enabled || !m.discoveryBusy {
+		t.Fatal("second physical press did not enable discovery")
+	}
+	generation = m.discoveryGeneration
+	ctx := m.discoveryCtx
+	for range 3 {
+		if _, cmd := m.Update(repeat); cmd != nil || !m.attention.Enabled || !m.discoveryBusy || m.discoveryGeneration != generation || ctx.Err() != nil {
+			t.Fatal("repeat toggled or restarted enabled discovery")
+		}
+	}
+	m.Update(key(keyMentions))
+	if m.attention.Enabled || m.discoveryBusy || ctx.Err() == nil {
+		t.Fatal("physical press did not disable discovery")
+	}
+}
+
+func TestRepeatedMentionLetterRemainsOrdinaryInput(t *testing.T) {
+	for _, mode := range []pickerMode{pickerClosed, pickerSwitch, pickerInclude} {
+		t.Run(string(mode), func(t *testing.T) {
+			m := fixture(t)
+			if mode == pickerClosed {
+				m.focus = focusCompose
+				m.composer.Focus()
+			} else {
+				m.openPicker(mode)
+			}
+			m.Update(tea.KeyPressMsg{Code: 'M', Text: "M", IsRepeat: true})
+			text := m.composer.Value()
+			if mode != pickerClosed {
+				text = m.picker.Value()
+			}
+			if text != "M" || m.attention.Enabled || m.mentionConfirm {
+				t.Fatal("repeat was not retained as ordinary input", text)
+			}
+		})
+	}
+}
+
+func TestRepeatedMentionKeyDoesNotStartDisclosure(t *testing.T) {
+	m := fixture(t)
+	m.setStatus("retained action", statusAction)
+	if _, cmd := m.Update(tea.KeyPressMsg{Code: 'M', Text: "M", IsRepeat: true}); cmd != nil || m.mentionConfirm || m.attention.Enabled || m.statusKind != statusAction {
+		t.Fatal("repeat initiated disclosure or cleared action feedback")
+	}
+}

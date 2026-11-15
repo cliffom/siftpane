@@ -28,6 +28,10 @@ func (m *Model) quitKey() tea.Cmd {
 
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
+	// Ignore held-key events before they can alter navigation confirmations.
+	if v.Key().IsRepeat && k == keyMentions && m.mode == pickerClosed && m.focus != focusCompose && !m.help {
+		return m, nil
+	}
 	if k != keyAcknowledgeGap {
 		m.gapConfirmation = nil
 	}
