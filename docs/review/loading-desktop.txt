@@ -1,13 +1,13 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
-│ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │                                                                          │
 │  #shipping         ●  │                                                                          │
 │▸ #studio              │                                                                          │
-│ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
 │  @Maya Chen        ●  │                                                                          │
 │  @Maya, Leo, you      │                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │

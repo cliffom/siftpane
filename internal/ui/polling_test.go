@@ -34,6 +34,7 @@ func pollingFixture(t *testing.T, count int) (*Model, *pollingService) {
 		cid := fmt.Sprintf("C%d", i)
 		m.directory = append(m.directory, core.Conversation{ID: cid, Name: cid, Kind: core.ConversationChannel})
 		m.included[cid] = true
+		m.attention.Kept[cid] = true
 		m.addContext(cid)
 	}
 	// Loaded metadata for an excluded conversation must never cause polling.

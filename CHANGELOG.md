@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 — Unreleased
+
+- Add Needs Attention and Kept, with explicit temporary add/open (`Ctrl+T` in a picker), keep (`K`), dismiss (`d`) and next-attention (`n`). Preserve existing included conversations as Kept. Reading and replying never dismiss.
+- Persist minimal account-isolated handled identities and checkpoints; keep drafts and unresolved sends protected during dismissal.
+- Add opt-in direct mentions (`M` twice), exact message/thread opening, bounded catch-up, and checking/failure/limited-coverage status. Add `search:read` to the manifest; existing installations must reinstall and update their stored user token.
+- Controlled live mention/dismiss/restart acceptance remains outstanding. Search filters, indexing and nearby-result collapsing limit discovery; see the discovery evidence record.
+
 ## 0.4.0 — 2026-11-15
 
 - Right-align sidebar unread and draft indicators in reserved columns, keeping them visible beside long names. Remove the sidebar activity legend and repeated shortcut lists.

@@ -28,6 +28,8 @@ Use `//nolint:<specific-linter> // reason` only for a justified false positive t
 
 ## Go conventions
 
+When an implemented feature needs a new Slack scope, update `slack-app-manifest.yaml` and the permission table in `docs/SLACK.md` in the same change. Document reinstall/re-authorization for existing installations; verify new-install grants from the manifest. A locally updated app grant is not a substitute for keeping the checked-in manifest current.
+
 - Use gofumpt and goimports, with standard library, third-party, and `github.com/cliffom/siftpane` imports in separate groups. Do not hand-align code or maintain a second formatting configuration in an editor.
 - Use clear package names, Go initialisms (`ID`, `URL`, `HTTP`), `err` for error variables, short conventional receivers, and descriptive names for state with a longer lifetime. Use multiline literals for substantial model/configuration values.
 - Keep exported identifiers documented, including internal package APIs. Comments explain contracts, ownership, failure behavior, and non-obvious decisions. Do not repeat the implementation line by line.

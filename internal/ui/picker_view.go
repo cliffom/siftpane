@@ -70,7 +70,10 @@ func (m *Model) pickerView(w, h int) string {
 
 func (m *Model) suggestionRow(c core.Conversation, focused bool) string {
 	marker := "[+]"
-	if m.included[c.ID] {
+	if len(m.attention.Pending[c.ID]) > 0 {
+		marker = "[!]"
+	}
+	if m.attention.Kept[c.ID] {
 		marker = "[✓]"
 	}
 	prefix := "  "
@@ -95,7 +98,7 @@ func (m *Model) choiceAction(cs []core.Conversation, index int) string {
 	action := "open "
 	if !m.included[c.ID] {
 		action = "include & open "
-		if len(m.included) >= selectionLimit {
+		if len(m.attention.Kept) >= selectionLimit {
 			return fmt.Sprintf(" Limit: %d included · remove via %s", selectionLimit, keyLabel(keyInclude))
 		}
 	}
@@ -111,8 +114,8 @@ func (m *Model) directoryState() string {
 	case !m.directoryLoaded:
 		return " Directory not loaded · " + keyLabel(keyDirectoryReload) + " retry"
 	case m.mode == pickerInclude:
-		return " " + keyLabel(keyFocus) + " include/remove · [✓] included"
+		return " " + keyLabel(keyFocus) + " keep/unkeep · [✓] kept"
 	default:
-		return " " + keyLabel(keyFocus) + " complete · " + keyLabel(keyEscape) + " close"
+		return " " + keyLabel(keyTemporary) + " temporary · " + keyLabel(keyFocus) + " complete"
 	}
 }

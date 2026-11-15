@@ -113,6 +113,7 @@ func (s *Service) History(_ context.Context, q core.Query) (core.Page, error) {
 			}
 		}
 	}
+	ms = openingMessages(ms, q)
 	if q.After != "" {
 		filtered := []core.Message{}
 		for _, m := range ms {
@@ -204,3 +205,16 @@ type sendFailure struct{}
 
 func (sendFailure) Error() string           { return "demo: simulated send failure; press Esc then r to retry" }
 func (sendFailure) DeliveryUncertain() bool { return false }
+
+func openingMessages(ms []core.Message, q core.Query) []core.Message {
+	if q.Target == "" {
+		return ms
+	}
+	out := []core.Message{}
+	for _, m := range ms {
+		if q.Thread == "" && m.TS <= q.Target || q.Thread != "" && m.TS >= q.Target {
+			out = append(out, m)
+		}
+	}
+	return out
+}

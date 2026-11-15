@@ -25,6 +25,9 @@ func (m *Model) activityStatus() string {
 	if len(m.metadataBusy) > 0 {
 		return m.restorationState()
 	}
+	if m.attention.Enabled || m.attentionErr != "" {
+		return m.discoveryStatus()
+	}
 	return m.status
 }
 

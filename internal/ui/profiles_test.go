@@ -148,7 +148,7 @@ func TestNameEvictionDoesNotCauseLookupLoop(t *testing.T) {
 
 func TestNamesSurviveRestartWithoutCrossAccountReuse(t *testing.T) {
 	m, svc := profileFixture(t)
-	st, err := store.Open(filepath.Join(t.TempDir(), "config.json"))
+	st, err := store.Open(filepath.Join(t.TempDir(), testConfigName))
 	if err != nil {
 		t.Fatal(err)
 	}

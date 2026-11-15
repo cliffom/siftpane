@@ -3,6 +3,8 @@ package ui
 import (
 	"fmt"
 
+	"github.com/charmbracelet/x/ansi"
+
 	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/slack"
 )
@@ -26,13 +28,13 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 	}
 	start := max(0, activeIndex-max(1, listHeight-sidebarSelectionRows))
-	includedChannels, totalChannels := m.channelCounts()
+
 	lastKind := ""
 	for i := start; i < len(cs); i++ {
 		c := cs[i]
-		kind := "CHANNELS"
-		if isPerson(c) {
-			kind = "PEOPLE"
+		kind := "KEPT"
+		if len(m.attention.Pending[c.ID]) > 0 {
+			kind = "NEEDS ATTENTION"
 		}
 		needed := 1
 		if lastKind != kind {
@@ -43,9 +45,7 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 		if lastKind != kind {
 			label := kind
-			if kind == "CHANNELS" {
-				label += fmt.Sprintf(" %d/%d", includedChannels, totalChannels)
-			}
+
 			rows = append(rows, labelLine(label, w, "╌", muted))
 			lastKind = kind
 		}
@@ -57,19 +57,6 @@ func (m *Model) sidebar(w, h int) []string {
 		rows = append(rows, " Nothing included yet.", " "+keyLabel(keyInclude)+"  choose conversations")
 	}
 	return padRows(rows, w, h)
-}
-
-func (m *Model) channelCounts() (int, int) {
-	includedChannels, totalChannels := 0, 0
-	for _, c := range m.directory {
-		if c.Kind == core.ConversationChannel || c.Kind == core.ConversationPrivate {
-			totalChannels++
-			if m.included[c.ID] {
-				includedChannels++
-			}
-		}
-	}
-	return includedChannels, totalChannels
 }
 
 func (m *Model) conversationRow(c core.Conversation, w int) string {
@@ -88,7 +75,13 @@ func (m *Model) conversationRow(c core.Conversation, w int) string {
 	} else {
 		markers += " "
 	}
-	text := fit(prefix+slack.Safe(c.Label()), w-sidebarMarkerColumns) + " " + markers
+	label := slack.Safe(c.Label())
+	reason := ""
+	if ts := m.attention.Pending[c.ID]; len(ts) > 0 {
+		reason = " · " + string(ts[0].Reason)
+	}
+	text := fit(prefix+label, max(0, w-sidebarMarkerColumns-ansi.StringWidth(reason))) + reason + " " + markers
+
 	if c.ID == m.active {
 		return selected.Render(fit(text, w))
 	}

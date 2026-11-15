@@ -1,13 +1,13 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
-│ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
-│  #design              │▸ U1  Nov 13 09:00                                                        │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  U1  Nov 13 09:00                                                        │
 │  #shipping         ●  │  Messages arrive before names finish loading. Hello @U2.                 │
 │▸ #studio              │                                                                          │
-│ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
 │  @Maya Chen        ●  │                                                                          │
 │  @Maya, Leo, you      │                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │

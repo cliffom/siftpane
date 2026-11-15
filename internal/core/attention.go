@@ -1,0 +1,142 @@
+package core
+
+import (
+	"errors"
+	"maps"
+	"slices"
+	"strings"
+	"time"
+)
+
+// AttentionReason describes why a conversation needs explicit handling.
+type AttentionReason string
+
+const (
+	// AttentionManual is a conversation explicitly brought in temporarily.
+	AttentionManual AttentionReason = "temporary"
+	// AttentionMention is a message directly mentioning the authenticated person.
+	AttentionMention AttentionReason = "mention"
+	// AttentionConversations bounds active attention independently of Kept.
+	AttentionConversations = 128
+	// AttentionTriggers bounds active and handled identities together per account.
+	AttentionTriggers = 1000
+	// AttentionLookback is the supported search/replay window, not an archive guarantee.
+	AttentionLookback = 7 * 24 * time.Hour
+)
+
+// AttentionTrigger identifies one relevant message or explicit local addition.
+// Message timestamps retain their original precision; Thread identifies its root.
+type AttentionTrigger struct {
+	ID     string          `json:"id"`
+	TS     string          `json:"ts,omitempty"`
+	Thread string          `json:"thread,omitempty"`
+	Reason AttentionReason `json:"reason"`
+	At     time.Time       `json:"at"`
+}
+
+// AttentionState contains durable account-local preferences and minimal identities.
+// Bodies and display names never belong in this state.
+type AttentionState struct {
+	Kept       map[string]bool               `json:"kept"`
+	Pending    map[string][]AttentionTrigger `json:"pending"`
+	Handled    map[string]AttentionTrigger   `json:"handled"`
+	Enabled    bool                          `json:"mentions_enabled"`
+	Checkpoint time.Time                     `json:"checkpoint"`
+	LastCheck  time.Time                     `json:"last_check"`
+	Floor      time.Time                     `json:"replay_floor"`
+}
+
+// NewAttention migrates existing inclusion to Kept without creating attention.
+func NewAttention(included map[string]bool) AttentionState {
+	kept := map[string]bool{}
+	for cid, v := range included {
+		if v {
+			kept[cid] = true
+		}
+	}
+	return AttentionState{Kept: kept, Pending: map[string][]AttentionTrigger{}, Handled: map[string]AttentionTrigger{}}
+}
+
+// Clone isolates a candidate change until its durable write succeeds.
+func (a AttentionState) Clone() AttentionState {
+	b := a
+	b.Kept = maps.Clone(a.Kept)
+	b.Handled = maps.Clone(a.Handled)
+	b.Pending = make(map[string][]AttentionTrigger, len(a.Pending))
+	for cid, ts := range a.Pending {
+		b.Pending[cid] = slices.Clone(ts)
+	}
+	return b
+}
+
+// Add deduplicates replay and groups attention by conversation; it never dismisses.
+func (a *AttentionState) Add(cid string, t AttentionTrigger) error {
+	if _, ok := a.Handled[cid+"/"+t.ID]; ok {
+		return nil
+	}
+	for _, old := range a.Pending[cid] {
+		if old.ID == t.ID {
+			return nil
+		}
+	}
+	if len(a.Pending[cid]) == 0 && len(a.Pending) >= AttentionConversations {
+		return errors.New("attention full; dismiss an entry and retry")
+	}
+	count := len(a.Handled)
+	for _, ts := range a.Pending {
+		count += len(ts)
+	}
+	if count >= AttentionTriggers {
+		return errors.New("attention identities full; coverage incomplete")
+	}
+	a.Pending[cid] = append(a.Pending[cid], t)
+	slices.SortFunc(a.Pending[cid], func(a, b AttentionTrigger) int {
+		if order := a.At.Compare(b.At); order != 0 {
+			return order
+		}
+		return strings.Compare(a.ID, b.ID)
+	})
+	return nil
+}
+
+// Dismiss handles only the currently observed trigger set for a conversation.
+func (a *AttentionState) Dismiss(cid string) {
+	for _, t := range a.Pending[cid] {
+		a.Handled[cid+"/"+t.ID] = t
+	}
+	delete(a.Pending, cid)
+}
+
+// Prune expires handled identities only behind a monotonic replay floor. Active
+// entries survive indefinitely until explicit dismissal, even beyond the window.
+func (a *AttentionState) Prune(floor time.Time) {
+	if floor.Before(a.Floor) {
+		floor = a.Floor
+	}
+	a.Floor = floor
+	for k, t := range a.Handled {
+		if t.At.Before(floor) {
+			delete(a.Handled, k)
+		}
+	}
+}
+
+// MentionQuery is an immutable bounded discovery request, independent of Kept.
+type MentionQuery struct {
+	User        string
+	From, Until time.Time
+	Page        int
+}
+
+// MentionMatch carries only discovery metadata and the exact opening target.
+type MentionMatch struct {
+	Conversation Conversation
+	Trigger      AttentionTrigger
+}
+
+// MentionPage records pagination explicitly; incomplete pages never advance a checkpoint.
+type MentionPage struct {
+	Matches []MentionMatch
+	More    bool
+	Total   int
+}

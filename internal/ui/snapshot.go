@@ -3,17 +3,21 @@ package ui
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+const demoShippingConversation = "Cshipping" // Shared offline seed identity, not a domain state.
+
 // SnapshotMode is an offline review identifier accepted by the CLI.
 type SnapshotMode string
 
 // Snapshot modes are independent of the UI's navigation state.
 const (
+	SnapshotAttention SnapshotMode = "attention"
 	SnapshotMessages  SnapshotMode = "messages"
 	SnapshotCompose   SnapshotMode = "compose"
 	SnapshotPicker    SnapshotMode = "picker"
@@ -55,6 +59,8 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.resize()
 	m.focus = focusMessages
 	switch mode {
+	case SnapshotAttention:
+		snapshotAttention(m)
 	case SnapshotStartup:
 		m.focus = focusChannels
 		m.directory = nil
@@ -108,4 +114,27 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 		}
 	}
 	return ansi.Strip(m.View().Content)
+}
+
+func snapshotAttention(m *Model) {
+	m.focus = focusChannels
+	at := time.Date(2026, time.November, 15, 12, 0, 0, 0, time.UTC)
+	if err := m.attention.Add(demoShippingConversation, core.AttentionTrigger{ID: "review:mention", TS: "1794672000.000001", Reason: core.AttentionMention, At: at}); err != nil {
+		m.setStatus(err.Error(), statusAction)
+	}
+	if err := m.attention.Add("Dleo", core.AttentionTrigger{ID: "review:temporary", Reason: core.AttentionManual, At: at.Add(time.Second)}); err != nil {
+		m.setStatus(err.Error(), statusAction)
+	}
+	m.attention.Enabled = true
+	m.attention.LastCheck = at
+	m.discoveryPhase = discoveryChecked
+	m.syncAttentionInclusion()
+	m.active = demoShippingConversation
+	p, err := m.service.History(m.ctx, core.Query{Conversation: m.active})
+	if err != nil {
+		m.setStatus(err.Error(), statusAction)
+	} else {
+		m.line(m.active)
+		m.Update(historyResult{Key: m.active, Generation: m.generations[m.active], Page: p})
+	}
 }

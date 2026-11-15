@@ -1,13 +1,13 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
-│ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │  Leo Park  Nov 13 10:27                                                  │
 │  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
 │▸ #studio              │                                                                          │
-│ PEOPLE ╌╌╌╌╌╭ [Keyboard guide] ────────────────────────────────────────────────────╮             │
-│  @Maya Chen │ NAVIGATE                                                             │             │
-│  @Maya, Leo,│ Tab  switch sidebar / messages                                       │             │
+│  @Maya Chen ╭ [Keyboard guide] ────────────────────────────────────────────────────╮             │
+│  @Maya, Leo,│ NAVIGATE                                                             │             │
+│             │ Tab  switch sidebar / messages                                       │             │
 │             │ j/k or ↑/↓  move / select                                            │             │
 │             │ PgUp/PgDn  scroll history                                            │             │
 │             │ G / End  newest + local read                                         │             │
@@ -19,7 +19,7 @@
 │             │ m  mark read locally                                                 │             │
 │             │ y  copy message via OSC52                                            │             │
 │             │                                                                      │e input.     │
-│             │ 1–13/46 ↑/↓ · Esc close                                              │             │
+│             │ 1–13/57 ↑/↓ · Esc close                                              │             │
 │             ╰──────────────────────────────────────────────────────────────────────╯             │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │

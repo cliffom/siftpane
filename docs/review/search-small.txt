@@ -12,7 +12,7 @@
 │  T│                                                  │und│
 │  t│ Enter include & open @Leo Park                   │   │
 │   │ 8 loaded · directory complete                    │   │
-│ ╭ │ Tab complete · Esc close                         │─╮ │
+│ ╭ │ Ctrl+T temporary · Tab complete                  │─╮ │
 │ │ │ Ctrl+L more · Ctrl+R reload                      │ │ │
 │ │ ╰──────────────────────────────────────────────────╯ │ │
 │ ╰──────────────────────────────────────────────────────╯ │

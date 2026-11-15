@@ -33,7 +33,7 @@ func TestHistoryPaginationAndThreadParams(t *testing.T) {
 		if r.Header.Get("Authorization") != "Bearer xoxp-test" {
 			t.Error("missing auth")
 		}
-		if r.Form.Get("channel") != "C1" || r.Form.Get("cursor") != "page2" || r.Form.Get("limit") != "50" {
+		if r.Form.Get(paramChannel) != "C1" || r.Form.Get("cursor") != "page2" || r.Form.Get("limit") != "50" {
 			t.Error(r.Form)
 		}
 		if r.URL.Path == "/conversations.replies" && (r.Form.Get("ts") != "10.1" || r.Form.Get("oldest") != "12.1") {
@@ -97,7 +97,7 @@ func TestSendFieldsAndAmbiguousFailure(t *testing.T) {
 			t.Errorf(parseRequestFailure, err)
 			return
 		}
-		if r.Form.Get("thread_ts") != "parent" || r.Form.Get("text") != outgoingBody || r.Form.Get("client_msg_id") != "stable" {
+		if r.Form.Get("thread_ts") != "parent" || r.Form.Get(paramText) != outgoingBody || r.Form.Get("client_msg_id") != "stable" {
 			t.Error(r.Form)
 		}
 		w.WriteHeader(503)
