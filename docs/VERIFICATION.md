@@ -23,6 +23,10 @@ The article and its `styles.png` and `panes-box.png` examples were fetched and v
 
 ## Outstanding live verification
 
+Milestone 1 / #14 preparation on 2026-11-15: checked official Slack search, scope, message-event, Events API, Real-time Search and rate-limit documentation. The [discovery feasibility record](ATTENTION-DISCOVERY.md) separates documented constraints, proposed contracts and an entirely unrun live matrix. No approved installation was established for this session and no Slack calls, scope changes, event subscriptions or test messages were made. #14's live gate and the dependent #15/#16 acceptance remain outstanding.
+
+`make check` passed with Go 1.27.4 on macOS arm64: formatting, zero lint findings, vet, race-enabled tests, build and both modules' hygiene/checksums. This change is documentation-only, so runtime/UI behavior and existing captures are unchanged. No dedicated release/version change is warranted; v0.4.0 is published. Hosted CI is recorded separately in the PR.
+
 No live Slack credentials were used or assumed available. The implementation is complete for the documented core Web API flow, but importing the manifest into Slack and end-to-end verification remain outstanding. Do not interpret fake-server/PTY success as proof of successful app installation or live event delivery.
 
 With an approved internal app, verify:

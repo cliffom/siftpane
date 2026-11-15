@@ -1,5 +1,7 @@
 # Prioritized follow-ups
 
+Milestone 1's attention workflow proceeds through #14 (live discovery decision), #15 (manual Needs Attention/Kept lifecycle), then #16 (direct mentions and live acceptance). The [discovery record](ATTENTION-DISCOVERY.md) preserves the proposed contract and test matrix; its live gate remains open. The inclusion-scoped refresh work below describes the shipping behavior, not authorization for workspace-wide synchronization.
+
 1. **P0 — Verify a real internal Slack installation.** Import the manifest, validate the granted user scopes, and exercise public/private channels, DMs/group DMs, read/send, thread pagination/replies, policy errors, revocation, and `429` recovery. Confirm posting identity in Slack. Test on a fresh workspace without relying on developer permissions.
 2. **P1 — Improve refresh and recovery.** Preserve scroll anchors during arbitrary edits, handle cursor invalidation automatically, show per-conversation refresh ages/errors, reconcile uncertain sends by stable identifiers where Slack documents support, and make active/inactive scheduling adaptive within a fixed request budget. Cover very large threads and bursts beyond one page. Keep all fetching selection-scoped.
 3. **P1 — Credential lifecycle.** Add an explicit user OAuth/PKCE flow appropriate to desktop clients, token rotation and secure refresh storage, and clearer scope diagnostics. Evaluate an opt-in encrypted draft recovery store without persisting bodies by default.
