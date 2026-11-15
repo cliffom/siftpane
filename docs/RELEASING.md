@@ -4,7 +4,7 @@ The authoritative application version is `internal/version/VERSION`, embedded by
 
 `0.1.0` (initial release) and `0.2.0` (local unread title) were published on 2026-11-14. `0.2.1` (background refresh scheduling fix) was also published on 2026-11-14. The `0.3.0` release adds persistent display metadata/name caching, immediate message pages with deferred names, and stable startup loading. The release notes are in [CHANGELOG.md](../CHANGELOG.md). Source builds before the first versioned release have no runtime version identity.
 
-Version `0.3.0` is published. Version `0.4.0` is prepared for the sidebar/footer cleanup and scrollable help modal, a compatible UI feature. No migration is required.
+Version `0.3.0` is published. The `0.4.0` release adds sidebar/footer cleanup, a scrollable solid-border help modal, and a bottom-left loading status bar. It is a compatible UI feature release; no migration is required.
 
 When authorized to release:
 

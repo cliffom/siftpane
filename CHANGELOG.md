@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 — Unreleased
+## 0.4.0 — 2026-11-15
 
 - Right-align sidebar unread and draft indicators in reserved columns, keeping them visible beside long names. Remove the sidebar activity legend and repeated shortcut lists.
 - Use a single quiet status row with a help entry point, giving messages another row. Show message loading/refresh progress and restoration counts at the bottom left instead of inside the message area. Retain pending/failed delivery recovery in the solid composer.
