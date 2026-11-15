@@ -1,12 +1,12 @@
 # Attention discovery decision and evidence (#14)
 
-Status: **bounded search candidate implemented; controlled live gate open**, 2026-11-15. [Milestone 1](https://github.com/cliffom/siftpane/milestone/1) still orders #14 (discovery decision), #15 (manual lifecycle), then #16 (integration/live acceptance). The implementation makes the manual workflow and an opt-in search candidate reviewable; it does not declare the outstanding live acceptance complete.
+Status: **bounded search source; operator-confirmed release acceptance**, 2026-11-15. [Milestone 1](https://github.com/cliffom/siftpane/milestone/1) orders #14 (discovery decision), #15 (manual lifecycle), then #16 (integration/live acceptance). The operator confirmed the outstanding live acceptance as “verified” in the release conversation. This resolves PR #18's draft release gate; no case-by-case operator fixture log or timings were supplied, so the assistant's observations below remain separately attributed. GitHub issue/milestone state is managed separately from publishing this release.
 
 ## Documented basis
 
 | Mechanism | Official evidence checked on 2026-11-15 | Decision |
 | --- | --- | --- |
-| [Message search](https://docs.slack.dev/reference/methods/search.messages/) | User `search:read`, Tier 2, timestamp sorting, page/count and cursor options. Saved Slack UI filters affect results; nearby matches can collapse. | Use exact-token search as an opt-in, explicitly limited candidate. Do not equate a successful empty page with complete mention delivery. |
+| [Message search](https://docs.slack.dev/reference/methods/search.messages/) | User `search:read`, Tier 2, timestamp sorting, page/count and cursor options. Saved Slack UI filters affect results; nearby matches can collapse. | Use exact-token search as an opt-in, explicitly limited source. Do not equate a successful empty page with complete mention delivery. |
 | [Search scope](https://docs.slack.dev/reference/scopes/search.read/) | Legacy user scope, distinct from history scopes. | Added to the internal app grant and checked-in manifest; reinstall existing installations. |
 | [Real-time Search](https://docs.slack.dev/apis/web-api/real-time-search-api/) | Described for apps using AI features and in response to user interactions. | No silent substitution for this non-AI background client. |
 | [Message events](https://docs.slack.dev/reference/events/message/) / [Events API](https://docs.slack.dev/apis/events-api/) | History-scoped families, best-effort delivery and bounded retries. | No subscriptions yet. Test user visibility and historical recovery before selecting events. |
@@ -25,7 +25,9 @@ The user approved all conversations for read-only testing and refreshed the inst
 
 Counts describe those observations, not complete workspace coverage or stable fixture expectations. Differences across runs are not proof of controlled new activity. No claim is made that all matching messages were returned, that indexing completed within a guaranteed latency, or that any controlled mention was received while the client was closed.
 
-| Case | Evidence / remaining validation |
+The following matrix records **assistant-run observations before the operator confirmation**. The operator confirmation did not include case-by-case results.
+
+| Case | Assistant-run evidence / earlier validation gaps |
 | --- | --- |
 | Public direct mention and exact thread opening | Existing-message search and production adapter context observed; controlled fixture still needed |
 | Private-channel/root/thread coverage | Private-conversation search observed; private-channel and private-thread fixtures not established |
@@ -56,7 +58,7 @@ Existing included IDs migrate to Kept. A direct trigger uses its source reason/m
 
 `K` keeps explicitly; `d` saves handled identities before hiding observed triggers; `n` opens the next exact trigger. Read/reply does not dismiss. A distinct later mention can return the conversation. Any retained conversation/thread draft or pending/failed/uncertain send blocks dismissal until recovery. Failed persistence leaves the entry visible. Context access failure remains actionable; removal cancels reads and ignores late generations. Cache eviction cannot discard durable dismissal state. No automatic send retries or Slack membership/read-state changes are introduced.
 
-## Remaining reproducible live pass
+## Reproducible live protocol
 
 Use synthetic fixture labels and keep the mapping to real IDs/timestamps private. Keep credentials in the OS store or explicit override, never shell arguments, logs or chat. An operator creates the fixtures; probes remain read-only unless the user explicitly authorizes a send.
 
@@ -66,4 +68,4 @@ Use synthetic fixture labels and keep the mapping to real IDs/timestamps private
 4. Interrupt a page, restart/replay, and insert activity during paging. Confirm partial entries survive but completion cannot skip the failed interval. Test access and grant revocation without trying to repair membership.
 5. Observe normal rate headers; do not flood Slack to provoke `429`. Record unobserved live backoff separately from deterministic offline tests. Assess `@channel`, `@here` and followed-thread-only replies separately from personal mentions.
 
-#14 and #16 remain open until the coverage and controlled acceptance decision is settled. The branch prepares 0.5.0 for the implemented compatible workflow; preparation is not publication or a claim that the milestone's live gate passed.
+The operator confirmation allows the reviewed 0.5.0 implementation to proceed through the release workflow. The documented search limits and the distinction between observed, offline-tested and operator-confirmed behavior still apply. This release operation does not separately close or edit #14/#15/#16 or milestone #1.
