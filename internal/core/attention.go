@@ -34,16 +34,25 @@ type AttentionTrigger struct {
 	At     time.Time       `json:"at"`
 }
 
+// AttentionGap bounds known uncovered discovery intervals. Checked periods may
+// exist between these bounds when multiple gaps are summarized together.
+type AttentionGap struct {
+	From  time.Time `json:"from"`
+	Until time.Time `json:"until"`
+}
+
 // AttentionState contains durable account-local preferences and minimal identities.
 // Bodies and display names never belong in this state.
 type AttentionState struct {
-	Kept       map[string]bool               `json:"kept"`
-	Pending    map[string][]AttentionTrigger `json:"pending"`
-	Handled    map[string]AttentionTrigger   `json:"handled"`
-	Enabled    bool                          `json:"mentions_enabled"`
-	Checkpoint time.Time                     `json:"checkpoint"`
-	LastCheck  time.Time                     `json:"last_check"`
-	Floor      time.Time                     `json:"replay_floor"`
+	GapAcknowledgedUntil time.Time                     `json:"gap_acknowledged_until"`
+	Gap                  *AttentionGap                 `json:"gap,omitempty"`
+	Kept                 map[string]bool               `json:"kept"`
+	Pending              map[string][]AttentionTrigger `json:"pending"`
+	Handled              map[string]AttentionTrigger   `json:"handled"`
+	Enabled              bool                          `json:"mentions_enabled"`
+	Checkpoint           time.Time                     `json:"checkpoint"`
+	LastCheck            time.Time                     `json:"last_check"`
+	Floor                time.Time                     `json:"replay_floor"`
 }
 
 // NewAttention migrates existing inclusion to Kept without creating attention.
@@ -60,6 +69,10 @@ func NewAttention(included map[string]bool) AttentionState {
 // Clone isolates a candidate change until its durable write succeeds.
 func (a AttentionState) Clone() AttentionState {
 	b := a
+	if a.Gap != nil {
+		gap := *a.Gap
+		b.Gap = &gap
+	}
 	b.Kept = maps.Clone(a.Kept)
 	b.Handled = maps.Clone(a.Handled)
 	b.Pending = make(map[string][]AttentionTrigger, len(a.Pending))
@@ -139,4 +152,25 @@ type MentionPage struct {
 	Matches []MentionMatch
 	More    bool
 	Total   int
+}
+
+// RecordGap preserves the bounds of all known missed intervals until the user
+// acknowledges them. Successful scans never implicitly erase this record.
+func (a *AttentionState) RecordGap(from, until time.Time) {
+	if from.Before(a.GapAcknowledgedUntil) {
+		from = a.GapAcknowledgedUntil
+	}
+	if !until.After(from) {
+		return
+	}
+	if a.Gap == nil {
+		a.Gap = &AttentionGap{From: from, Until: until}
+		return
+	}
+	if from.Before(a.Gap.From) {
+		a.Gap.From = from
+	}
+	if until.After(a.Gap.Until) {
+		a.Gap.Until = until
+	}
 }

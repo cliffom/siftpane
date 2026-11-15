@@ -4,6 +4,7 @@ import "strings"
 
 // Key identifiers use Bubble Tea names; presentation labels derive from them.
 const (
+	keyAcknowledgeGap  = "ctrl+g"
 	keyTemporary       = "ctrl+t"
 	keyKeep            = "K"
 	keyDismiss         = "d"

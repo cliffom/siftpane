@@ -21,6 +21,7 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Navigate | `d` | Dismiss observed attention after draft/send recovery |
 | Navigate | `n` | Open next attention trigger |
 | Navigate | `M` | Enable mentions with a second consecutive `M`; disable an enabled source |
+| Navigate | `Ctrl+G` twice | Acknowledge known catch-up gaps without recovering missed history |
 | Picker | `↑/↓`, `Ctrl+P/N` | Move |
 | Search | `Tab` | Complete highlighted name; do not include or open |
 | Kept chooser (`p`) | `Tab` | Keep/unkeep locally |
@@ -68,3 +69,5 @@ Existing included conversations migrate to Kept. Explicit temporary additions an
 Use `K` to keep an active conversation and `d` to dismiss its observed triggers. A Kept conversation remains available after dismissal. An unkept entry is removed locally, without changing Slack membership/read state or sending anything. Dismissal refuses any retained draft or unresolved send across all that conversation's threads. Return to the affected target, inspect Slack for uncertain delivery, use existing retry/edit recovery, and explicitly clear or send the draft before dismissal. A temporary result can be reopened with a new `Ctrl+T` action after dismissal.
 
 `M` twice opts into direct personal mentions from accessible unkept conversations using `search:read`; an intervening key cancels confirmation. The source starts disabled and its preference persists per account. One `M` disables it without removing entries. `R` retries discovery alongside current history. The footer shows checking, failure/retry, last successful check with limited coverage, or a catch-up gap. An empty list does not establish successful discovery. See [search limitations](SLACK.md#direct-mentions-and-coverage) before relying on it.
+
+Known catch-up gaps persist across successful scans, source toggles and restarts. The warning summarizes the earliest-to-latest uncovered bounds; some intervening periods may have been checked. `Ctrl+G` twice acknowledges that warning without fetching the missing interval, advancing the checkpoint, dismissing attention or changing drafts. An intervening key cancels confirmation; key repeat cannot confirm. If gap bounds change before confirmation, review and confirm the updated warning again.

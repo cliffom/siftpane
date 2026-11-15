@@ -55,7 +55,11 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {
 		p, err := svc.History(ctx, q)
-		return historyResult{Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: q.After, Target: q.Target}
+		after := q.After
+		if q.Target != "" && q.Thread != "" {
+			after = q.Target
+		}
+		return historyResult{Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: after, Target: q.Target}
 	}
 }
 

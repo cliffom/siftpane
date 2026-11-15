@@ -28,6 +28,9 @@ func (m *Model) quitKey() tea.Cmd {
 
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
+	if k != keyAcknowledgeGap {
+		m.gapConfirmation = nil
+	}
 	if k != keyMentions {
 		m.mentionConfirm = false
 	}
@@ -46,7 +49,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if k != keyRetry {
 		m.retryConfirm = false
 	}
-	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit) {
+	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit || k == keyAcknowledgeGap) {
 		return m, nil
 	}
 	if k == keyQuit {
@@ -84,6 +87,8 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	switch k {
+	case keyAcknowledgeGap:
+		m.acknowledgeGap()
 	case keyKeep:
 		m.keepActive()
 	case keyDismiss:

@@ -77,6 +77,9 @@ func (s *Store) SaveAttention(id core.Identity, a core.AttentionState) error {
 }
 
 func validateAttention(a core.AttentionState) error {
+	if a.Gap != nil && (a.Gap.From.IsZero() || !a.Gap.Until.After(a.Gap.From)) {
+		return errors.New("invalid discovery gap bounds")
+	}
 	if a.Kept == nil || a.Pending == nil || a.Handled == nil || len(a.Kept) > core.AttentionConversations || len(a.Pending) > core.AttentionConversations {
 		return errors.New("invalid attention maps or capacity")
 	}

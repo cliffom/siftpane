@@ -7,6 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/slack"
 )
 
@@ -91,7 +92,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 
 func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{tick(), m.checkMentions(time.Now())}
-	cs := m.selected()
+	cs := m.pollingConversations()
 	if !m.stopped && len(cs) > 0 {
 		// Keep the first visible page ahead of background timeline reads.
 		if line := m.cache[m.key()]; m.active != "" && m.thread == "" && (line == nil || (!line.Loaded && line.Err == nil)) {
@@ -114,4 +115,17 @@ func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, tea.Batch(cmds...)
+}
+
+// Only conversations eligible for history consume a turn. Sidebar-only search
+// discoveries remain visible without slowing Kept or explicitly opened entries.
+func (m *Model) pollingConversations() []core.Conversation {
+	cs := m.selected()
+	out := cs[:0]
+	for _, c := range cs {
+		if m.canRead(c.ID) {
+			out = append(out, c)
+		}
+	}
+	return out
 }

@@ -63,6 +63,7 @@ func helpRows(w int) []string {
 		keyLabel(keyDismiss) + "  dismiss observed attention (recover drafts/sends first)",
 		keyLabel(keyAttention) + "  next attention, opening its exact trigger",
 		keyLabel(keyMentions) + "  enable/disable direct mentions; confirm enabling with a second press",
+		keyLabel(keyAcknowledgeGap) + " twice  acknowledge known catch-up gaps; does not recover missed history",
 		"Mentions search accessible unkept messages with search:read. Seven-day lookback, filters and indexing limit coverage; R retries. Reading/replying never dismisses.",
 		"",
 		"LOCAL ACTIVITY",

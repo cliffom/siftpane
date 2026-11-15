@@ -290,7 +290,13 @@ func (m *Model) checkMentions(now time.Time) tea.Cmd {
 		m.discoveryErr = "Clock precedes stored discovery floor"
 		return nil
 	}
-	m.discoveryGap = !m.attention.Checkpoint.IsZero() && m.attention.Checkpoint.Before(now.Add(-core.AttentionLookback))
+	if !m.attention.Checkpoint.IsZero() && m.attention.Checkpoint.Before(from) {
+		a := m.attention.Clone()
+		a.RecordGap(a.Checkpoint, from)
+		if !m.persistAttention(a) {
+			return nil
+		}
+	}
 	m.discoveryBusy = true
 	m.discoveryPage = 1
 	m.discoveryTotal = 0
@@ -326,6 +332,7 @@ func (m *Model) updateMentions(v mentionResult) (tea.Model, tea.Cmd) {
 		m.discoveryErr = v.Err.Error()
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
+			m.setStatus("Credentials expired · login & restart", statusAction)
 		}
 		return m, nil
 	}
@@ -409,8 +416,11 @@ func (m *Model) discoveryStatus() string {
 		return "Mentions not checked · " + keyLabel(keyRefresh) + " retry"
 	}
 	text := "Mentions " + m.attention.LastCheck.Local().Format("15:04") + " · limited search"
-	if m.discoveryGap {
+	if m.attention.Gap != nil {
 		text = "Mentions " + m.attention.LastCheck.Local().Format("15:04") + " · gap/limited"
+		if m.width >= sidebarBreakpoint {
+			text += " · " + m.attention.Gap.From.Local().Format("Jan 02") + "–" + m.attention.Gap.Until.Local().Format("Jan 02") + " · " + keyLabel(keyAcknowledgeGap) + " acknowledge"
+		}
 	}
 	return text
 }
@@ -428,6 +438,9 @@ func (m *Model) replaceConversation(c core.Conversation) {
 // fetchTrigger requests a bounded page anchored at the actual mention, so old
 // mentions and replies do not silently open only the newest channel page.
 func (m *Model) fetchTrigger(t core.AttentionTrigger) tea.Cmd {
+	if m.stopped || !m.canRead(m.active) {
+		return nil
+	}
 	key := m.key()
 	line := m.line(key)
 	if line.Busy {
@@ -456,4 +469,28 @@ func (m *Model) finishDiscovery() {
 		m.discoveryCancel = nil
 	}
 	m.discoveryCtx = nil
+}
+
+func (m *Model) acknowledgeGap() {
+	gap := m.attention.Gap
+	if gap == nil {
+		m.setStatus("No discovery gap to acknowledge", statusAction)
+		return
+	}
+	if m.gapConfirmation == nil || !m.gapConfirmation.From.Equal(gap.From) || !m.gapConfirmation.Until.Equal(gap.Until) {
+		copyGap := *gap
+		m.gapConfirmation = &copyGap
+		m.setStatus(keyLabel(keyAcknowledgeGap)+" again: acknowledge gaps", statusAction)
+		return
+	}
+	a := m.attention.Clone()
+	if gap.Until.After(a.GapAcknowledgedUntil) {
+		a.GapAcknowledgedUntil = gap.Until
+	}
+	a.Gap = nil
+	if !m.persistAttention(a) {
+		return
+	}
+	m.gapConfirmation = nil
+	m.setStatus("Gaps acknowledged · limited search", statusAction)
 }

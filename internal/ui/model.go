@@ -60,7 +60,7 @@ type Model struct {
 	discoveryTotal      int
 	discoveryPage       int
 	discoveryErr        string
-	discoveryGap        bool
+	gapConfirmation     *core.AttentionGap
 	discoveryNext       time.Time
 	discoveryGeneration uint64
 	discoveryCtx        context.Context

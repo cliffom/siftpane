@@ -76,6 +76,12 @@ func (m *Model) observeActivity(cid, ts string) {
 }
 
 func (t *timeline) applyPage(v historyResult, thread string) {
+	// An explicit anchor starts a new bounded window. Merging it into a full
+	// newer thread cache would immediately evict the requested older message.
+	if v.Target != "" {
+		t.Messages = nil
+		t.Loaded = false
+	}
 	previous := t.Loaded
 	// Refresh replaces the observed range so edits/deletions within it are reflected.
 	if !v.Older && thread == "" && !v.Page.More {
