@@ -123,3 +123,30 @@ func TestActionWarningsOverrideTimelineProgress(t *testing.T) {
 		})
 	}
 }
+
+func TestQuitRecoveryInstructionFitsMinimumViewport(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {60, 20}, {40, 14}} {
+		for _, unsent := range []string{"draft", "delivery"} {
+			m := fixture(t)
+			m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			m.focus = focusMessages
+			if unsent == "draft" {
+				m.composer.SetValue(mainDraft)
+			} else {
+				m.deliveries[m.key()] = &core.Delivery{State: core.DeliveryFailed}
+			}
+			_, cmd := m.Update(key(keyQuitQuiet))
+			if cmd != nil {
+				t.Fatal("quit discarded unsent work")
+			}
+			rows := strings.Split(ansi.Strip(m.View().Content), "\n")
+			footer := rows[len(rows)-1]
+			if !strings.Contains(footer, keyLabel(keyQuit)+" twice") || !strings.Contains(footer, "exit") || strings.Contains(footer, "…") {
+				t.Fatalf("%s at %v: recovery instruction clipped: %q", unsent, size, footer)
+			}
+			if ansi.StringWidth(footer) != size[0] {
+				t.Fatal("status bar changed viewport width")
+			}
+		}
+	}
+}

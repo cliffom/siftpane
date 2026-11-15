@@ -60,10 +60,13 @@ func (m *Model) View() tea.View {
 		helpKey = keyHelpGlobal
 	}
 	hint := " " + keyLabel(helpKey) + " help "
-	status := fit(muted.Render(" "+slack.Safe(statusText)), w-ansi.StringWidth(hint)) + muted.Render(hint)
-	// Recovery and discard warnings take precedence over the help entry point.
-	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" {
-		status = fit(muted.Render(" "+slack.Safe(statusText)), w)
+	statusColumns := w - ansi.StringWidth(hint)
+	statusContent := " " + slack.Safe(statusText)
+	status := fit(muted.Render(statusContent), statusColumns) + muted.Render(hint)
+	// Action feedback gets the full row when the help entry would clip it.
+	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" ||
+		(m.statusKind == statusAction && ansi.StringWidth(statusContent) > statusColumns) {
+		status = fit(muted.Render(statusContent), w)
 	}
 	content := strings.Join([]string{header, strings.Repeat(" ", w), body, status}, "\n")
 	if m.mode != pickerClosed {

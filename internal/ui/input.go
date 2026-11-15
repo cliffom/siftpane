@@ -13,13 +13,13 @@ func (m *Model) quitKey() tea.Cmd {
 	m.rememberDraft()
 	for _, s := range m.drafts {
 		if s != "" {
-			m.setStatus("Unsent drafts in memory. Use "+keyLabel(keyQuit)+" twice to exit.", statusAction)
+			m.setStatus("Unsent drafts · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 			return nil
 		}
 	}
 	for _, d := range m.deliveries {
 		if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
-			m.setStatus("Unresolved send. Use "+keyLabel(keyQuit)+" twice to exit.", statusAction)
+			m.setStatus("Unresolved send · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 			return nil
 		}
 	}
