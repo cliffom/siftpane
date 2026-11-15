@@ -23,6 +23,9 @@ func stamp(ts string) string {
 
 func (m *Model) history(w, h int) []string {
 	if m.active == "" {
+		if len(m.metadataBusy) > 0 && !m.stopped {
+			return padRows(nil, w, h)
+		}
 		if text := m.restorationState(); text != "" {
 			rows := []string{"", " " + text}
 			if !m.stopped {
@@ -40,7 +43,7 @@ func (m *Model) history(w, h int) []string {
 		return padRows([]string{"", " Could not load messages.", " " + slack.Safe(t.Err.Error()), " " + keyLabel(keyRefresh) + " retry / refresh"}, w, h)
 	}
 	if t == nil || !t.Loaded {
-		return padRows([]string{"", " Loading messages…", " R retry / refresh"}, w, h)
+		return padRows(nil, w, h)
 	}
 	rows := []string{}
 	starts := []int{}

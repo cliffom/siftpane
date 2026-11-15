@@ -23,13 +23,13 @@ func (m *Model) send(retry bool) tea.Cmd {
 		}
 		if d.Uncertain && !m.retryConfirm {
 			m.retryConfirm = true
-			m.status = "Delivery unknown. Check Slack before retrying. Press " + keyLabel(keyRetry) + " again to risk a duplicate."
+			m.setStatus("Delivery unknown. Check Slack before retrying. Press "+keyLabel(keyRetry)+" again to risk a duplicate.", statusAction)
 			return nil
 		}
 	}
 	if !retry {
 		if d != nil && (d.State == core.DeliveryPending || d.State == core.DeliveryFailed) {
-			m.status = "Resolve the current delivery first: " + keyLabel(keyEscape) + " then " + keyLabel(keyRetry) + " retries; " + keyLabel(keyEditFailed) + " restores it for editing."
+			m.setStatus("Resolve the current delivery first: "+keyLabel(keyEscape)+" then "+keyLabel(keyRetry)+" retries; "+keyLabel(keyEditFailed)+" restores it for editing.", statusAction)
 			return nil
 		}
 		body := m.composer.Value()
@@ -39,7 +39,7 @@ func (m *Model) send(retry bool) tea.Cmd {
 		// UUIDv4: 16 bytes; version nibble 0100 and variant bits 10 (RFC 9562).
 		id := make([]byte, sendIDBytes)
 		if _, err := rand.Read(id); err != nil {
-			m.status = "Cannot create send ID; draft kept"
+			m.setStatus("Cannot create send ID; draft kept", statusAction)
 			return nil
 		}
 		id[6] = (id[6] & 15) | 64
@@ -51,7 +51,7 @@ func (m *Model) send(retry bool) tea.Cmd {
 		return nil
 	}
 	m.retryConfirm = false
-	m.status = "Sending… draft retained until acknowledged"
+	m.setStatus("Sending… draft retained until acknowledged", statusAction)
 	svc, ctx, o := m.service, m.ctx, d.Outgoing
 	return func() tea.Msg { msg, err := svc.Send(ctx, o); return sendResult{key, msg, err} }
 }
@@ -64,9 +64,9 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 	uncertain := core.UncertainDelivery(v.Err)
 	d.Finish(v.Err, uncertain)
 	if v.Err != nil {
-		m.status = "Send failed: " + v.Err.Error() + " · text kept · " + keyLabel(keyEscape) + " then " + keyLabel(keyRetry) + " retry"
+		m.setStatus("Send failed: "+v.Err.Error()+" · text kept · "+keyLabel(keyEscape)+" then "+keyLabel(keyRetry)+" retry", statusAction)
 		if uncertain {
-			m.status = "Delivery unknown; text kept. Check Slack before " + keyLabel(keyRetry) + " retry."
+			m.setStatus("Delivery unknown; text kept. Check Slack before "+keyLabel(keyRetry)+" retry.", statusAction)
 		}
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
@@ -75,7 +75,7 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 	}
 	cid, _ := split(v.Key)
 	if !m.included[cid] {
-		m.status = "Message sent to removed conversation"
+		m.setStatus("Message sent to removed conversation", statusAction)
 		delete(m.drafts, v.Key)
 		return m, nil
 	}
@@ -89,7 +89,7 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 		m.composer.Reset()
 		delete(m.drafts, v.Key)
 	}
-	m.status = "Message sent"
+	m.setStatus("Message sent", statusAction)
 	return m, nil
 }
 

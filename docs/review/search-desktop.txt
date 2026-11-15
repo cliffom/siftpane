@@ -3,7 +3,7 @@
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │  Leo Park  Nov 13 10:27                                                  │
-│  #shipping ●          │  Here's the checklist: review notes (https://example.com/review)         │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
 │▸ #studio              │                                                                          │
 │ PEOPLE ╌╌╌╌╌╭ [Search conversations] ──────────────────────────────────────────────╮             │
 │  @Maya Chen │ / @leo                                                               │             │
@@ -20,11 +20,11 @@
 │             │ 8 loaded · directory complete                                        │             │
 │             │ Tab complete · Esc close                                             │e input.     │
 │             │ Ctrl+L more · Ctrl+R reload                                          │             │
-│             ╰──────────────────────────────────────────────────────────────────────╯───────────╮ │
+│             ╰──────────────────────────────────────────────────────────────────────╯             │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │
-│ ··· UNREAD HERE ···   │ │                                                                      │ │
-│ ● unread here  ✎ draft│ │                                                                      │ │
-│ p choose   / search   │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversations
- ↑/↓ move · Tab complete · Esc close
+ Refreshed                                                                                  F1 help

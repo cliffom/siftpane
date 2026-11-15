@@ -19,21 +19,22 @@ func (m *Model) pickerSize() (w, h int) {
 
 func (m *Model) pickerOverlay(content string, w, h int) string {
 	mw, mh := m.pickerSize()
+	return m.modalOverlay(content, m.pickerView(mw, mh), w, h)
+}
+
+func (m *Model) modalOverlay(content, modal string, w, h int) string {
+	mw, mh := m.pickerSize()
 	x, y := (w-mw)/2, (h-mh)/2
-	// Strip prior highlights before applying one quiet backdrop style. The modal
-	// owns its colors and paints every cell, including padding over message text.
+	// Strip highlights before dimming; the modal paints every cell opaquely.
 	background := backdrop.Render(ansi.Strip(content))
-	modal := m.pickerView(mw, mh)
 	canvas := lipgloss.NewCanvas(w, h)
 	canvas.Compose(lipgloss.NewCompositor(
 		lipgloss.NewLayer(background),
 		lipgloss.NewLayer(modal).X(x).Y(y).Z(1),
 	))
 	rows := padRows(strings.Split(canvas.Render(), "\n"), w, h)
-	// Keep the unsent-exit warning and save failures readable above background updates.
-	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" {
-		rows[h-2] = strings.Split(content, "\n")[h-2]
-	}
+	// Keep status and recovery readable while a modal has keyboard focus.
+	rows[h-1] = strings.Split(content, "\n")[h-1]
 	return strings.Join(rows, "\n")
 }
 

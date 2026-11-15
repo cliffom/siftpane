@@ -2,6 +2,9 @@
 
 ╭ [@Maya, Leo, you] ───────────────────────────────────────╮
 │ Group DM · 3 people · Small launch review                │
+│  You  Nov 13 10:36                                       │
+│  The clipped first message and the noisy footer.         │
+│                                                          │
 │  Maya Chen  Nov 13 10:39                                 │
 │  I'll take the viewport adjustment. Maya, could you      │
 │  review the labels?                                      │
@@ -9,12 +12,9 @@
 │▸ Leo Park  Nov 13 10:42                                  │
 │  Deal. Let's regroup once those changes are ready.       │
 │                                                          │
-│                                                          │
-│                                                          │
 │ ╭ Message ─────────────────────────────────────────────╮ │
 │ │ › Write a message…                                   │ │
 │ │                                                      │ │
-│ ╰ i compose ───────────────────────────────────────────╯ │
+│ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversat…
- Tab focus · / search · i write · ? help
+ Refreshed                                           ? help

@@ -23,11 +23,11 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	t.Err = v.Err
 	if v.Err != nil {
 		if !errors.Is(v.Err, context.Canceled) {
-			m.status = v.Err.Error() + " · R refresh"
+			m.setStatus(v.Err.Error()+" · R refresh", statusRoutine)
 		}
 		if slack.IsAuth(v.Err) {
 			m.stopped = true
-			m.status = "Credentials expired/revoked. Drafts kept; reinstall or replace user token and restart."
+			m.setStatus("Credentials expired/revoked. Drafts kept; reinstall or replace user token and restart.", statusRoutine)
 		}
 		return m, nil
 	}
@@ -50,7 +50,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 		}
 	}
 	if d := m.deliveries[m.key()]; !m.stopped && (d == nil || d.State == core.DeliverySent) {
-		m.status = "Refreshed · local unread only · polling included conversations"
+		m.setStatus("Refreshed", statusRoutine)
 	}
 	return m, m.profileCmd()
 }

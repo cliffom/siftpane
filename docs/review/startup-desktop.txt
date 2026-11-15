@@ -1,10 +1,11 @@
  siftpane                                                                   Fieldwork · demo · @you
 
 ╭ [Messages] ───────────┬ Choose conversations · p ────────────────────────────────────────────────╮
-│ Loading 5 saved conve…│ Choose what belongs here · p                                             │
+│                       │ Choose what belongs here · p                                             │
 │                       │                                                                          │
-│                       │ Loading 5 saved conversations…                                           │
-│                       │ R retry saved conversations                                              │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
@@ -22,9 +23,8 @@
 │                       │                                                                          │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │
-│ ··· UNREAD HERE ···   │ │                                                                      │ │
-│ ● unread here  ✎ draft│ │                                                                      │ │
-│ p choose   / search   │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Restoring saved conversations
- Tab focus · / search · i write · t thread · ? help
+ Loading 5 saved conversations…                                                              ? help

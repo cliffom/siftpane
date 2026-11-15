@@ -42,10 +42,7 @@ func (m *Model) View() tea.View {
 	gap := w - ansi.StringWidth(left) - ansi.StringWidth(workspace) - 1
 	header := left + strings.Repeat(" ", max(0, gap)) + muted.Render(workspace) + " "
 	body := m.mainView()
-	if m.help {
-		body = m.helpView(w, h-chromeRows)
-	}
-	statusText := m.status
+	statusText := m.activityStatus()
 	if m.quitConfirm {
 		statusText = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
 	}
@@ -58,24 +55,26 @@ func (m *Model) View() tea.View {
 	if m.persistErr != "" && !m.quitConfirm {
 		statusText = "Preferences not saved: " + m.persistErr
 	}
-	status := fit(muted.Render(" "+slack.Safe(statusText)), w)
-	hint := " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " search · " + keyLabel(keyWrite) + " write · " + keyLabel(keyThread) + " thread · " + keyLabel(keyHelp) + " help"
-	if m.focus == focusCompose {
-		hint = " " + keyLabel(keySend) + " send · " + keyLabel(keyCompose) + " newline · " + keyLabel(keyEscape) + " navigate · " + keyLabel(keySwitch) + " search"
+	helpKey := keyHelp
+	if m.focus == focusCompose || m.mode != pickerClosed {
+		helpKey = keyHelpGlobal
 	}
-	if m.mode != pickerClosed {
-		hint = " " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + " move · " + keyLabel(keyFocus) + " complete · " + keyLabel(keyEscape) + " close"
-		if m.mode == pickerInclude {
-			hint = " " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + " move · " + keyLabel(keyFocus) + " toggle · " + keyLabel(keyEscape) + " close"
-		}
+	hint := " " + keyLabel(helpKey) + " help "
+	statusColumns := w - ansi.StringWidth(hint)
+	statusContent := " " + slack.Safe(statusText)
+	status := fit(muted.Render(statusContent), statusColumns) + muted.Render(hint)
+	// Action feedback gets the full row when the help entry would clip it.
+	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" ||
+		(m.statusKind == statusAction && ansi.StringWidth(statusContent) > statusColumns) {
+		status = fit(muted.Render(statusContent), w)
 	}
-
-	if w < sidebarBreakpoint && m.focus != focusCompose && m.mode == pickerClosed {
-		hint = " " + keyLabel(keyFocus) + " focus · " + keyLabel(keySearch) + " search · " + keyLabel(keyWrite) + " write · " + keyLabel(keyHelp) + " help"
-	}
-	content := strings.Join([]string{header, strings.Repeat(" ", w), body, status, fit(accent.Render(hint), w)}, "\n")
+	content := strings.Join([]string{header, strings.Repeat(" ", w), body, status}, "\n")
 	if m.mode != pickerClosed {
 		content = m.pickerOverlay(content, w, h)
+	}
+	if m.help {
+		mw, mh := m.pickerSize()
+		content = m.modalOverlay(content, m.helpView(mw, mh), w, h)
 	}
 	v := tea.NewView(content)
 	v.AltScreen = true

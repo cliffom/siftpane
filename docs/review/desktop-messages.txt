@@ -3,10 +3,10 @@
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │  Leo Park  Nov 13 10:27                                                  │
-│  #shipping ●          │  Here's the checklist: review notes (https://example.com/review)         │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
 │▸ #studio              │                                                                          │
 │ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│  You  Nov 13 10:30                                                       │
-│  @Maya Chen ●         │  No rush. Pick this up when you have a quiet moment.                     │
+│  @Maya Chen        ●  │  No rush. Pick this up when you have a quiet moment.                     │
 │  @Maya, Leo, you      │                                                                          │
 │                       │  Nora Ellis  Nov 13 10:33  ↳ 3 replies                                   │
 │                       │  How should the border hierarchy work on smaller terminals?              │
@@ -20,11 +20,11 @@
 │                       │▸ You  Nov 13 10:42                                                       │
 │                       │  Thanks, everyone. Let's leave some breathing room around the input.     │
 │                       │                                                                          │
+│                       │                                                                          │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │
-│ ··· UNREAD HERE ···   │ │                                                                      │ │
-│ ● unread here  ✎ draft│ │                                                                      │ │
-│ p choose   / search   │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversations
- Tab focus · / search · i write · t thread · ? help
+ Refreshed                                                                                   ? help

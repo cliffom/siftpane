@@ -13,7 +13,7 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Compose | `Ctrl+S` | Send (turn off terminal XON/XOFF with `stty -ixon` if intercepted) |
 | Compose | `Enter` | Newline |
 | Compose | `Esc` | Keep draft, return to navigation |
-| Anywhere | `Ctrl+K`, delivered `Cmd+K` | Open conversation search; keep draft |
+| Outside help | `Ctrl+K`, delivered `Cmd+K` | Open conversation search; keep draft |
 | Navigate | `/` | Open conversation search |
 | Navigate | `p` | Searchable include/remove picker |
 | Picker | `↑/↓`, `Ctrl+P/N` | Move |
@@ -31,9 +31,12 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Navigate | `r` | Retry failed send; uncertain delivery requires a second explicit `r` |
 | Navigate | `x` | Restore failed body for editing; retains any newer composed text |
 | Navigate | `y` | Copy selected message body through OSC52, if supported |
-| Navigate | `?` | Contextual key/border guide; any key closes |
+| Navigate | `?` | Open scrollable keyboard help modal |
+| Anywhere | `F1` | Open help, retaining composing/picker context |
+| Help | `↑/↓`, `j/k`, `PgUp/PgDn`, `End`/`G` | Scroll, page, or reach the end |
+| Help | `Esc` or any other non-scroll key | Close; the key is consumed |
 | Navigate | `q` | Quit; warns if there is unsent text |
-| Anywhere | `Ctrl+C` | Quit; a second press explicitly discards unsent text |
+| Outside help | `Ctrl+C` | Quit; a second press explicitly discards unsent text |
 
 Unsent drafts survive conversation and thread switches and removal/re-inclusion during the session. Drafts and message bodies are **memory-only** and do not survive exit/crash. The composer stays locked while a send is pending, duplicate submissions are rejected, and its body is cleared only on a successful acknowledgement for that draft. Failed and pending states remain visible in the composer frame. A network timeout or server failure can mean Slack accepted a message without returning a response: inspect Slack before explicitly retrying. There are no automatic write retries, and exactly-once delivery is not promised. Retrying reuses the original body and client ID.
 
@@ -46,3 +49,9 @@ Suggestions update locally as you type. `↑/↓` or `Ctrl+P/N` highlights a res
 `Esc` dismisses search without modifying inclusion or sending text. It restores the prior navigation/composing focus, conversation/thread, and draft. Selecting a result retains the prior draft and opens the new conversation in navigation mode.
 
 The modal reports directory coverage, loading, and errors. The initial metadata page loads at startup; `Ctrl+L` explicitly loads the next page, and `Ctrl+R` reloads the first page or retries an initial failure. Typing/completion makes no network requests. Existing suggestions remain available after a page failure; a failed next-page request retains its cursor for an explicit retry. Background refresh cannot overwrite the modal's directory error. Use the [terminal fallback](TERMINALS.md#command-k) if `Cmd+K` is intercepted.
+
+## Help and local markers
+
+Help opens over dimmed conversation context. Its single-column guide wraps to the terminal width; scroll to see all shortcuts and marker explanations. Paste is ignored while help is open. Closing restores the prior draft, focus and picker. Use `F1` while composing; `?` still inserts a question mark. The footer keeps a minimal help entry beside status rather than repeating hotkeys. Its bottom-left status bar shows message loading/refresh progress or saved-conversation restoration counts, then returns to the completed status. The message area stays clear while loading; failures retain actionable recovery text.
+
+Sidebar trailing slots show `●` for locally observed unread activity and `✎` for a retained conversation draft. Long names truncate before these slots. These markers do not imply Slack-synchronized read state or persisted drafts.

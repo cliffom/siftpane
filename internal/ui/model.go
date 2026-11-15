@@ -95,12 +95,14 @@ type Model struct {
 	composer                     textarea.Model
 	width, height, index, scroll int
 
-	status    string
-	stopped   bool
-	pollIndex int
-	pollCount int
+	status     string
+	statusKind statusKind
+	stopped    bool
+	pollIndex  int
+	pollCount  int
 
 	help, quitConfirm, retryConfirm bool
+	helpScroll                      int
 }
 
 // New creates a UI using an authenticated service and workspace preferences.
@@ -182,7 +184,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		m.active = "Cstudio"
 		m.unread["Cshipping"] = true
 		m.unread["Dmaya"] = true
-		m.status = "Offline demo · " + keyLabel(keyInclude) + " choose · " + keyLabel(keySearch) + " search · " + keyLabel(keyWrite) + " compose · " + keyLabel(keyHelp) + " help"
+		m.setStatus("Offline demo", statusRoutine)
 	}
 	m.restoreDraft()
 	return m
@@ -226,6 +228,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateTick(v)
 	case tea.KeyPressMsg:
 		return m.updateKey(v)
+	}
+	if m.help {
+		return m, nil
 	}
 	// Picker paste/blink messages take precedence even when the underlying send is pending.
 	if m.mode != pickerClosed {

@@ -3,11 +3,12 @@
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ CHANNELS 3/5 ╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │▸ Name U1  Nov 13 09:00                                                   │
-│  #shipping ●          │  Messages arrive before names finish loading. Hello @Name U2.            │
+│  #shipping         ●  │  Messages arrive before names finish loading. Hello @Name U2.            │
 │▸ #studio              │                                                                          │
 │ PEOPLE ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
-│  @Maya Chen ●         │                                                                          │
+│  @Maya Chen        ●  │                                                                          │
 │  @Maya, Leo, you      │                                                                          │
+│                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
 │                       │                                                                          │
@@ -22,9 +23,8 @@
 │                       │                                                                          │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │
-│ ··· UNREAD HERE ···   │ │                                                                      │ │
-│ ● unread here  ✎ draft│ │                                                                      │ │
-│ p choose   / search   │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversations
- Tab focus · / search · i write · t thread · ? help
+ Refreshed                                                                                   ? help

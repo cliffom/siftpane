@@ -13,13 +13,13 @@ func (m *Model) quitKey() tea.Cmd {
 	m.rememberDraft()
 	for _, s := range m.drafts {
 		if s != "" {
-			m.status = "Unsent drafts in memory. Use " + keyLabel(keyQuit) + " twice to exit."
+			m.setStatus("Unsent drafts · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 			return nil
 		}
 	}
 	for _, d := range m.deliveries {
 		if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
-			m.status = "Unresolved send. Use " + keyLabel(keyQuit) + " twice to exit."
+			m.setStatus("Unresolved send · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 			return nil
 		}
 	}
@@ -28,6 +28,18 @@ func (m *Model) quitKey() tea.Cmd {
 
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
+	if m.help {
+		return m, m.helpKey(k)
+	}
+	// The next explicit key dismisses transient action priority; handlers can
+	// publish fresh feedback without losing the underlying delivery text.
+	m.statusKind = statusRoutine
+	if k == keyHelpGlobal {
+		m.quitConfirm = false
+		m.retryConfirm = false
+		m.help, m.helpScroll = true, 0
+		return m, nil
+	}
 	if k != keyRetry {
 		m.retryConfirm = false
 	}
@@ -35,30 +47,9 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	if k == keyQuit {
-		m.rememberDraft()
-		dirty := false
-		for _, s := range m.drafts {
-			if s != "" {
-				dirty = true
-			}
-		}
-		for _, d := range m.deliveries {
-			if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
-				dirty = true
-			}
-		}
-		if dirty && !m.quitConfirm {
-			m.quitConfirm = true
-			m.status = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
-			return m, nil
-		}
-		return m, tea.Quit
+		return m, m.confirmQuit()
 	}
 	m.quitConfirm = false
-	if m.help {
-		m.help = false
-		return m, nil
-	}
 	if m.mode != pickerClosed {
 		return m, m.pickerKey(v)
 	}
@@ -77,7 +68,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, m.send(false)
 		}
 		if d := m.deliveries[m.key()]; d != nil && d.State == core.DeliveryPending {
-			m.status = "Sending… composer locked until acknowledgement; text kept"
+			m.setStatus("Sending… composer locked until acknowledgement; text kept", statusAction)
 			return m, nil
 		}
 		var cmd tea.Cmd
@@ -93,7 +84,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyQuitQuiet:
 		return m, m.quitKey()
 	case keyHelp:
-		m.help = true
+		m.help, m.helpScroll = true, 0
 	case keyInclude:
 		return m, m.openPicker(pickerInclude)
 	case keySearch:
@@ -139,7 +130,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 		return m, m.refresh()
 	case keyRead:
 		m.read(m.active)
-		m.status = "Marked read locally; Slack read position unchanged"
+		m.setStatus("Marked read locally; Slack read position unchanged", statusAction)
 	case keyThread:
 		return m, m.openThread()
 	case keyCopy:
@@ -198,7 +189,7 @@ func (m *Model) openThread() tea.Cmd {
 func (m *Model) copyMessage() tea.Cmd {
 	t := m.line(m.key())
 	if len(t.Messages) > 0 {
-		m.status = "Copied message via OSC52 (terminal support required)"
+		m.setStatus("Copied message via OSC52 (terminal support required)", statusAction)
 		return tea.SetClipboard(slack.Body(slack.WithProfiles(t.Messages[min(m.index, len(t.Messages)-1)], m.profiles)))
 	}
 	return nil
@@ -213,12 +204,33 @@ func (m *Model) restoreFailedDraft() {
 			s = d.Text
 		}
 		if len([]rune(s)) > m.composer.CharLimit || strings.Count(s, "\n") >= m.composer.MaxHeight {
-			m.status = "Cannot combine drafts without truncation. Copy your current draft first; failed body retained."
+			m.setStatus("Cannot combine drafts without truncation. Copy your current draft first; failed body retained.", statusAction)
 			return
 		}
 		m.composer.SetValue(s)
 		m.rememberDraft()
 		delete(m.deliveries, m.key())
-		m.status = "Restored failed text for editing; uncertain sends may already exist in Slack"
+		m.setStatus("Restored failed text for editing; uncertain sends may already exist in Slack", statusAction)
 	}
+}
+
+func (m *Model) confirmQuit() tea.Cmd {
+	m.rememberDraft()
+	dirty := false
+	for _, s := range m.drafts {
+		if s != "" {
+			dirty = true
+		}
+	}
+	for _, d := range m.deliveries {
+		if d.State == core.DeliveryPending || d.State == core.DeliveryFailed {
+			dirty = true
+		}
+	}
+	if dirty && !m.quitConfirm {
+		m.quitConfirm = true
+		m.setStatus("Unsent text is in memory. "+keyLabel(keyQuit)+" again exits and discards it; any other key cancels.", statusAction)
+		return nil
+	}
+	return tea.Quit
 }

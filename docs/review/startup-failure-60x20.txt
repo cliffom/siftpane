@@ -14,7 +14,7 @@
 │  #extra-08                                               │
 │  #extra-09                                               │
 │  #extra-10                                               │
+│  #extra-11                                               │
 │ Unavailable · R retry                                    │
 ╰──────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversat…
- Tab focus · / search · i write · ? help
+ Refreshed                                           ? help

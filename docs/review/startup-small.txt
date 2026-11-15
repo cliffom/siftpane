@@ -1,7 +1,6 @@
  siftpane                           Fieldwork · demo · @you
 
 ╭ [Messages] ──────────────────────────────────────────────╮
-│ Loading 5 saved conversations…                           │
 │                                                          │
 │                                                          │
 │                                                          │
@@ -12,9 +11,10 @@
 │                                                          │
 │                                                          │
 │                                                          │
-│ ··· UNREAD HERE ···                                      │
-│ ● unread here  ✎ draft                                   │
-│ p choose   / search                                      │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
+│                                                          │
 ╰──────────────────────────────────────────────────────────╯
- Restoring saved conversations
- Tab focus · / search · i write · ? help
+ Loading 5 saved conversations…                      ? help

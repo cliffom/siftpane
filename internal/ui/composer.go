@@ -12,13 +12,12 @@ func (m *Model) composerRows(w, h int) []string {
 	stroke := "─"
 	border := muted
 	title := "Message"
-	hint := keyLabel(keyWrite) + " compose"
+	hint := ""
 	if m.thread != "" {
 		title = "Thread reply"
 	}
 	if m.focus == focusCompose {
 		border = accent
-		hint = keyLabel(keySend) + " send · " + keyLabel(keyEscape) + " navigate"
 	}
 	if d := m.deliveries[m.key()]; d != nil {
 		switch d.State {
@@ -38,6 +37,10 @@ func (m *Model) composerRows(w, h int) []string {
 	for _, line := range padRows(strings.Split(m.composer.View(), "\n"), w-composerInsetColumns-composerPaddingColumns, h) {
 		rows = append(rows, " "+border.Render("│")+" "+line+" "+border.Render("│")+" ")
 	}
-	rows = append(rows, " "+border.Render("╰")+labelLine(hint, inner, stroke, border)+border.Render("╯")+" ")
+	bottom := border.Render(strings.Repeat(stroke, inner))
+	if hint != "" {
+		bottom = labelLine(hint, inner, stroke, border)
+	}
+	rows = append(rows, " "+border.Render("╰")+bottom+border.Render("╯")+" ")
 	return rows
 }

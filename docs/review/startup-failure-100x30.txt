@@ -20,11 +20,11 @@
 │  #extra-14            │                                                                          │
 │  #extra-15            │                                                                          │
 │  #extra-16            │                                                                          │
-│  #extra-17            │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
-│  #extra-18            │ │ › Write a message…                                                   │ │
-│  #extra-19            │ │                                                                      │ │
-│  #shipping ●          │ │                                                                      │ │
-│ Unavailable · R retry │ ╰ i compose ───────────────────────────────────────────────────────────╯ │
+│  #extra-17            │                                                                          │
+│  #extra-18            │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│  #extra-19            │ │ › Write a message…                                                   │ │
+│  #shipping         ●  │ │                                                                      │ │
+│  #studio              │ │                                                                      │ │
+│ Unavailable · R retry │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Refreshed · local unread only · polling included conversations
- Tab focus · / search · i write · t thread · ? help
+ Refreshed                                                                                   ? help
