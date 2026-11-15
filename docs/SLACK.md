@@ -1,5 +1,7 @@
 # Slack setup
 
+Milestone 1's opt-in personal-mention discovery is still gated on live feasibility. See the [discovery candidate, identity contract and reproducible validation plan](ATTENTION-DISCOVERY.md). The current manifest and runtime do not enable this source.
+
 1. Open [Your Slack apps](https://api.slack.com/apps), choose **Create New App → From a manifest**, and select your workspace. Paste [slack-app-manifest.yaml](../slack-app-manifest.yaml) into the YAML tab. Review and create the app. Keep this app internal to your workspace; do not enable public distribution.
 2. In **OAuth & Permissions**, verify the **User Token Scopes** below. No bot scopes are needed. Install the app to the workspace, approve the requested access, and complete any administrator approval required by your workspace. If you change scopes later, reinstall the app.
 3. Copy the **User OAuth Token**, beginning `xoxp-`, from OAuth & Permissions. This is the documented app-installation token, not a browser cookie, desktop session, bot token, or app-level token. There is no embedded client secret or hosted OAuth callback in this version. Installation in Slack's app dashboard provides the user grant for this personal internal app.
