@@ -127,13 +127,70 @@ func messageRows(msg core.Message, w int, focused bool) []string {
 		head = muted.Render(head)
 	}
 	rows = append(rows, ansi.Truncate(head, w, "…"))
-	body := slack.Body(msg)
-	wrapped := strings.Split(ansi.Wrap(body, max(1, w-messagePaddingColumns), ""), "\n")
-	for _, line := range wrapped {
-		rows = append(rows, "  "+line)
-	}
+	rows = append(rows, formattedBodyRows(slack.Body(msg), w)...)
 	rows = append(rows, "")
 	return rows
 }
 
+const codeFence = "```"
+
 const messagePaddingColumns = 2 // History text inset in display cells.
+
+// Visual rails distinguish quoted and fenced text; clipboard content stays plain.
+// Slack permits content directly after opening fences and before closing fences.
+func formattedBodyRows(body string, width int) []string {
+	rows := []string{}
+	for {
+		prose, rest, fenced := strings.Cut(body, codeFence)
+		if fenced {
+			prose = strings.TrimSuffix(prose, "\n")
+		}
+		rows = append(rows, proseBodyRows(prose, width)...)
+		if !fenced {
+			return rows
+		}
+		literal, after, closed := strings.Cut(rest, codeFence)
+		literal = strings.TrimPrefix(literal, "\n")
+		if closed {
+			literal = strings.TrimSuffix(literal, "\n")
+		}
+		rows = append(rows, "  "+muted.Render("┌ code"))
+		rows = append(rows, wrappedBodyRows(literal, "│ ", width)...)
+		if !closed {
+			return rows
+		}
+		rows = append(rows, "  "+muted.Render("└"))
+		body = strings.TrimPrefix(after, "\n")
+	}
+}
+
+func proseBodyRows(body string, width int) []string {
+	if body == "" {
+		return nil
+	}
+	rows := []string{}
+	for _, line := range strings.Split(body, "\n") {
+		trimmed, prefix := strings.TrimSpace(line), ""
+		switch {
+		case strings.HasPrefix(trimmed, ">"):
+			prefix, line = "│ ", strings.TrimSpace(strings.TrimPrefix(trimmed, ">"))
+		case strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* "):
+			prefix, line = "• ", trimmed[2:]
+		}
+		rows = append(rows, wrappedBodyRows(line, prefix, width)...)
+	}
+	return rows
+}
+
+func wrappedBodyRows(text, prefix string, width int) []string {
+	available := max(1, width-messagePaddingColumns-ansi.StringWidth(prefix))
+	rows := []string{}
+	for i, part := range strings.Split(ansi.Wrap(text, available, ""), "\n") {
+		marker := prefix
+		if prefix == "• " && i > 0 {
+			marker = "  "
+		}
+		rows = append(rows, "  "+marker+part)
+	}
+	return rows
+}

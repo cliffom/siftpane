@@ -26,7 +26,7 @@ type attentionFile struct {
 // Attention loads durable account-isolated state. Corrupt files are errors, never
 // silently discarded as if they were disposable caches. Missing files migrate Kept.
 func (s *Store) Attention(id core.Identity) (core.AttentionState, error) {
-	initial := core.NewAttention(s.Workspace(id.Workspace).Included)
+	initial := core.NewAttention(s.AccountWorkspace(id).Included)
 	if s.Path == "" {
 		return initial, nil
 	}

@@ -1,5 +1,5 @@
- siftpane                                                                   Fieldwork · demo · @you
-
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
 │  #design              │  Leo Park  Nov 13 10:27                                                  │
@@ -7,6 +7,7 @@
 │▸ #studio              │                                                                          │
 │  @Maya Chen ╭ [Keyboard guide] ────────────────────────────────────────────────────╮             │
 │  @Maya, Leo,│ NAVIGATE                                                             │             │
+│             │ Ctrl+W  switch workspace/account; inactive accounts pause reads      │             │
 │             │ Tab  switch sidebar / messages                                       │             │
 │             │ j/k or ↑/↓  move / select                                            │             │
 │             │ PgUp/PgDn  scroll history                                            │             │
@@ -17,9 +18,8 @@
 │             │ o  older history / next reply page                                   │             │
 │             │ R  refresh / retry saved metadata                                    │             │
 │             │ m  mark read locally                                                 │             │
-│             │ y  copy message via OSC52                                            │             │
-│             │                                                                      │e input.     │
-│             │ 1–13/64 ↑/↓ · Esc close                                              │             │
+│             │ y  copy message via OSC52                                            │e input.     │
+│             │ 1–13/68 ↑/↓ · Esc close                                              │             │
 │             ╰──────────────────────────────────────────────────────────────────────╯             │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │
@@ -27,4 +27,4 @@
 │                       │ │                                                                      │ │
 │                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
- Refreshed                                                                                   ? help
+ Refreshed                                                                                   ? help 

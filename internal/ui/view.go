@@ -38,13 +38,24 @@ func (m *Model) View() tea.View {
 	if username != "" {
 		account = ansi.Truncate(" · @"+username, max(0, available-accountPrefixColumns), "…")
 	}
-	workspace = ansi.Truncate(workspace, available-ansi.StringWidth(account), "…") + account
+	if m.multipleAccounts {
+		identity := accountText(m.identity.Workspace) + "/" + accountText(m.identity.User)
+		account = " · " + identity
+		if ansi.StringWidth(" · @"+username+account) <= available-accountPrefixColumns {
+			account = " · @" + username + account
+		}
+		account = ansi.Truncate(account, max(0, available), "…")
+	}
+	workspace = ansi.Truncate(workspace, max(0, available-ansi.StringWidth(account)), "…") + account
 	gap := w - ansi.StringWidth(left) - ansi.StringWidth(workspace) - 1
 	header := left + strings.Repeat(" ", max(0, gap)) + muted.Render(workspace) + " "
 	body := m.mainView()
 	statusText := m.activityStatus()
 	if m.quitConfirm {
 		statusText = "Unsent text is in memory. " + keyLabel(keyQuit) + " again exits and discards it; any other key cancels."
+		if m.multipleAccounts {
+			statusText = "Unsent · " + keyLabel(keyQuit) + " again discards/exits"
+		}
 	}
 	if m.messageCacheErr != "" && !m.quitConfirm && !m.stopped {
 		statusText = m.messageCacheErr
@@ -147,3 +158,8 @@ func (m *Model) mainView() string {
 }
 
 const accountPrefixColumns = 4 // Space, separator, space and @ before username.
+
+// Account labels occupy one row even when remote display names contain controls.
+func accountText(text string) string {
+	return strings.Join(strings.Fields(slack.Safe(text)), " ")
+}

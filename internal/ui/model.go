@@ -53,6 +53,7 @@ type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
+	participationBusy   bool
 	broadcastConfirm    core.AttentionReason
 	discoverySources    []core.AttentionReason
 	followBusy          bool
@@ -104,6 +105,8 @@ type Model struct {
 	store            *store.Store
 	prefs            *store.Workspace
 	ctx              context.Context
+	sendCtx          context.Context
+	multipleAccounts bool
 
 	directory       []core.Conversation
 	directoryNext   string
@@ -145,7 +148,7 @@ type Model struct {
 
 // New creates a UI using an authenticated service and workspace preferences.
 func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store, isDemo bool) *Model {
-	p := st.Workspace(id.Workspace)
+	p := st.AccountWorkspace(id)
 	if isDemo && len(p.Included) == 0 {
 		for _, cid := range []string{"Cstudio", demoShippingConversation, "Cdesign", "Dmaya", "Gcrew"} {
 			p.Included[cid] = true
@@ -185,6 +188,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		store:          st,
 		prefs:          p,
 		ctx:            ctx,
+		sendCtx:        ctx,
 		included:       p.Included,
 		contexts:       map[string]context.Context{},
 		cancels:        map[string]context.CancelFunc{},
@@ -252,7 +256,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 
 // Init starts metadata discovery and the bounded refresh scheduler.
 func (m *Model) Init() tea.Cmd {
-	cmds := []tea.Cmd{m.directoryCmd(""), tick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
+	cmds := []tea.Cmd{m.directoryCmd(""), m.nextTick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
 	for cid, included := range m.included {
 		if included {
 			cmds = append(cmds, m.conversationCmd(cid))
@@ -286,6 +290,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateHistory(v)
 	case profileResult:
 		return m.updateProfile(v)
+	case participationResult:
+		return m.updateParticipation(v)
+	case openSlackResult:
+		if v.err != nil {
+			m.setStatus("Open in Slack failed: "+v.err.Error(), statusAction)
+		} else {
+			m.setStatus("Opened selected message in Slack", statusAction)
+		}
+		return m, nil
 	case sendResult:
 		return m.updateSend(v)
 	case tickMsg:

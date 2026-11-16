@@ -335,6 +335,9 @@ func (m *Model) mentionCmd(q core.MentionQuery) tea.Cmd {
 	svc, ok := m.service.(mentionService)
 	gen, ctx := m.discoveryGeneration, m.discoveryCtx
 	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return mentionResult{Query: q, Generation: gen, Err: err}
+		}
 		if !ok {
 			return mentionResult{Query: q, Generation: gen, Err: fmt.Errorf("mention discovery unavailable for this service")}
 		}

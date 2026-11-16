@@ -1,0 +1,14 @@
+ siftpane  Fieldwork … · @you · DEMO/U2 
+                                        
+╭ [#╭ [Workspaces] ────────────────╮───╮
+│ Ch│ Enter switch · Esc close     │er…│
+│▸ Y│ Inactive accounts pause reads│   │
+│  T│                              │e  │
+│  b│  DEMO/U2 · @you · Fieldwork …│   │
+│   │▸ DEMO2/U2 · @maya · Workshop…│   │
+│ ╭ │                              │o╮ │
+│ │ │                              │ │ │
+│ │ │                              │ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+ Refreshed                       ? help 

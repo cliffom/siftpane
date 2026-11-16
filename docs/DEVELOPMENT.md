@@ -84,6 +84,10 @@ go run ./cmd/siftpane --snapshot search --width 60 --height 20
 go run ./cmd/siftpane --snapshot thread --width 100 --height 30
 go run ./cmd/siftpane --snapshot startup --width 100 --height 30
 go run ./cmd/siftpane --snapshot loading --width 60 --height 20
+go run ./cmd/siftpane --snapshot workspaces --width 100 --height 30
+go run ./cmd/siftpane --snapshot account-compose --width 60 --height 20
+go run ./cmd/siftpane --snapshot account-failed --width 40 --height 14
+go run ./cmd/siftpane --snapshot readability --width 100 --height 30
 go run ./cmd/siftpane --snapshot load-error --width 60 --height 20
 go run ./cmd/siftpane --demo
 ```

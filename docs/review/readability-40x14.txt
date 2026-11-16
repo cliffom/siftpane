@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#studio] ───────────────────────────╮
+│ Channel · Daily collaboration, fewer…│
+│▸ Maya  Nov 14 08:00                  │
+│  @you Please review:                 │
+│  │ Keep the old contract.            │
+│  • Check the parser                  │
+│ ╭ Message ─────────────────────────╮ │
+│ │ › Write a message…               │ │
+│ │                                  │ │
+│ ╰──────────────────────────────────╯ │
+╰──────────────────────────────────────╯
+ Refreshed                       ? help 

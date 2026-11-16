@@ -17,13 +17,15 @@ An environment variable is an explicit fallback when the OS credential store is 
 ./bin/siftpane
 ```
 
-`SIFTPANE_SLACK_TOKEN` takes precedence over the keyring. Avoid pasting tokens into shell history. `--logout` deletes the saved keyring entry; it does not revoke the token at Slack or remove an environment override. Revoke the app/token in Slack if necessary. Tokens with rotation enabled are not supported: the supplied manifest leaves rotation disabled. Expired/revoked credentials stop automatic refresh and leave drafts in memory; reinstall/replace the token and restart. Copy any drafts before restarting.
+`SIFTPANE_SLACK_TOKEN` takes precedence over the keyring. Avoid pasting tokens into shell history. `--logout --account WORKSPACE_ID/USER_ID` deletes only that saved keyring entry; it does not revoke the token at Slack or remove an environment override. Revoke the app/token in Slack if necessary. Tokens with rotation enabled are not supported: the supplied manifest leaves rotation disabled. Expired/revoked credentials stop automatic refresh and leave drafts in memory; reinstall/replace the token and restart. Copy any drafts before restarting.
+
+Startup and `--login` identify legacy credentials through the same documented `auth.test` boundary before migrating them. Retired single-token entries cannot silently reimport after logout; see [migration and cleanup](CONFIGURATION.md#multiple-accounts-and-migration-07).
 
 OS storage uses macOS Keychain, Windows Credential Manager, or Linux Secret Service. A locked/missing Linux secret service causes `--login` to fail clearly, without silently writing a plaintext token file. Siftpane stores one active credential; switching workspaces is not a supported UI feature.
 
 ### Permissions
 
-All eleven scopes are **user** scopes:
+All thirteen scopes are **user** scopes:
 
 | Scope | Implemented use |
 | --- | --- |
@@ -32,6 +34,8 @@ All eleven scopes are **user** scopes:
 | `users:read` | Lazy `users.info` for DM labels, authors, and mentions; no workspace user dump |
 | `search:read` | Opt-in direct personal-mention discovery through documented `search.messages`, including accessible unkept conversations |
 | `chat:write` | `chat.postMessage` as the authenticated user, including `thread_ts` replies |
+| `reactions:read` | Explicit `reactions.get` before toggling your own quick reaction |
+| `reactions:write` | Explicit `reactions.add` / `reactions.remove` for selected messages |
 
 `auth.test` identifies the workspace and user. User-token writes act as that user. History access covers public channels and private conversations the user can access. Posting still depends on membership, channel restrictions, and workspace policy; Siftpane never joins a channel for you. The picker lists existing accessible conversations; starting new DMs or joining/leaving channels is outside this version. Group DMs use their Slack-provided name.
 
@@ -73,3 +77,12 @@ Official [search.messages](https://docs.slack.dev/reference/methods/search.messa
 Local follows are explicit Siftpane roots, not Slack's followed-thread list. The existing user history grants authorize `conversations.replies` for accessible roots. Bounded cursor scans use exclusive oldest/latest with one microsecond of lower padding and exact local [from, until) filtering; roots and self-authored replies are excluded locally. Up to 32 roots rotate, one single-flight scanner with at most ten pages per root check, at least three minutes between starts for the same root and a seven-day maximum catch-up. This adds a bounded independent reply scan alongside existing timeline polling; server backoff remains authoritative. Only all completed pages advance a root watermark. Empty successful windows, missing access, failure, budget exhaustion and longer-absence gaps are distinct. Follow scopes, local controls and storage are in [usage](USAGE.md#broadcasts-local-follows-and-resume) and [privacy](CONFIGURATION.md).
 
 Assistant-run new-source validation is offline only. The operator confirmed 0.6.0 live release acceptance on 2026-11-15, without supplying a case-by-case fixture log or timings. The [evidence record](ATTENTION-DISCOVERY.md#06-extension-evidence) preserves that distinction and the controlled protocol for broadcasts, closed-client followed replies, mixed-source dismissal and access revocation. No credentials, bodies or sends were used for assistant implementation/release validation.
+
+
+## Multiple accounts and reactions (0.7)
+
+Official [`auth.test`](https://docs.slack.dev/reference/methods/auth.test/), [`reactions.get`](https://docs.slack.dev/reference/methods/reactions.get/), [`reactions.add`](https://docs.slack.dev/reference/methods/reactions.add/), [`reactions.remove`](https://docs.slack.dev/reference/methods/reactions.remove/) and [`chat.getPermalink`](https://docs.slack.dev/reference/methods/chat.getPermalink/) docs were checked on 2026-11-15. Identity is the returned `team_id` plus `user_id`. Multiple accounts use the same authorized user-token installation model; there is no new OAuth flow or event subscription.
+
+Reinstall/re-authorize the app with `reactions:read` and `reactions:write` from the updated manifest, then `--login` with the replacement user token for each account. Existing messaging/discovery remains usable without reaction grants; a missing reaction grant is shown as an action failure. On each explicit toggle, `reactions.get` uses channel/timestamp, and its users list includes the authenticated user when they reacted even when other users are truncated. One add/remove uses channel/timestamp/name, with no user override, to modify only the caller's reaction. No automatic write retries occur. Reaction removals use a 3.1-second start interval for the documented Tier 2 limit; reaction reads/adds retain the 1.3-second interval. Server `Retry-After` applies to each method. `chat.getPermalink` takes channel/message_ts and needs no additional scope; opening always targets the selected exact message/thread reply.
+
+Only active-account timelines, profiles, mention/broadcast search and local follows refresh. Startup credential validation is separate; switching cancels obsolete reads, retains per-account pacing clocks and starts bounded enabled-source catch-up. Offline tests do not establish live multi-workspace isolation, reaction permissions, posting identity, or browser account selection; use the acceptance protocol in the verification record.

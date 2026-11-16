@@ -24,6 +24,7 @@ func dialogFrame(title string, rows []string, w, h int, border lipgloss.Border) 
 func helpRows(w int) []string {
 	rows := []string{
 		"NAVIGATE",
+		keyLabel(keyAccounts) + "  switch workspace/account; inactive accounts pause reads",
 		keyLabel(keyFocus) + "  switch sidebar / messages",
 		keyLabel(keyNext) + "/" + keyLabel(keyPrevious) + " or " + keyLabel(keyUp) + "/" + keyLabel(keyDown) + "  move / select",
 		keyLabel(keyPageUp) + "/" + keyLabel(keyPageDown) + "  scroll history",
@@ -35,6 +36,8 @@ func helpRows(w int) []string {
 		keyLabel(keyRefresh) + "  refresh / retry saved metadata",
 		keyLabel(keyRead) + "  mark read locally",
 		keyLabel(keyCopy) + "  copy message via OSC52",
+		keyLabel(keyOpenSlack) + "  open selected message in Slack",
+		quickReactionHelp(),
 		"",
 		"COMPOSE AND RECOVER",
 		keyLabel(keySend) + "  send; " + keyLabel(keyCompose) + "  newline",
@@ -121,12 +124,7 @@ func (m *Model) helpKey(k string) tea.Cmd {
 		m.help = false
 		// Help consumes blink messages. Restart the focused input's timer chain
 		// so dismissal cannot leave its virtual cursor hidden or frozen.
-		if m.mode != pickerClosed {
-			return m.picker.Focus()
-		}
-		if m.focus == focusCompose {
-			return m.composer.Focus()
-		}
+		return m.resumeInput()
 	}
 	return nil
 }

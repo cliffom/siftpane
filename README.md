@@ -25,7 +25,7 @@ siftpane --demo
 
 ## Connect Slack
 
-Siftpane currently supports one workspace through your own internal Slack app.
+Connect one or more accounts through your own internal Slack apps. Repeat `--login` for each account and use `Ctrl+W` to switch.
 
 1. Follow the [Slack setup guide](docs/SLACK.md) to create and install the app using the supplied [manifest](slack-app-manifest.yaml).
 2. Run `./bin/siftpane --login` and paste your **User OAuth Token** into the hidden prompt. Siftpane saves it in your OS credential store.
@@ -37,6 +37,9 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 
 | Key | Action |
 | --- | --- |
+| `Ctrl+W` | Switch workspace/account; inactive accounts pause refresh |
+| `1` / `2` / `3` | Toggle your Acknowledged / Looking / Resolved reaction |
+| `O` | Open the selected message in Slack |
 | `p` | Choose conversations; `Tab` keeps or unkeeps an item |
 | Picker `Ctrl+T` | Temporarily add and open |
 | `K` / `d` / `n` | Keep / dismiss attention / next attention |
@@ -65,7 +68,7 @@ Drafts stay with their conversation or thread while you switch, but remain in me
 - Dismissing an unkept attention entry stops its local refresh without leaving it in Slack. Drafts and unresolved sends must be recovered first.
 - Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Channel, people and resolved author names are cached separately for faster startup. Messages appear before remaining names finish loading. Handled attention identities persist separately so replay does not resurrect dismissed activity. Tokens and message bodies never go into preferences or the metadata cache. Recent Kept history can be cached separately with explicit opt-in; see [privacy and bounds](docs/CONFIGURATION.md#optional-recent-message-cache).
 - Ordinary terminals work without patches. Rounded Unicode frames, bracketed amber focus titles, and a compact layout keep messages readable. See [terminal compatibility](docs/TERMINALS.md).
-- This version handles text messaging and threads. It does not include calls, huddles, file uploads, AI features, or a multi-workspace interface.
+- This version handles text messaging and threads. It does not include calls, huddles, file uploads, AI features, or a combined cross-workspace inbox.
 
 The [Slack guide](docs/SLACK.md) explains permissions, rate limits, credential recovery, and polling limitations.
 

@@ -86,6 +86,9 @@ func (m *Model) profileCmd() tea.Cmd {
 			m.profileKey = m.key()
 			key, gen, lookupGen := m.key(), m.generations[m.active], m.profileLookupGeneration
 			return func() tea.Msg {
+				if err := ctx.Err(); err != nil {
+					return profileResult{ID: id, Key: key, Generation: gen, LookupGeneration: lookupGen, Err: err}
+				}
 				p, err := svc.Profile(ctx, id)
 				return profileResult{ID: id, Key: key, Generation: gen, LookupGeneration: lookupGen, Profile: p, Err: err}
 			}

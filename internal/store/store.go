@@ -6,17 +6,24 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/cliffom/siftpane/internal/core"
 )
 
-// Workspace stores only inclusion and local read positions for one workspace.
+// Workspace stores only inclusion and local read positions for one account.
 type Workspace struct {
 	Included map[string]bool   `json:"included"`
 	Read     map[string]string `json:"local_read"`
 }
 
-// Config isolates preferences by Slack workspace ID.
+// Config isolates account preferences and stores nonsecret credential identities.
 type Config struct {
-	Workspaces map[string]*Workspace `json:"workspaces"`
+	Workspaces         map[string]*Workspace    `json:"workspaces"`
+	Accounts           map[string]core.Identity `json:"accounts,omitempty"`
+	AccountPreferences map[string]*Workspace    `json:"account_preferences,omitempty"`
+	DefaultAccount     string                   `json:"default_account,omitempty"`
+	// LegacyAccount records ownership and retires automatic single-token import.
+	LegacyAccount string `json:"legacy_account,omitempty"`
 }
 
 // Store owns preferences and disposable display metadata; an empty path disables disk I/O.
@@ -55,6 +62,9 @@ func Open(path string) (*Store, error) {
 
 // Workspace returns initialized preferences for the given workspace ID.
 func (s *Store) Workspace(id string) *Workspace {
+	if s.Config.Workspaces == nil {
+		s.Config.Workspaces = map[string]*Workspace{}
+	}
 	w := s.Config.Workspaces[id]
 	if w == nil {
 		w = &Workspace{}
@@ -110,3 +120,28 @@ func writePrivate(path string, b []byte) error {
 }
 
 const privateDirectoryMode = 0o700 // Owner-only preference directory.
+
+// AccountKey identifies an authenticated account independently of display names.
+func AccountKey(id core.Identity) string { return id.Workspace + "/" + id.User }
+
+// AccountWorkspace claims legacy workspace preferences once, then isolates users.
+// Old entries are moved, rather than copied into every user of the workspace.
+func (s *Store) AccountWorkspace(id core.Identity) *Workspace {
+	if s.Config.AccountPreferences == nil {
+		s.Config.AccountPreferences = map[string]*Workspace{}
+	}
+	key := AccountKey(id)
+	if w := s.Config.AccountPreferences[key]; w != nil {
+		if w.Included == nil {
+			w.Included = map[string]bool{}
+		}
+		if w.Read == nil {
+			w.Read = map[string]string{}
+		}
+		return w
+	}
+	w := s.Workspace(id.Workspace)
+	delete(s.Config.Workspaces, id.Workspace)
+	s.Config.AccountPreferences[key] = w
+	return w
+}

@@ -133,6 +133,10 @@ func (m *Model) checkFollowed(now time.Time) tea.Cmd {
 func (m *Model) followedCmd(ctx context.Context, result followedResult) tea.Cmd {
 	svc := m.service
 	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			result.Err = err
+			return result
+		}
 		result.Page, result.Err = svc.History(ctx, result.Query)
 		return result
 	}

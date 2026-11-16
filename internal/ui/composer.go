@@ -29,6 +29,9 @@ func (m *Model) composerRows(w, h int) []string {
 			hint = keyLabel(keyRetry) + " retry · " + keyLabel(keyEditFailed) + " edit · text kept"
 		}
 	}
+	if m.multipleAccounts {
+		title += " · @" + accountText(m.identity.Username) + " · " + accountText(m.identity.WorkspaceName)
+	}
 	if m.focus == focusCompose {
 		title = "[" + title + "]"
 	}

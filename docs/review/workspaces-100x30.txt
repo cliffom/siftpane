@@ -1,0 +1,30 @@
+ siftpane                                                         Fieldwork · demo · @you · DEMO/U2 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  Leo Park  Nov 13 10:27                                                  │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
+│▸ #studio              │                                                                          │
+│  @Maya Chen ╭ [Workspaces] ────────────────────────────────────────────────────────╮             │
+│  @Maya, Leo,│ Enter switch · Esc close                                             │             │
+│             │ Inactive accounts pause reads                                        │             │
+│             │                                                                      │             │
+│             │  DEMO/U2 · @you · Fieldwork · demo                                   │             │
+│             │▸ DEMO2/U2 · @maya · Workshop · demo                                  │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │e input.     │
+│             │                                                                      │             │
+│             ╰──────────────────────────────────────────────────────────────────────╯             │
+│                       │ ╭ Message · @you · Fieldwork · demo ───────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Refreshed                                                                                   ? help 

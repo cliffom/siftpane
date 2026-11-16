@@ -11,6 +11,7 @@ import (
 
 var (
 	mentionRE = regexp.MustCompile(`<@[A-Z0-9]+>`)
+	codeRE    = regexp.MustCompile("(?s)```.*?(?:```|$)|`[^`\n]*`")
 	angleRE   = regexp.MustCompile(`<([^<>]+)>`)
 )
 
@@ -32,28 +33,30 @@ func Safe(s string) string {
 
 // Readable renders Slack mentions, links, and entities as safe terminal text.
 func Readable(s string) string {
-	s = angleRE.ReplaceAllStringFunc(s, func(v string) string {
-		parts := strings.SplitN(v[1:len(v)-1], "|", linkParts)
-		a := parts[0]
-		if len(parts) == linkParts {
-			if strings.HasPrefix(a, "http") {
-				return parts[1] + " (" + a + ")"
+	s = outsideCode(s, func(text string) string {
+		return angleRE.ReplaceAllStringFunc(text, func(v string) string {
+			parts := strings.SplitN(v[1:len(v)-1], "|", linkParts)
+			a := parts[0]
+			if len(parts) == linkParts {
+				if strings.HasPrefix(a, "http") {
+					return parts[1] + " (" + a + ")"
+				}
+				if strings.HasPrefix(a, "#") {
+					return "#" + parts[1]
+				}
+				if strings.HasPrefix(a, "@") {
+					return "@" + parts[1]
+				}
+				return parts[1]
 			}
-			if strings.HasPrefix(a, "#") {
-				return "#" + parts[1]
+			if strings.HasPrefix(a, "!") {
+				return "@" + strings.TrimPrefix(a, "!")
 			}
 			if strings.HasPrefix(a, "@") {
-				return "@" + parts[1]
+				return a
 			}
-			return parts[1]
-		}
-		if strings.HasPrefix(a, "!") {
-			return "@" + strings.TrimPrefix(a, "!")
-		}
-		if strings.HasPrefix(a, "@") {
 			return a
-		}
-		return a
+		})
 	})
 	return Safe(html.UnescapeString(s))
 }
@@ -118,12 +121,27 @@ func WithProfiles(m core.Message, profiles map[string]core.Profile) core.Message
 	if p := profiles[m.User]; p.Name != "" && m.Author != "You" {
 		m.Author = p.Name
 	}
-	m.Text = mentionRE.ReplaceAllStringFunc(m.Text, func(mention string) string {
-		id := mention[2 : len(mention)-1]
-		if p := profiles[id]; p.Name != "" {
-			return "@" + html.EscapeString(p.Name)
-		}
-		return mention
+	m.Text = outsideCode(m.Text, func(text string) string {
+		return mentionRE.ReplaceAllStringFunc(text, func(mention string) string {
+			id := mention[2 : len(mention)-1]
+			if p := profiles[id]; p.Name != "" {
+				return "@" + html.EscapeString(p.Name)
+			}
+			return mention
+		})
 	})
 	return m
+}
+
+// Slack markup inside code is literal. Preserve spans while decorating prose.
+func outsideCode(text string, transform func(string) string) string {
+	var out strings.Builder
+	start := 0
+	for _, span := range codeRE.FindAllStringIndex(text, -1) {
+		out.WriteString(transform(text[start:span[0]]))
+		out.WriteString(text[span[0]:span[1]])
+		start = span[1]
+	}
+	out.WriteString(transform(text[start:]))
+	return out.String()
 }

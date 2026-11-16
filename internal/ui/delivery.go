@@ -52,7 +52,7 @@ func (m *Model) send(retry bool) tea.Cmd {
 	}
 	m.retryConfirm = false
 	m.setStatus("Sending… draft retained until acknowledged", statusAction)
-	svc, ctx, o := m.service, m.ctx, d.Outgoing
+	svc, ctx, o := m.service, m.sendCtx, d.Outgoing
 	return func() tea.Msg { msg, err := svc.Send(ctx, o); return sendResult{key, msg, err} }
 }
 

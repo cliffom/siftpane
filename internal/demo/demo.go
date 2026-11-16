@@ -28,6 +28,7 @@ type Service struct {
 	sent          map[string]core.Message
 	failed        map[string]bool
 	polls         int
+	reactions     map[string]bool
 }
 
 // New seeds distinct conversation histories, threads, and simulated activity.
@@ -217,4 +218,19 @@ func openingMessages(ms []core.Message, q core.Query) []core.Message {
 		}
 	}
 	return out
+}
+
+// ToggleReaction updates only in-memory demo state without Slack access.
+func (s *Service) ToggleReaction(ctx context.Context, target core.MessageTarget, reaction core.QuickReaction, user string) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.reactions == nil {
+		s.reactions = map[string]bool{}
+	}
+	key := target.Conversation + "/" + target.TS + "/" + user + "/" + string(reaction)
+	s.reactions[key] = !s.reactions[key]
+	return s.reactions[key], nil
 }

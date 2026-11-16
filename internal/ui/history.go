@@ -38,6 +38,8 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	previous := t.Loaded
 	oldLen := len(t.Messages)
 	selectedTS := ""
+	// At newest, selection follows the viewport. Preserve message identity only
+	// while browsing, so incoming pages cannot leave actions targeting offscreen text.
 	if v.Key == m.key() && m.scroll != 0 && m.index < oldLen {
 		selectedTS = t.Messages[m.index].TS
 	}
