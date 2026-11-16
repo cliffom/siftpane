@@ -1,0 +1,43 @@
+name: Signed macOS candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-signing-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    runs-on: macos-26
+    environment: macos-signing
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.26.7'
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - run: make check
+      - name: Sign, notarize and staple the candidate disk image
+        env:
+          SIFTPANE_CERTIFICATE_P12_BASE64: ${{ secrets.SIFTPANE_CERTIFICATE_P12_BASE64 }}
+          SIFTPANE_CERTIFICATE_PASSWORD: ${{ secrets.SIFTPANE_CERTIFICATE_PASSWORD }}
+          SIFTPANE_SIGN_IDENTITY: ${{ secrets.SIFTPANE_SIGN_IDENTITY }}
+          SIFTPANE_NOTARY_KEY_BASE64: ${{ secrets.SIFTPANE_NOTARY_KEY_BASE64 }}
+          SIFTPANE_NOTARY_KEY_ID: ${{ secrets.SIFTPANE_NOTARY_KEY_ID }}
+          SIFTPANE_NOTARY_ISSUER: ${{ secrets.SIFTPANE_NOTARY_ISSUER }}
+        run: bash scripts/sign-macos-ci.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: siftpane-signed-macos-arm64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

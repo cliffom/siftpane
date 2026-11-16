@@ -2,6 +2,8 @@ package ui
 
 import "github.com/cliffom/siftpane/internal/core"
 
+const messageTimeFormat = "Jan 02 15:04" // Message and refresh timestamps.
+
 const statusTimeFormat = "15:04" // Compact local check time shared by source status.
 
 // activityStatus derives progress from current state, so unrelated background
@@ -21,7 +23,15 @@ func (m *Model) activityStatus() string {
 		case t.Cached && (t.Err != nil || t.CachedRefreshErr != nil):
 			return "Cached refresh failed · " + keyLabel(keyRefresh) + " retry"
 		case t.Cached:
-			return "Cached " + t.Saved.Local().Format("Jan 02 15:04") + " · refreshing / R refresh"
+			return "Cached " + t.Saved.Local().Format(messageTimeFormat) + " · refreshing / R refresh"
+		case t.RecentErr != nil && !t.Loaded:
+			return t.RecentErr.Error() + " · " + keyLabel(keyRefreshDetails) + " details"
+		case t.RecentErr != nil:
+			return "Refresh failed · " + keyLabel(keyRefreshDetails) + " details · R retry"
+		case t.PageErr != nil:
+			return "Page failed · " + keyLabel(keyRefreshDetails) + " details · o retry"
+		case t.More && m.thread != "" && !t.Busy:
+			return "Partial replies · o next page · " + keyLabel(keyRefreshDetails) + " details"
 		case t.Err != nil:
 			return t.Err.Error() + " · " + keyLabel(keyRefresh) + " retry / refresh"
 		case t.Busy:

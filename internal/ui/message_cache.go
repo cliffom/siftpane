@@ -136,5 +136,12 @@ func (m *Model) stopReads() {
 		cancel()
 	}
 	m.clearMessages()
-	m.setStatus("Credentials expired · login & restart", statusAction)
+	m.setStatus(m.credentialRecovery(), statusAction)
+}
+
+func (m *Model) credentialRecovery() string {
+	if m.multipleAccounts {
+		return "Expired · " + keyLabel(keyRefreshDetails) + " steps · " + keyLabel(keyReloadCredential) + " reload"
+	}
+	return "Credentials expired · login & restart"
 }

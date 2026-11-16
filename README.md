@@ -6,7 +6,9 @@ A focused Slack client for your terminal. Choose the channels, DMs, and group DM
 
 ## Try it
 
-Requires Go **1.26.7 or newer**. From this checkout:
+The 0.8 download target is **Apple silicon, macOS 26+**, with Developer ID signing/notarization support. Release downloads are not published yet; see [installation and upgrades](docs/INSTALLATION.md).
+
+For source builds, use Go **1.26.7 or newer**. From this checkout:
 
 ```sh
 go build -o bin/siftpane ./cmd/siftpane
@@ -37,6 +39,8 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 
 | Key | Action |
 | --- | --- |
+| `v` | Inspect refresh ages, errors and recovery details |
+| Navigation `Ctrl+R` | Reload this account’s saved credential after `--login --account …` elsewhere |
 | `Ctrl+W` | Switch workspace/account; inactive accounts pause refresh |
 | `1` / `2` / `3` | Toggle your Acknowledged / Looking / Resolved reaction |
 | `O` | Open the selected message in Slack |

@@ -18,13 +18,16 @@ type Account struct {
 	Service  core.Service
 	Identity core.Identity
 	Offline  bool
+	// Reload reads and validates the credential at the CLI boundary. No token is returned.
+	Reload func(context.Context) (core.Service, core.Identity, error)
 }
 
 type accountSession struct {
-	account Account
-	model   *Model
-	cancel  context.CancelFunc
-	epoch   uint64
+	account   Account
+	model     *Model
+	cancel    context.CancelFunc
+	epoch     uint64
+	reloading bool
 }
 
 type accountEvent struct {
@@ -150,6 +153,8 @@ func (a *Accounts) Init() tea.Cmd { return tea.Batch(a.activate(a.active), tick(
 // Update preserves ownership across switches, including delayed send completion.
 func (a *Accounts) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch v := msg.(type) {
+	case credentialResult:
+		return a, a.updateCredential(v)
 	case accountEvent:
 		s := &a.sessions[v.index]
 		if accountWriteResult(v.message) {
@@ -205,7 +210,7 @@ func (a *Accounts) dirty() bool {
 func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
 	m := a.current()
-	if k == keyQuit && !m.help {
+	if k == keyQuit && !m.help && !m.refreshDetails {
 		if v.Key().IsRepeat {
 			return a, nil
 		}
@@ -222,7 +227,14 @@ func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.cancelConfirmations()
 		return a.chooseKey(k, v.Key().IsRepeat)
 	}
-	if k == keyAccounts && !m.help {
+	if k == keyReloadCredential && !m.help && !m.refreshDetails && m.mode == pickerClosed && m.focus != focusCompose {
+		m.cancelConfirmations()
+		if v.Key().IsRepeat {
+			return a, nil
+		}
+		return a, a.reloadCredential()
+	}
+	if k == keyAccounts && !m.help && !m.refreshDetails {
 		if v.Key().IsRepeat {
 			return a, nil
 		}
@@ -231,7 +243,7 @@ func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		a.choosing, a.choice = true, a.active
 		return a, nil
 	}
-	if k == keyQuitQuiet && !m.help && m.mode == pickerClosed && m.focus != focusCompose && a.dirty() {
+	if k == keyQuitQuiet && !m.help && !m.refreshDetails && m.mode == pickerClosed && m.focus != focusCompose && a.dirty() {
 		m.cancelConfirmations()
 		m.setStatus("Unsent text in an account · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 		return a, nil

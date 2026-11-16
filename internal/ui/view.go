@@ -90,6 +90,10 @@ func (m *Model) View() tea.View {
 		mw, mh := m.pickerSize()
 		content = m.modalOverlay(content, m.helpView(mw, mh), w, h)
 	}
+	if m.refreshDetails {
+		mw, mh := m.pickerSize()
+		content = m.modalOverlay(content, m.refreshDetailsView(mw, mh), w, h)
+	}
 	v := tea.NewView(content)
 	v.AltScreen = true
 	v.WindowTitle = m.windowTitle()

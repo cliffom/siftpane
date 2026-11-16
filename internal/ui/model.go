@@ -14,6 +14,7 @@ import (
 )
 
 type timeline struct {
+	replyCursors       []string
 	After              string
 	Messages           []core.Message
 	Next               string
@@ -22,17 +23,21 @@ type timeline struct {
 	Saved              time.Time
 	More, Loaded, Busy bool
 	Err                error
+	RecentErr          error
+	PageErr            error
+	Checked            time.Time
 	Touched            uint64
 }
 type historyResult struct {
-	CacheEpoch uint64
-	Target     string
-	QueryAfter string
-	Key        string
-	Generation uint64
-	Page       core.Page
-	Older      bool
-	Err        error
+	CacheEpoch  uint64
+	Target      string
+	QueryCursor string
+	QueryAfter  string
+	Key         string
+	Generation  uint64
+	Page        core.Page
+	Older       bool
+	Err         error
 }
 type conversationResult struct {
 	Conversation core.Conversation
@@ -45,14 +50,18 @@ type directoryResult struct {
 	Err  error
 }
 type sendResult struct {
-	Key     string
-	Message core.Message
-	Err     error
+	ServiceGeneration uint64
+	Key               string
+	Message           core.Message
+	Err               error
 }
 type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
+	serviceGeneration   uint64
+	refreshDetails      bool
+	detailsScroll       int
 	participationBusy   bool
 	broadcastConfirm    core.AttentionReason
 	discoverySources    []core.AttentionReason
@@ -274,9 +283,12 @@ func (m *Model) Init() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch v := msg.(type) {
 	case tea.WindowSizeMsg:
+		anchor := m.captureReadingAnchor()
 		m.width = v.Width
 		m.height = v.Height
 		m.resize()
+		m.restoreReadingAnchor(anchor)
+		m.preserveVisibleSelection()
 		return m, nil
 	case conversationResult:
 		return m.updateConversation(v)
@@ -306,7 +318,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m.updateKey(v)
 	}
-	if m.help {
+	if m.help || m.refreshDetails {
 		return m, nil
 	}
 	// Picker paste/blink messages take precedence even when the underlying send is pending.

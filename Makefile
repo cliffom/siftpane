@@ -3,10 +3,13 @@
 GO ?= go
 LINT := $(GO) tool -modfile=tools/go.mod golangci-lint
 
-.PHONY: build demo test vet fmt fmt-check lint check mod-check
+.PHONY: build demo test vet fmt fmt-check lint check mod-check macos-candidate
 
 build:
 	$(GO) build -o bin/siftpane ./cmd/siftpane
+
+macos-candidate:
+	bash scripts/package-macos.sh --unsigned
 
 demo:
 	$(GO) run ./cmd/siftpane --demo

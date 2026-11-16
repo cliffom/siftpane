@@ -69,7 +69,7 @@ func run() error {
 			return err
 		}
 		if *login {
-			return loginToken(ctx, st)
+			return loginToken(ctx, st, *account)
 		}
 		if *logout {
 			return logoutAccount(st, *account)
@@ -93,7 +93,7 @@ func run() error {
 			return fmt.Errorf("snapshot requires at least %d columns and %d rows", ui.MinWidth, ui.MinHeight)
 		}
 		switch ui.SnapshotMode(*snapshot) {
-		case ui.SnapshotWorkspaces, ui.SnapshotAccountCompose, ui.SnapshotAccountFailed, ui.SnapshotReadability, ui.SnapshotCached, ui.SnapshotCacheError, ui.SnapshotCoverage, ui.SnapshotFollowed, ui.SnapshotAttention, ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp, ui.SnapshotStartup, ui.SnapshotLoading, ui.SnapshotLoadError:
+		case ui.SnapshotRefreshDetails, ui.SnapshotCredentialRecovery, ui.SnapshotPartialThread, ui.SnapshotWorkspaces, ui.SnapshotAccountCompose, ui.SnapshotAccountFailed, ui.SnapshotReadability, ui.SnapshotCached, ui.SnapshotCacheError, ui.SnapshotCoverage, ui.SnapshotFollowed, ui.SnapshotAttention, ui.SnapshotMessages, ui.SnapshotCompose, ui.SnapshotPicker, ui.SnapshotSearch, ui.SnapshotThread, ui.SnapshotHelp, ui.SnapshotStartup, ui.SnapshotLoading, ui.SnapshotLoadError:
 		default:
 			return fmt.Errorf("unknown snapshot view")
 		}

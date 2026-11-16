@@ -22,9 +22,10 @@ type permalinkService interface {
 }
 
 type participationResult struct {
-	reaction core.QuickReaction
-	present  bool
-	err      error
+	serviceGeneration uint64
+	reaction          core.QuickReaction
+	present           bool
+	err               error
 }
 
 func (m *Model) messageTarget() (core.MessageTarget, bool) {
@@ -47,10 +48,10 @@ func (m *Model) toggleReaction(reaction core.QuickReaction) tea.Cmd {
 	}
 	m.participationBusy = true
 	m.setStatus(reaction.Label()+" · updating your reaction…", statusAction)
-	ctx, user := m.sendCtx, m.identity.User
+	ctx, user, generation := m.sendCtx, m.identity.User, m.serviceGeneration
 	return func() tea.Msg {
 		present, err := svc.ToggleReaction(ctx, target, reaction, user)
-		return participationResult{reaction: reaction, present: present, err: err}
+		return participationResult{reaction: reaction, present: present, err: err, serviceGeneration: generation}
 	}
 }
 
@@ -58,7 +59,7 @@ func (m *Model) updateParticipation(v participationResult) (tea.Model, tea.Cmd) 
 	m.participationBusy = false
 	if v.err != nil {
 		m.setStatus("Reaction failed · inspect Slack before toggling again: "+v.err.Error(), statusAction)
-		if slack.IsAuth(v.err) {
+		if slack.IsAuth(v.err) && v.serviceGeneration == m.serviceGeneration {
 			m.stopReads()
 		}
 		return m, nil

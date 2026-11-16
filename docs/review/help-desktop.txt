@@ -17,9 +17,9 @@
 │             │ Esc  leave thread / focus sidebar                                    │             │
 │             │ o  older history / next reply page                                   │             │
 │             │ R  refresh / retry saved metadata                                    │             │
-│             │ m  mark read locally                                                 │             │
-│             │ y  copy message via OSC52                                            │e input.     │
-│             │ 1–13/68 ↑/↓ · Esc close                                              │             │
+│             │ v  refresh ages, errors and recovery details                         │             │
+│             │ Ctrl+R  reload saved credential after --login --account elsewhere    │e input.     │
+│             │ 1–13/71 ↑/↓ · Esc close                                              │             │
 │             ╰──────────────────────────────────────────────────────────────────────╯             │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │

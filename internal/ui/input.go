@@ -44,6 +44,9 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if k != keyMentions {
 		m.mentionConfirm = false
 	}
+	if m.refreshDetails {
+		return m, m.refreshDetailsKey(k)
+	}
 	if m.help {
 		return m, m.helpKey(k)
 	}
@@ -102,6 +105,8 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	switch k {
+	case keyRefreshDetails:
+		m.refreshDetails, m.detailsScroll = true, 0
 	case keyAcknowledged, keyLooking, keyResolved:
 		return m, m.toggleReaction(quickReaction(k))
 	case keyOpenSlack:
@@ -157,11 +162,16 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 		return m, m.moveSelection(k)
 	case keyPageUp:
 		m.scroll = max(0, m.scroll) + max(minScrollRows, m.height/scrollPageDivisor)
+		m.keepSelectionVisible()
 	case keyPageDown:
 		m.scroll = max(0, m.scroll-max(minScrollRows, m.height/scrollPageDivisor))
 		if m.scroll == 0 {
+			if t := m.cache[m.key()]; t != nil {
+				m.index = max(0, len(t.Messages)-1)
+			}
 			m.read(m.active)
 		}
+		m.keepSelectionVisible()
 	case keyLast, keyNewest:
 		delete(m.openTargets, m.key())
 		m.scroll = 0

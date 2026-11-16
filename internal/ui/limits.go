@@ -6,6 +6,7 @@ import "time"
 const (
 	profileLookupLimit = 512             // Name lookups attempted per focused view/manual refresh.
 	cacheLimit         = 300             // Messages per timeline.
+	replyCursorHistory = 16              // Recent reply cursors for cycle detection.
 	timelineLimit      = 16              // LRU timelines per session.
 	selectionLimit     = 32              // Explicitly included conversations per workspace.
 	refreshInterval    = 3 * time.Second // One round-robin read per tick.

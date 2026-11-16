@@ -6,6 +6,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/cliffom/siftpane/internal/core"
+	"github.com/cliffom/siftpane/internal/slack"
 )
 
 func tick() tea.Cmd {
@@ -40,6 +41,9 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 	if older && t.Loaded && !t.More {
 		return nil
 	}
+	if !older && thread != "" && t.Loaded && t.More && m.openTargets[key] == "" {
+		return nil // Incomplete reply pages advance only on explicit o.
+	}
 	t.Busy = true
 	t.Err = nil
 	if !older {
@@ -61,6 +65,10 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		q.Target = m.openTargets[key]
 		q.After = ""
 	}
+	resumeAfter := ""
+	if thread != "" && len(t.Messages) > 0 {
+		resumeAfter = t.Messages[len(t.Messages)-1].TS
+	}
 	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {
@@ -68,11 +76,15 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 			return historyResult{Key: key, Generation: gen, Err: err}
 		}
 		p, err := svc.History(ctx, q)
+		if q.Thread != "" && q.Cursor != "" && slack.IsInvalidCursor(err) && ctx.Err() == nil {
+			q.Cursor, q.After = "", resumeAfter
+			p, err = svc.History(ctx, q) // One read recovery; transport pacing still applies.
+		}
 		after := q.After
 		if q.Target != "" && q.Thread != "" {
 			after = q.Target
 		}
-		return historyResult{CacheEpoch: epoch, Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryAfter: after, Target: q.Target}
+		return historyResult{CacheEpoch: epoch, Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryCursor: q.Cursor, QueryAfter: after, Target: q.Target}
 	}
 }
 

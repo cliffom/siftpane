@@ -3,7 +3,7 @@
 Design reference: Josh McKinney's [Terminal borders that don't cost a cell](https://www.joshka.net/cell-borders/), including the **Styles and joints** gallery and rounded solid/dashed/dotted examples. The implemented fallback reserves actual terminal rows/columns for its borders:
 
 - One thin rounded outer frame, a shared sidebar edge, and an inset rounded composer frame with its own input prompt and shortcut footer; messages have no individual boxes.
-- Solid primary outlines and composer in every state; solid search/include modals; dashed help and Channels/People separators; dotted local-activity grouping. Rounded corners use `╭╮╰╯`. Dashed/dotted strokes are Unicode approximations whose continuity depends on the font.
+- Solid primary outlines and composer in every state; solid search/include modals; solid help/recovery modals and dashed Channels/People separators; dotted local-activity grouping. Rounded corners use `╭╮╰╯`. Dashed/dotted strokes are Unicode approximations whose continuity depends on the font.
 - Conversation context uses one muted line for the channel topic/purpose, DM type, or group size when Slack supplies it. The footer keeps common actions visible; `?` opens the full guide.
 - History starts at a complete message header where possible. Oversized messages remain scrollable and repeat the author with a “continued” label when the viewport starts inside them.
 - Below 76 columns, the sidebar becomes a focused full-width view. `Tab` toggles it with messages, and `/` switches directly. Minimum practical size is 40×14; 80×24 or larger is more comfortable. Below minimum, a resize prompt appears. Long text wraps by display-cell width.
@@ -27,3 +27,8 @@ The window/tab title is `Siftpane *` whenever any included conversation has loca
 The marker counts no messages and is independent of Slack's read position. Activity appears only after existing polling observes it, so refresh delays still apply. The offline demo starts with unread conversations for testing. There are no bells, desktop notifications, extra requests, or additional scopes.
 
 Title updates use Bubble Tea's window-title support. Visibility depends on the terminal's tab/window title settings and any multiplexer title policy; a fixed tab name or tmux/screen configuration may hide or override them. Real terminal/multiplexer behavior remains unverified.
+
+
+## 0.8 platform commitment
+
+Release downloads target Apple silicon on macOS 26+. Automated macOS checks and PTY/cell renders establish only their recorded cases; real terminal/font, Keychain and downloaded Gatekeeper/browser behavior remain controlled acceptance checks. Intel macOS, Linux and Windows download support is deferred. The code retains source compatibility paths without claiming those hosts have been validated. See [installation](INSTALLATION.md) and [0.8 acceptance](ACCEPTANCE-0.8.md).

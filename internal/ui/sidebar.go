@@ -94,6 +94,9 @@ func (m *Model) conversationRow(c core.Conversation, w int) string {
 // Restoration state stays visible independently of transient history/send status.
 func (m *Model) restorationState() string {
 	if m.stopped && len(m.metadataFailed) > 0 {
+		if m.multipleAccounts {
+			return m.credentialRecovery()
+		}
 		return "Credentials expired · replace token and restart"
 	}
 	if len(m.metadataBusy) > 0 {

@@ -1,0 +1,30 @@
+ siftpane                                                         Fieldwork · demo · @you · DEMO/U2 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  Leo Park  Nov 13 10:27                                                  │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
+│▸ #studio              │                                                                          │
+│  @Maya Chen ╭ [Refresh and recovery] ──────────────────────────────────────────────╮             │
+│  @Maya, Leo,│ R retry current view/sources · Esc close                             │             │
+│             │                                                                      │             │
+│             │ Credential recovery: --login --account DEMO/U2 in another terminal,  │             │
+│             │ then Ctrl+R here from navigation. Drafts stay in this session.       │             │
+│             │                                                                      │             │
+│             │ Cstudio: Last refresh Nov 15 04:00                                   │             │
+│             │ Refresh failed: connection failed; retry current view with R         │             │
+│             │                                                                      │             │
+│             │ Discovery: Mentions off · M enable                                   │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │e input.     │
+│             │ 1–9/9 ↑/↓ · Esc close                                                │             │
+│             ╰──────────────────────────────────────────────────────────────────────╯             │
+│                       │ ╭ Message · @you · Fieldwork · demo ───────────────────────────────────╮ │
+│                       │ │ › Draft retained during recovery.                                    │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Refresh failed · v details · R retry                                                        ? help 

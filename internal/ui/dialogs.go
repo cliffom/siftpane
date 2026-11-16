@@ -34,6 +34,8 @@ func helpRows(w int) []string {
 		keyLabel(keyEscape) + "  leave thread / focus sidebar",
 		keyLabel(keyOlder) + "  older history / next reply page",
 		keyLabel(keyRefresh) + "  refresh / retry saved metadata",
+		keyLabel(keyRefreshDetails) + "  refresh ages, errors and recovery details",
+		keyLabel(keyReloadCredential) + "  reload saved credential after --login --account elsewhere (navigation)",
 		keyLabel(keyRead) + "  mark read locally",
 		keyLabel(keyCopy) + "  copy message via OSC52",
 		keyLabel(keyOpenSlack) + "  open selected message in Slack",

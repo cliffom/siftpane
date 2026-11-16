@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 — Unreleased
+
+- Preserve reading anchors through older-page loads, edits before the viewport, resize and name enrichment; choose a visible retained successor when selected content disappears. Keep scroll action targets visible and newest-following explicit.
+- Retain available thread roots within bounded reply windows, stop automatic partial-thread page loops, and recover an expired cursor with one paced timestamp continuation. Keep incomplete/failed pages actionable.
+- Open scrollable refresh/recovery details with `v`, retaining per-timeline freshness and separate recent/page failures after unrelated activity.
+- Replace a registered account’s token with `--login --account WORKSPACE_ID/USER_ID` in another terminal, then navigation `Ctrl+R` to reload in-session. Preserve drafts, failed/uncertain delivery and original in-flight sends; reject another account’s token and retain pacing/backoff. Environment sessions revalidate only the inherited override.
+- Improve first-run and missing-grant diagnostics; retain the internal-app user-token model and existing scopes/formats. No automatic send/reaction retry or disk draft persistence is added.
+- Prepare Apple silicon/macOS 26+ candidate packaging, checksums, macOS CI and a manual Developer ID signing/notarization/stapled-DMG workflow. Signed distribution and real Keychain/terminal/live acceptance remain pending; no 0.8 release is published.
+
 ## 0.7.0 — 2026-11-15
 
 - Save multiple account credentials in the OS keyring; switch explicitly with `Ctrl+W`. Restore each workspace/user session, thread, selection, scroll, drafts and send recovery. `--account WORKSPACE_ID/USER_ID` chooses the initial account.
