@@ -8,6 +8,11 @@ import (
 
 // Key identifiers use Bubble Tea names; presentation labels derive from them.
 const (
+	keyAccounts        = "ctrl+w"
+	keyAcknowledged    = "1"
+	keyLooking         = "2"
+	keyResolved        = "3"
+	keyOpenSlack       = "O"
 	keyChannel         = "B"
 	keyHere            = "H"
 	keyFollow          = "f"

@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you 
+                                                            
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Channel · Daily collaboration, fewer interruptions       │
+│▸ Maya  Nov 14 08:00                                      │
+│  @you Please review:                                     │
+│  │ Keep the old contract.                                │
+│  • Check the parser                                      │
+│  • Preserve literal code mentions                        │
+│  ┌ code go                                               │
+│  │ if ready {                                            │
+│  │     send("<@U2>")                                     │
+│  │ }                                                     │
+│  └                                                       │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Refreshed                                           ? help 

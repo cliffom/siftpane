@@ -1,6 +1,6 @@
 # Architecture
 
-The program has one Bubble Tea event loop. State changes happen in `Update`; views format state and do not perform I/O. `tea.Cmd` closures perform Slack calls and return typed result messages. Configuration writes are small synchronous local-file operations; authentication runs before starting the TUI. No HTTP calls execute inside `View` or a key handler.
+The program has one Bubble Tea event loop. `ui.Accounts` owns retained per-account `Model` sessions and one refresh clock. State changes happen in `Update`; views format state and do not perform I/O. `tea.Cmd` closures perform Slack calls and return typed result messages. Configuration writes are small synchronous local-file operations; authentication runs before starting the TUI. No HTTP calls execute inside `View` or a key handler.
 
 | Package | Responsibility |
 | --- | --- |
@@ -89,3 +89,12 @@ The event loop owns the enabled search source queue. One cancelable scan runs ea
 Recent disk-window freshness is independent of older-page loading. A successful older page retains the original fetched time and cached provenance, plus a separate recent-refresh failure until a new recent request starts. Older loads do not feed unrefreshed cached timestamps into local activity/read observation. Only a successful recent refresh or an explicit replacement window can clear cached provenance.
 
 An explicit conversation access denial cancels and rotates that conversation's read context/generation, cancels its active profile/follow lookup, releases invalidated metadata/startup busy state, and purges visible/disk content. Late metadata/history/reply/profile results are rejected. Fresh retries use a new read context; other conversations, durable attention, drafts and delivery acknowledgements retain their independent lifecycles. Purged timelines retain the access error for actionable recovery rather than an indefinite loading state.
+
+
+## Workspace sessions and participation (0.7)
+
+The CLI authenticates OS-keyring credentials and passes services plus verified identities to `ui.Accounts`. The registry contains display identity only; an environment override runs one account without registering its secret. Every session owns its full view, cache, attention/source state, drafts and deliveries. Preferences now use `store.AccountKey` (workspace/user); existing account-hashed stores keep their names. Legacy preferences are claimed once, not copied to every user of a workspace.
+
+Only the active model receives input and refresh ticks. On switching, the coordinator cancels its read context, invalidates its activation epoch and discovery/profile/follow generations, and clears abandoned busy guards. Results carry their originating session and epoch, including directory pages. Obsolete results cannot publish or advance checkpoints, even after switching back. Queued canceled read commands return before invoking the service. Accepted partial activity and completed checkpoints remain intact. Activation creates new read contexts and promptly checks enabled sources, retries unfinished metadata/directory restoration and refreshes the current live view if it is at newest. Scrolled views retain their anchor; their live history resumes at newest or explicit refresh. One retained client per account preserves method pacing and server backoff across switches. Inactive counts are omitted.
+
+Sends capture the original service, application context and immutable target/body. Send, reaction and explicit open-in-Slack completions route to their owning session even while inactive; no switch triggers a write or retry. Reaction toggles read current own-user state then make at most one add/remove, treating a concurrent already-present/already-absent response as the intended state. Mutations are single-flight per account and never dismiss attention. Permalinks use `chat.getPermalink` for the selected timestamp, then an argv-only platform opener restricted to Slack HTTPS domains. Demo reactions remain memory-only; demo browser opening is unavailable. Global exit protection includes every retained draft and pending/failed send.

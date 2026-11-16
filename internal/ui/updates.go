@@ -94,7 +94,7 @@ func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) updateTick(_ tickMsg) (tea.Model, tea.Cmd) {
-	cmds := []tea.Cmd{tick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
+	cmds := []tea.Cmd{m.nextTick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
 	cs := m.pollingConversations()
 	if !m.stopped && len(cs) > 0 {
 		// Keep the first visible page ahead of background timeline reads.

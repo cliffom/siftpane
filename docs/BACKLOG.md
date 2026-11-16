@@ -12,4 +12,4 @@ Milestone 1's attention workflow proceeds through #14 (live discovery decision),
 
 Milestone 2: #11, #19, #20 and #21 cover opt-in recent message caching, independent broadcasts, explicit local thread follows, and shared identity/catch-up. The 0.6.0 release adds these features; the operator confirmed the live acceptance gate on 2026-11-15. The #22 protocol and evidence distinguish operator confirmation from assistant-run offline regressions/captures. Dense intervals beyond the bounded page budgets remain visibly incomplete; adaptive interval splitting is future work.
 
-Multi-workspace UI, huddles, calls, AI, enterprise deployment, and file uploads remain outside the first-version scope.
+Milestone 3 adds explicit account switching, isolated views, active-only scheduling, quick reactions and explicit open-in-Slack. Live multi-workspace/reaction acceptance remains outstanding; see the verification protocol. A combined cross-workspace inbox and inactive-account background discovery are deferred. Huddles, calls, AI, enterprise deployment and file uploads remain outside scope.

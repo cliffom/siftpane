@@ -18,20 +18,24 @@ type SnapshotMode string
 
 // Snapshot modes are independent of the UI's navigation state.
 const (
-	SnapshotCached     SnapshotMode = "cached"
-	SnapshotCacheError SnapshotMode = "cache-error"
-	SnapshotCoverage   SnapshotMode = "coverage"
-	SnapshotFollowed   SnapshotMode = "followed"
-	SnapshotAttention  SnapshotMode = "attention"
-	SnapshotMessages   SnapshotMode = "messages"
-	SnapshotCompose    SnapshotMode = "compose"
-	SnapshotPicker     SnapshotMode = "picker"
-	SnapshotSearch     SnapshotMode = "search"
-	SnapshotThread     SnapshotMode = "thread"
-	SnapshotHelp       SnapshotMode = "help"
-	SnapshotStartup    SnapshotMode = "startup"
-	SnapshotLoading    SnapshotMode = "loading"
-	SnapshotLoadError  SnapshotMode = "load-error"
+	SnapshotWorkspaces     SnapshotMode = "workspaces"
+	SnapshotAccountCompose SnapshotMode = "account-compose"
+	SnapshotAccountFailed  SnapshotMode = "account-failed"
+	SnapshotReadability    SnapshotMode = "readability"
+	SnapshotCached         SnapshotMode = "cached"
+	SnapshotCacheError     SnapshotMode = "cache-error"
+	SnapshotCoverage       SnapshotMode = "coverage"
+	SnapshotFollowed       SnapshotMode = "followed"
+	SnapshotAttention      SnapshotMode = "attention"
+	SnapshotMessages       SnapshotMode = "messages"
+	SnapshotCompose        SnapshotMode = "compose"
+	SnapshotPicker         SnapshotMode = "picker"
+	SnapshotSearch         SnapshotMode = "search"
+	SnapshotThread         SnapshotMode = "thread"
+	SnapshotHelp           SnapshotMode = "help"
+	SnapshotStartup        SnapshotMode = "startup"
+	SnapshotLoading        SnapshotMode = "loading"
+	SnapshotLoadError      SnapshotMode = "load-error"
 )
 
 // LoadSnapshot loads offline review data through the normal update path.
@@ -64,6 +68,27 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.resize()
 	m.focus = focusMessages
 	switch mode {
+	case SnapshotWorkspaces:
+		m.multipleAccounts = true
+		other := m.identity
+		other.Workspace, other.WorkspaceName, other.Username = "DEMO2", "Workshop · demo", "maya"
+		a := &Accounts{ctx: m.ctx, store: m.store, sessions: []accountSession{{model: m, account: Account{Identity: m.identity}}, {account: Account{Identity: other}}}, choosing: true, choice: 1, width: width, height: height}
+		return ansi.Strip(a.View().Content)
+	case SnapshotAccountCompose, SnapshotAccountFailed:
+		m.multipleAccounts = true
+		m.focus = focusCompose
+		m.composer.SetValue("Draft for this account, retained while switching.")
+		m.composer.Focus()
+		if mode == SnapshotAccountFailed {
+			m.focus = focusMessages
+			m.deliveries[m.key()] = &core.Delivery{Outgoing: core.Outgoing{Conversation: m.active, Text: m.composer.Value()}, State: core.DeliveryFailed, Uncertain: true}
+			m.setStatus("Delivery unknown · check Slack before r retry", statusAction)
+		}
+	case SnapshotReadability:
+		m.line(m.key()).Messages = []core.Message{{Author: "Maya", TS: "1794672000.000001", Text: "@you Please review:\n> Keep the old contract.\n- Check the parser\n- Preserve literal code mentions\n```go\nif ready {\n    send(\"<@U2>\")\n}\n```\nUse `dryRun` before sending."}}
+		m.line(m.key()).Loaded = true
+		m.index, m.scroll = 0, -1
+
 	case SnapshotCached, SnapshotCacheError:
 		line := m.line(m.key())
 		line.Cached, line.Busy, line.Saved = true, true, time.Date(2026, time.November, 15, 12, 0, 0, 0, time.UTC)

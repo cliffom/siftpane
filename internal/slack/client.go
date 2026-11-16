@@ -106,6 +106,9 @@ func New(token string) *Client {
 // Pacing is per method and workspace. A 429 blocks that method, including manual calls.
 func (c *Client) wait(ctx context.Context, method string) error {
 	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		c.mu.Lock()
 		delay := time.Until(c.next[method])
 		if delay <= 0 {
@@ -135,10 +138,20 @@ func (c *Client) wait(ctx context.Context, method string) error {
 }
 
 func (c *Client) call(ctx context.Context, method string, v url.Values, out any) error {
+	return c.callHTTP(ctx, http.MethodPost, method, v, out)
+}
+
+func (c *Client) callHTTP(ctx context.Context, httpMethod, method string, v url.Values, out any) error {
 	if err := c.wait(ctx, method); err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.base+method, strings.NewReader(v.Encode()))
+	endpoint := c.base + method
+	body := v.Encode()
+	if httpMethod == http.MethodGet {
+		endpoint += "?" + body
+		body = ""
+	}
+	req, err := http.NewRequestWithContext(ctx, httpMethod, endpoint, strings.NewReader(body))
 	if err != nil {
 		return errors.New("cannot create Slack request")
 	}
@@ -146,7 +159,7 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r, err := c.http.Do(req)
 	if err != nil {
-		return &APIError{Code: "connection failed; refresh will reconnect", Ambiguous: method == methodSend}
+		return &APIError{Code: "connection failed; refresh will reconnect", Ambiguous: isWriteMethod(method)}
 	}
 	defer func() {
 		// Closing an already-read response cannot change its API result.
@@ -167,18 +180,18 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 		return &APIError{Code: "ratelimited", RetryAfter: d}
 	}
 	if r.StatusCode != http.StatusOK {
-		return &APIError{Code: fmt.Sprintf("HTTP %d", r.StatusCode), Ambiguous: method == methodSend}
+		return &APIError{Code: fmt.Sprintf("HTTP %d", r.StatusCode), Ambiguous: isWriteMethod(method)}
 	}
 	b, err := io.ReadAll(io.LimitReader(r.Body, responseByteLimit))
 	if err != nil {
-		return &APIError{Code: "incomplete response", Ambiguous: method == methodSend}
+		return &APIError{Code: "incomplete response", Ambiguous: isWriteMethod(method)}
 	}
 	var envelope struct {
 		OK    bool   `json:"ok"`
 		Error string `json:"error"`
 	}
 	if json.Unmarshal(b, &envelope) != nil {
-		return &APIError{Code: "invalid response", Ambiguous: method == methodSend}
+		return &APIError{Code: "invalid response", Ambiguous: isWriteMethod(method)}
 	}
 	if !envelope.OK {
 		code := envelope.Error // Slack error codes only, never server payloads.
@@ -188,7 +201,7 @@ func (c *Client) call(ctx context.Context, method string, v url.Values, out any)
 		return &APIError{Code: code, Ambiguous: code == "internal_error" || code == "fatal_error" || code == "request_timeout" || code == "service_unavailable"}
 	}
 	if err = json.Unmarshal(b, out); err != nil {
-		return &APIError{Code: "invalid payload", Ambiguous: method == methodSend}
+		return &APIError{Code: "invalid payload", Ambiguous: isWriteMethod(method)}
 	}
 	return nil
 }
@@ -205,6 +218,9 @@ func (c *Client) Identity(ctx context.Context) (core.Identity, error) {
 	err := c.call(ctx, methodIdentity, url.Values{}, &r)
 	if err != nil {
 		return core.Identity{}, err
+	}
+	if r.TeamID == "" || r.UserID == "" {
+		return core.Identity{}, errors.New("slack authentication returned no workspace/user identity")
 	}
 	if r.BotID != "" {
 		return core.Identity{}, errors.New("a user OAuth token is required; bot tokens cannot act as you")
@@ -363,3 +379,7 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 
 // paramChannel is the shared Web API conversation parameter.
 const paramChannel = "channel"
+
+func isWriteMethod(method string) bool {
+	return method == methodSend || method == methodReactionAdd || method == methodReactionRemove
+}

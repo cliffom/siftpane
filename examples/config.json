@@ -1,6 +1,7 @@
 {
-  "workspaces": {
-    "T_REPLACE_WITH_YOUR_WORKSPACE_ID": {
+  "workspaces": {},
+  "account_preferences": {
+    "T_REPLACE_WITH_WORKSPACE_ID/U_REPLACE_WITH_USER_ID": {
       "included": {
         "C_REPLACE_WITH_CONVERSATION_ID": true,
         "D_REPLACE_WITH_DM_ID": true

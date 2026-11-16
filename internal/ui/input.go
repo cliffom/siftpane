@@ -59,7 +59,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if k != keyRetry {
 		m.retryConfirm = false
 	}
-	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit || k == keyAcknowledgeGap) {
+	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit || k == keyAcknowledgeGap || quickReaction(k) != "" || k == keyOpenSlack) {
 		return m, nil
 	}
 	if k == keyQuit {
@@ -97,6 +97,10 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	switch k {
+	case keyAcknowledged, keyLooking, keyResolved:
+		return m, m.toggleReaction(quickReaction(k))
+	case keyOpenSlack:
+		return m, m.openSlack()
 	case keyAcknowledgeGap:
 		m.acknowledgeGap()
 	case keyKeep:

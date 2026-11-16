@@ -127,13 +127,53 @@ func messageRows(msg core.Message, w int, focused bool) []string {
 		head = muted.Render(head)
 	}
 	rows = append(rows, ansi.Truncate(head, w, "…"))
-	body := slack.Body(msg)
-	wrapped := strings.Split(ansi.Wrap(body, max(1, w-messagePaddingColumns), ""), "\n")
-	for _, line := range wrapped {
-		rows = append(rows, "  "+line)
-	}
+	rows = append(rows, formattedBodyRows(slack.Body(msg), w)...)
 	rows = append(rows, "")
 	return rows
 }
 
+const codeFence = "```"
+
 const messagePaddingColumns = 2 // History text inset in display cells.
+
+// Visual rails distinguish quoted and fenced text; clipboard content stays plain.
+func formattedBodyRows(body string, width int) []string {
+	rows := []string{}
+	code := false
+	for _, line := range strings.Split(body, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !code && strings.HasPrefix(trimmed, codeFence) && strings.HasSuffix(trimmed, codeFence) && len(trimmed) >= len(codeFence)*2 {
+			literal := trimmed[len(codeFence) : len(trimmed)-len(codeFence)]
+			rows = append(rows, formattedBodyRows(codeFence+"\n"+literal+"\n"+codeFence, width)...)
+			continue
+		}
+		if strings.HasPrefix(trimmed, codeFence) && (!code || trimmed == codeFence) {
+			code = !code
+			label := "└"
+			if code {
+				label = "┌ code " + strings.TrimPrefix(trimmed, codeFence)
+			}
+			rows = append(rows, "  "+muted.Render(ansi.Truncate(label, max(1, width-messagePaddingColumns), "…")))
+			continue
+		}
+		prefix := ""
+		switch {
+		case code:
+			prefix = "│ "
+		case strings.HasPrefix(trimmed, ">"):
+
+			prefix, line = "│ ", strings.TrimSpace(strings.TrimPrefix(trimmed, ">"))
+		case strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* "):
+			prefix, line = "• ", trimmed[2:]
+		}
+		available := max(1, width-messagePaddingColumns-ansi.StringWidth(prefix))
+		for i, part := range strings.Split(ansi.Wrap(line, available, ""), "\n") {
+			marker := prefix
+			if prefix == "• " && i > 0 {
+				marker = "  "
+			}
+			rows = append(rows, "  "+marker+part)
+		}
+	}
+	return rows
+}

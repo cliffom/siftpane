@@ -44,7 +44,7 @@ func key(s string) tea.KeyPressMsg {
 
 func TestLayoutDimensionsAndBorderJunctions(t *testing.T) {
 	for _, size := range [][2]int{{120, 36}, {100, 30}, {80, 24}, {60, 20}, {40, 14}} {
-		for _, mode := range []SnapshotMode{SnapshotCached, SnapshotCacheError, SnapshotCoverage, SnapshotFollowed, SnapshotAttention, SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotSearch, SnapshotThread, SnapshotHelp, SnapshotStartup, SnapshotLoading, SnapshotLoadError} {
+		for _, mode := range []SnapshotMode{SnapshotWorkspaces, SnapshotAccountCompose, SnapshotAccountFailed, SnapshotReadability, SnapshotCached, SnapshotCacheError, SnapshotCoverage, SnapshotFollowed, SnapshotAttention, SnapshotMessages, SnapshotCompose, SnapshotPicker, SnapshotSearch, SnapshotThread, SnapshotHelp, SnapshotStartup, SnapshotLoading, SnapshotLoadError} {
 			t.Run(fmt.Sprint(size)+string(mode), func(t *testing.T) {
 				m := fixture(t)
 				s := Snapshot(m, size[0], size[1], mode)
@@ -346,6 +346,12 @@ func assertLayout(t *testing.T, m *Model, s string, size [2]int, mode SnapshotMo
 	focusedHeader := "[" + m.title() + "]"
 	if mode == SnapshotStartup || mode == SnapshotAttention || mode == SnapshotCoverage {
 		focusedHeader = "[Messages]"
+	}
+	if mode == SnapshotAccountCompose {
+		focusedHeader = "[Message · @you"
+	}
+	if mode == SnapshotWorkspaces {
+		focusedHeader = "[Workspaces]"
 	}
 	if mode == SnapshotCompose {
 		focusedHeader = "[Message]"

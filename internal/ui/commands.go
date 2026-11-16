@@ -19,7 +19,13 @@ func (m *Model) directoryCmd(cursor string) tea.Cmd {
 	m.directoryBusy = true
 	m.directoryErr = nil
 	svc, ctx := m.service, m.ctx
-	return func() tea.Msg { p, err := svc.Directory(ctx, cursor); return directoryResult{Page: p, Err: err} }
+	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return directoryResult{Err: err}
+		}
+		p, err := svc.Directory(ctx, cursor)
+		return directoryResult{Page: p, Err: err}
+	}
 }
 
 func (m *Model) fetch(key string, older bool) tea.Cmd {
@@ -58,6 +64,9 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return historyResult{Key: key, Generation: gen, Err: err}
+		}
 		p, err := svc.History(ctx, q)
 		after := q.After
 		if q.Target != "" && q.Thread != "" {
@@ -75,6 +84,9 @@ func (m *Model) conversationCmd(cid string) tea.Cmd {
 	delete(m.metadataFailed, cid)
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return conversationResult{ID: cid, Generation: gen, Err: err}
+		}
 		c, err := svc.Conversation(ctx, cid)
 		return conversationResult{Conversation: c, ID: cid, Generation: gen, Err: err}
 	}
@@ -88,4 +100,11 @@ func (m *Model) refresh() tea.Cmd {
 		cmds = append(cmds, m.conversationCmd(cid))
 	}
 	return tea.Batch(cmds...)
+}
+
+func (m *Model) nextTick() tea.Cmd {
+	if m.multipleAccounts {
+		return nil
+	}
+	return tick()
 }

@@ -1,0 +1,14 @@
+ siftpane  Fieldwork … · @you · DEMO/U2 
+                                        
+╭ [#studio] ───────────────────────────╮
+│ Channel · Daily collaboration, fewer…│
+│▸ You  Nov 13 10:42                   │
+│  Thanks, everyone. Let's leave some  │
+│  breathing room around the input.    │
+│                                      │
+│ ╭ Message · failed · @you · Fieldwo╮ │
+│ │ › Draft for this account,        │ │
+│ │   retained while switching.      │ │
+│ ╰ r retry · x edit · text kept ────╯ │
+╰──────────────────────────────────────╯
+ Delivery unknown · check Slack before …
