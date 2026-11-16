@@ -193,3 +193,10 @@ Conversation access denial now cancels/invalidates existing read generations, ac
 `make fmt` and `make check` passed on Go 1.27.4/macOS arm64 with zero lint findings, vet, race tests, build and both modules' hygiene/checksums. Inspected [cached older history at desktop](review/cached-older-desktop.png), [small cached older history](review/cached-older-small.png), [desktop access denial](review/access-denied-desktop.png), and [small access denial](review/access-denied-small.png). Existing cached-error captures are refreshed at 100×30, 60×20 and 40×14 for the complete retry hint; the regression checks recovery visibility at all three sizes. Captures render normal ANSI view cells with Menlo, retaining the physical-terminal limitations above.
 
 Prepared 0.6.0 is reused. No live Slack calls, sends or credential operations were used; controlled live acceptance remains #22. Hosted CI and the single independent follow-up review are recorded separately in the PR/conversation.
+
+
+## 0.6.0 release acceptance
+
+On 2026-11-15, the operator requested `$release #23 - verified`. This is recorded as operator confirmation of the outstanding live acceptance for release. No additional case-by-case fixture log, timing measurements or message/send evidence was supplied to the assistant. Prior assistant-run offline tests and the 0.5 live observations remain separately attributed. No new live Slack calls, sends, membership/read-position writes or credential operations were performed during this release workflow.
+
+Implementation revision `d85fdca` passed local `make check`, all push/PR CI jobs on Go 1.26.7/stable, the independent full-diff read-only review and a subsequent conversation review without actionable findings. Release metadata dates the 0.6.0 changelog and records the operator confirmation consistently while retaining bounded-search, physical-terminal and cross-platform limitations. Release-head/source-install checks, post-merge/tag CI and publication are reported separately in the release conversation. Apart from issue closures already declared by PR #23, this operation does not change issue/milestone state.

@@ -31,7 +31,7 @@ Siftpane currently supports one workspace through your own internal Slack app.
 2. Run `./bin/siftpane --login` and paste your **User OAuth Token** into the hidden prompt. Siftpane saves it in your OS credential store.
 3. Run `./bin/siftpane`, press `p`, and choose which conversations to keep. Nothing is kept automatically. Use `Ctrl+T` in the picker for a temporary conversation.
 
-Read-only live mention discovery and exact thread opening have been exercised, and the operator confirmed live acceptance for 0.5.0. See the [verification record](docs/VERIFICATION.md) for the evidence and remaining coverage limitations.
+Read-only live mention discovery and exact thread opening have been exercised, and the operator confirmed live acceptance for 0.5.0 and 0.6.0. See the [verification record](docs/VERIFICATION.md) for the evidence and remaining coverage limitations.
 
 ## Find your way around
 
