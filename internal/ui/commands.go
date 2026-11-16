@@ -36,6 +36,9 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 	}
 	t.Busy = true
 	t.Err = nil
+	if !older {
+		t.CachedRefreshErr = nil
+	}
 	q := core.Query{Conversation: cid, Thread: thread}
 	if !older && thread != "" && t.Loaded && !t.More && len(t.Messages) > 0 {
 		q.After = t.Messages[len(t.Messages)-1].TS

@@ -11,4 +11,4 @@
 │ │                                  │ │
 │ ╰──────────────────────────────────╯ │
 ╰──────────────────────────────────────╯
- Cached, refresh failed · R ret… ? help
+ Cached refresh failed · R retry ? help

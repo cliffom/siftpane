@@ -25,7 +25,7 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 		m.metadataFailed[v.ID] = true
 		m.setStatus("Saved conversation "+v.ID+" unavailable: "+v.Err.Error(), statusRoutine)
 		if slack.IsAccess(v.Err) {
-			m.purgeConversationCache(v.ID)
+			m.purgeConversationCache(v.ID, v.Err)
 		}
 		if slack.IsAuth(v.Err) {
 			m.stopReads()

@@ -18,8 +18,8 @@ func (m *Model) activityStatus() string {
 		switch {
 		case t == nil || (!t.Loaded && t.Err == nil):
 			return "Loading messages…"
-		case t.Cached && t.Err != nil:
-			return "Cached, refresh failed · " + keyLabel(keyRefresh) + " retry"
+		case t.Cached && (t.Err != nil || t.CachedRefreshErr != nil):
+			return "Cached refresh failed · " + keyLabel(keyRefresh) + " retry"
 		case t.Cached:
 			return "Cached " + t.Saved.Local().Format("Jan 02 15:04") + " · refreshing / R refresh"
 		case t.Err != nil:

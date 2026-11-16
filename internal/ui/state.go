@@ -17,6 +17,29 @@ func (m *Model) addContext(cid string) {
 	m.generations[cid] = m.readGeneration
 }
 
+// Invalidate the revoked conversation's reads while keeping fresh retry contexts
+// and all draft/delivery state. Sends use the application context independently.
+func (m *Model) invalidateConversationReads(cid string) {
+	if cancel := m.cancels[cid]; cancel != nil {
+		cancel()
+	}
+	if m.included[cid] {
+		m.addContext(cid)
+		m.metadataFailed[cid] = true
+	}
+	if profileCID, _ := split(m.profileKey); profileCID == cid {
+		m.cancelProfileLookup()
+	}
+	if followCID, _ := split(m.followKey); followCID == cid {
+		m.cancelFollowed()
+	}
+	delete(m.metadataBusy, cid)
+	if len(m.metadataBusy) == 0 {
+		m.startupRestoring = false
+		m.startupSidebar = nil
+	}
+}
+
 func (m *Model) key() string {
 	if m.thread != "" {
 		return m.active + "/" + m.thread

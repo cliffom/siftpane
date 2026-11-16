@@ -17,6 +17,7 @@ type timeline struct {
 	After              string
 	Messages           []core.Message
 	Next               string
+	CachedRefreshErr   error
 	Cached             bool
 	Saved              time.Time
 	More, Loaded, Busy bool

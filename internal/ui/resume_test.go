@@ -79,7 +79,7 @@ func TestClearDisableRemovalAndAuthRejectLateCacheWrites(t *testing.T) {
 			case "auth":
 				m.stopReads()
 			case "access":
-				m.purgeConversationCache(cid)
+				m.purgeConversationCache(cid, &slack.APIError{Code: "channel_not_found"})
 			}
 			m.Update(pending())
 			if len(m.store.Messages(m.identity, m.attention.Kept)) != 0 {

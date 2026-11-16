@@ -154,7 +154,7 @@ func (m *Model) updateFollowed(v followedResult) (tea.Model, tea.Cmd) {
 			m.stopReads()
 		}
 		if slack.IsAccess(v.Err) {
-			m.purgeConversationCache(f.Conversation)
+			m.purgeConversationCache(f.Conversation, v.Err)
 		}
 		return m, nil
 	}

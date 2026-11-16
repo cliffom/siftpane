@@ -108,7 +108,8 @@ func (m *Model) trimPersisted() {
 	}
 }
 
-func (m *Model) purgeConversationCache(cid string) {
+func (m *Model) purgeConversationCache(cid string, err error) {
+	m.invalidateConversationReads(cid)
 	m.cacheEpoch++
 	delete(m.persisted, cid)
 	m.saveMessages()
@@ -118,6 +119,10 @@ func (m *Model) purgeConversationCache(cid string) {
 			t.Messages = nil
 			t.Loaded = false
 			t.Cached = false
+			t.CachedRefreshErr = nil
+			t.Saved = time.Time{}
+			t.Busy = false
+			t.Err = err
 		}
 	}
 }

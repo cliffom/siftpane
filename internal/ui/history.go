@@ -22,9 +22,10 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	}
 	t.Busy = false
 	t.Err = v.Err
+	t.recordFreshness(v)
 	if v.Err != nil {
 		if slack.IsAccess(v.Err) {
-			m.purgeConversationCache(cid)
+			m.purgeConversationCache(cid, v.Err)
 		}
 		if !errors.Is(v.Err, context.Canceled) {
 			m.setStatus(v.Err.Error()+" · R refresh", statusRoutine)
@@ -34,8 +35,6 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
-	t.Cached = false
-	t.Saved = time.Now()
 	previous := t.Loaded
 	oldLen := len(t.Messages)
 	selectedTS := ""
@@ -44,7 +43,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	}
 	t.applyPage(v, thread)
 	m.cacheHistory(v, cid, thread)
-	if len(t.Messages) > 0 && thread == "" {
+	if len(t.Messages) > 0 && thread == "" && !t.Cached {
 		m.observeActivity(cid, t.Messages[len(t.Messages)-1].TS)
 	}
 	if v.Key == m.key() {
@@ -163,5 +162,20 @@ func (m *Model) restoreMessageSelection(v historyResult, t *timeline, selectedTS
 				break
 			}
 		}
+	}
+}
+
+// Older pages cannot establish freshness for a retained recent disk window.
+func (t *timeline) recordFreshness(v historyResult) {
+	if v.Older {
+		return
+	}
+	if t.Cached {
+		t.CachedRefreshErr = v.Err
+	}
+	if v.Err == nil {
+		t.Cached = false
+		t.CachedRefreshErr = nil
+		t.Saved = time.Now()
 	}
 }

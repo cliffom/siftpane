@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you
+
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │                                                                          │
+│  #shipping         ●  │ Could not load messages.                                                 │
+│▸ #studio             ✎│ Slack: channel_not_found                                                 │
+│  @Maya Chen        ●  │ R retry / refresh                                                        │
+│  @Maya, Leo, you      │                                                                          │
+│ Unavailable · R retry │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Draft retained after access denial                                 │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Slack: channel_not_found · R retry / refresh                                                ? help
