@@ -11,7 +11,7 @@ import (
 
 var (
 	mentionRE = regexp.MustCompile(`<@[A-Z0-9]+>`)
-	codeRE    = regexp.MustCompile("(?s)```.*?```|`[^`\n]*`")
+	codeRE    = regexp.MustCompile("(?s)```.*?(?:```|$)|`[^`\n]*`")
 	angleRE   = regexp.MustCompile(`<([^<>]+)>`)
 )
 

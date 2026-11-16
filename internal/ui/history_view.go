@@ -137,43 +137,60 @@ const codeFence = "```"
 const messagePaddingColumns = 2 // History text inset in display cells.
 
 // Visual rails distinguish quoted and fenced text; clipboard content stays plain.
+// Slack permits content directly after opening fences and before closing fences.
 func formattedBodyRows(body string, width int) []string {
 	rows := []string{}
-	code := false
-	for _, line := range strings.Split(body, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if !code && strings.HasPrefix(trimmed, codeFence) && strings.HasSuffix(trimmed, codeFence) && len(trimmed) >= len(codeFence)*2 {
-			literal := trimmed[len(codeFence) : len(trimmed)-len(codeFence)]
-			rows = append(rows, formattedBodyRows(codeFence+"\n"+literal+"\n"+codeFence, width)...)
-			continue
+	for {
+		prose, rest, fenced := strings.Cut(body, codeFence)
+		if fenced {
+			prose = strings.TrimSuffix(prose, "\n")
 		}
-		if strings.HasPrefix(trimmed, codeFence) && (!code || trimmed == codeFence) {
-			code = !code
-			label := "└"
-			if code {
-				label = "┌ code " + strings.TrimPrefix(trimmed, codeFence)
-			}
-			rows = append(rows, "  "+muted.Render(ansi.Truncate(label, max(1, width-messagePaddingColumns), "…")))
-			continue
+		rows = append(rows, proseBodyRows(prose, width)...)
+		if !fenced {
+			return rows
 		}
-		prefix := ""
-		switch {
-		case code:
-			prefix = "│ "
-		case strings.HasPrefix(trimmed, ">"):
+		literal, after, closed := strings.Cut(rest, codeFence)
+		literal = strings.TrimPrefix(literal, "\n")
+		if closed {
+			literal = strings.TrimSuffix(literal, "\n")
+		}
+		rows = append(rows, "  "+muted.Render("┌ code"))
+		rows = append(rows, wrappedBodyRows(literal, "│ ", width)...)
+		if !closed {
+			return rows
+		}
+		rows = append(rows, "  "+muted.Render("└"))
+		body = strings.TrimPrefix(after, "\n")
+	}
+}
 
+func proseBodyRows(body string, width int) []string {
+	if body == "" {
+		return nil
+	}
+	rows := []string{}
+	for _, line := range strings.Split(body, "\n") {
+		trimmed, prefix := strings.TrimSpace(line), ""
+		switch {
+		case strings.HasPrefix(trimmed, ">"):
 			prefix, line = "│ ", strings.TrimSpace(strings.TrimPrefix(trimmed, ">"))
 		case strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* "):
 			prefix, line = "• ", trimmed[2:]
 		}
-		available := max(1, width-messagePaddingColumns-ansi.StringWidth(prefix))
-		for i, part := range strings.Split(ansi.Wrap(line, available, ""), "\n") {
-			marker := prefix
-			if prefix == "• " && i > 0 {
-				marker = "  "
-			}
-			rows = append(rows, "  "+marker+part)
+		rows = append(rows, wrappedBodyRows(line, prefix, width)...)
+	}
+	return rows
+}
+
+func wrappedBodyRows(text, prefix string, width int) []string {
+	available := max(1, width-messagePaddingColumns-ansi.StringWidth(prefix))
+	rows := []string{}
+	for i, part := range strings.Split(ansi.Wrap(text, available, ""), "\n") {
+		marker := prefix
+		if prefix == "• " && i > 0 {
+			marker = "  "
 		}
+		rows = append(rows, "  "+marker+part)
 	}
 	return rows
 }

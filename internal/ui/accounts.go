@@ -81,9 +81,9 @@ func (a *Accounts) activate(index int) tea.Cmd {
 	m.followNext = map[string]time.Time{}
 	// Keep stopped authentication local; activation never retries a failed send.
 	if m.stopped {
-		return nil
+		return a.wrap(index, s.epoch, m.resumeInput())
 	}
-	cmds := []tea.Cmd{m.profileCmd(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
+	cmds := []tea.Cmd{m.resumeInput(), m.profileCmd(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
 	if !m.directoryLoaded {
 		cmds = append(cmds, m.directoryCmd(""))
 	}
@@ -112,10 +112,7 @@ func (a *Accounts) deactivate() {
 	for _, line := range m.cache {
 		line.Busy = false
 	}
-	m.mentionConfirm, m.cacheConfirm = false, false
-	m.broadcastConfirm = ""
-	m.gapConfirmation = nil
-	m.retryConfirm, m.quitConfirm = false, false
+	m.cancelConfirmations()
 }
 
 // wrap recursively tags batched results while leaving terminal control messages
@@ -135,10 +132,14 @@ func (a *Accounts) wrap(index int, epoch uint64, cmd tea.Cmd) tea.Cmd {
 			return tea.BatchMsg(cmds)
 		case tickMsg:
 			return nil
-		case historyResult, conversationResult, directoryResult, mentionResult, followedResult, profileResult, sendResult, participationResult, openSlackResult:
-			return accountEvent{index, epoch, msg}
+		case nil:
+			return nil
+		case tea.QuitMsg:
+			return v
+		case terminalResult:
+			return v.message
 		default:
-			return msg
+			return accountEvent{index, epoch, msg}
 		}
 	}
 }
@@ -155,7 +156,7 @@ func (a *Accounts) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			_, cmd := s.model.Update(v.message)
 			return a, a.wrap(v.index, s.epoch, cmd)
 		}
-		if v.index != a.active || v.epoch != s.epoch {
+		if v.index != a.active || v.epoch != s.epoch || (a.choosing && !accountReadResult(v.message)) {
 			return a, nil
 		}
 		_, cmd := s.model.Update(v.message)
@@ -208,6 +209,7 @@ func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		if v.Key().IsRepeat {
 			return a, nil
 		}
+		m.cancelConfirmations()
 		if a.dirty() && !a.quitConfirm {
 			a.quitConfirm = true
 			m.quitConfirm = true
@@ -217,17 +219,20 @@ func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	a.quitConfirm, m.quitConfirm = false, false
 	if a.choosing {
+		m.cancelConfirmations()
 		return a.chooseKey(k, v.Key().IsRepeat)
 	}
 	if k == keyAccounts && !m.help {
 		if v.Key().IsRepeat {
 			return a, nil
 		}
+		m.cancelConfirmations()
 		m.rememberDraft()
 		a.choosing, a.choice = true, a.active
 		return a, nil
 	}
 	if k == keyQuitQuiet && !m.help && m.mode == pickerClosed && m.focus != focusCompose && a.dirty() {
+		m.cancelConfirmations()
 		m.setStatus("Unsent text in an account · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 		return a, nil
 	}
@@ -239,6 +244,7 @@ func (a *Accounts) chooseKey(k string, repeat bool) (tea.Model, tea.Cmd) {
 	switch k {
 	case keyEscape, keyAccounts:
 		a.choosing = false
+		return a, a.wrap(a.active, a.sessions[a.active].epoch, a.current().resumeInput())
 	case keyUp, keyPrevious:
 		a.choice = (a.choice + len(a.sessions) - 1) % len(a.sessions)
 	case keyDown, keyNext:
@@ -252,6 +258,7 @@ func (a *Accounts) chooseKey(k string, repeat bool) (tea.Model, tea.Cmd) {
 			a.deactivate()
 			return a, a.activate(a.choice)
 		}
+		return a, a.wrap(a.active, a.sessions[a.active].epoch, a.current().resumeInput())
 	}
 	return a, nil
 }
@@ -284,6 +291,14 @@ func (a *Accounts) View() tea.View {
 func accountWriteResult(msg tea.Msg) bool {
 	switch msg.(type) {
 	case sendResult, participationResult, openSlackResult:
+		return true
+	}
+	return false
+}
+
+func accountReadResult(msg tea.Msg) bool {
+	switch msg.(type) {
+	case historyResult, conversationResult, directoryResult, mentionResult, followedResult, profileResult:
 		return true
 	}
 	return false

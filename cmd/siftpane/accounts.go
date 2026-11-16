@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -52,7 +53,7 @@ func loginToken(ctx context.Context, st *store.Store) error {
 	if err != nil {
 		return err
 	}
-	if err = saveAccount(st, id, token); err != nil {
+	if err = saveLoginAccount(ctx, st, id, token, tokenIdentity); err != nil {
 		return err
 	}
 	fmt.Println("Saved account", store.AccountKey(id), "for", slack.Safe(id.WorkspaceName), "@"+slack.Safe(id.Username))
@@ -63,14 +64,19 @@ func logoutAccount(st *store.Store, selected string) error {
 	if selected == "" {
 		selected = st.Config.DefaultAccount
 	}
-	if selected == "" {
-		return keyring.Delete(credentialService, credentialAccount)
+	if selected == "" || selected == credentialAccount {
+		return deleteCredential(credentialAccount)
 	}
 	if _, ok := st.Config.Accounts[selected]; !ok {
 		return fmt.Errorf("unknown saved account; use WORKSPACE_ID/USER_ID")
 	}
-	if err := keyring.Delete(credentialService, selected); err != nil {
-		return fmt.Errorf("delete account credential: %w", err)
+	if st.Config.LegacyAccount == selected {
+		if err := deleteCredential(credentialAccount); err != nil {
+			return err
+		}
+	}
+	if err := deleteCredential(selected); err != nil {
+		return err
 	}
 	delete(st.Config.Accounts, selected)
 	if st.Config.DefaultAccount == selected {
@@ -149,6 +155,9 @@ func migrateCredential(ctx context.Context, st *store.Store, authenticate accoun
 	if len(st.Config.Accounts) != 0 {
 		return nil
 	}
+	if st.Config.LegacyAccount != "" {
+		return fmt.Errorf("no saved accounts: run siftpane --login or set SIFTPANE_SLACK_TOKEN")
+	}
 
 	token, err := keyring.Get(credentialService, credentialAccount)
 	if err != nil {
@@ -158,12 +167,52 @@ func migrateCredential(ctx context.Context, st *store.Store, authenticate accoun
 	if err != nil {
 		return err
 	}
+	return saveLoginAccount(ctx, st, id, token, authenticate)
+}
+
+// Register the verified legacy owner before replacing its slot. An explicit
+// login may precede normal startup, including when refreshing reaction scopes.
+func saveLoginAccount(ctx context.Context, st *store.Store, id core.Identity, token string, authenticate accountAuthenticator) error {
+	legacyToken, err := keyring.Get(credentialService, credentialAccount)
+	if errors.Is(err, keyring.ErrNotFound) {
+		return saveAccount(st, id, token)
+	}
+	if err != nil {
+		return fmt.Errorf("read legacy credential: %w", err)
+	}
+	legacyID := id
+	if legacyToken != token {
+		legacyID, err = authenticate(ctx, legacyToken)
+		if err != nil {
+			return fmt.Errorf("cannot identify legacy account; preserve configuration and remove the old token with --logout --account user-token before retrying --login: %w", err)
+		}
+	}
+	legacyKey := store.AccountKey(legacyID)
+	previousOwner := st.Config.LegacyAccount
+	st.Config.LegacyAccount = legacyKey
+	if legacyKey != store.AccountKey(id) && previousOwner != legacyKey {
+		if _, registered := st.Config.Accounts[legacyKey]; !registered {
+			if err = saveAccount(st, legacyID, legacyToken); err != nil {
+				st.Config.LegacyAccount = previousOwner
+				return err
+			}
+		}
+	}
 	if err = saveAccount(st, id, token); err != nil {
 		return err
 	}
-	// Only delete the legacy credential after both replacement and registry save.
-	if err = keyring.Delete(credentialService, credentialAccount); err != nil {
-		fmt.Fprintln(os.Stderr, "Legacy keyring entry retained; new account credential is saved.")
+	// Registry persistence retires automatic import even if cleanup fails. Logout
+	// retries this owner's old slot before reporting successful credential removal.
+	if err = deleteCredential(credentialAccount); err != nil {
+		fmt.Fprintln(os.Stderr, "Legacy keyring cleanup failed; account is saved. Logout retries cleanup for the original account.")
+	}
+	return nil
+}
+
+func deleteCredential(account string) error {
+	err := keyring.Delete(credentialService, account)
+	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
+		return fmt.Errorf("delete saved credential: %w", err)
 	}
 	return nil
 }

@@ -85,7 +85,7 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 			m.setStatus("Delivery unknown · check Slack before r retry", statusAction)
 		}
 	case SnapshotReadability:
-		m.line(m.key()).Messages = []core.Message{{Author: "Maya", TS: "1794672000.000001", Text: "@you Please review:\n> Keep the old contract.\n- Check the parser\n- Preserve literal code mentions\n```go\nif ready {\n    send(\"<@U2>\")\n}\n```\nUse `dryRun` before sending."}}
+		m.line(m.key()).Messages = []core.Message{{Author: "Maya", TS: "1794672000.000001", Text: "@you Please review:\n> Keep the old contract.\n- Check the parser\n- Preserve literal code mentions\n```if ready {\n    send(\"<@U2>\")\n}```\nUse `dryRun` before sending."}}
 		m.line(m.key()).Loaded = true
 		m.index, m.scroll = 0, -1
 

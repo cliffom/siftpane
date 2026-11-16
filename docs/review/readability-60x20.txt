@@ -7,7 +7,7 @@
 │  │ Keep the old contract.                                │
 │  • Check the parser                                      │
 │  • Preserve literal code mentions                        │
-│  ┌ code go                                               │
+│  ┌ code                                                  │
 │  │ if ready {                                            │
 │  │     send("<@U2>")                                     │
 │  │ }                                                     │

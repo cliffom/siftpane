@@ -48,3 +48,12 @@ func TestCodePreservesLiteralMentionsAndLinks(t *testing.T) {
 		t.Fatal("code interpreted as prose", got)
 	}
 }
+
+func TestUnclosedCodeKeepsMentionsAndLinksLiteral(t *testing.T) {
+	raw := "Before <@U1>\n```literal <@U1> <https://example.com|label>"
+	m := WithProfiles(core.Message{Text: raw}, map[string]core.Profile{"U1": {ID: "U1", Name: "Code Tester"}})
+	got := Body(m)
+	if !strings.HasPrefix(got, "Before @Code Tester") || !strings.Contains(got, "literal <@U1> <https://example.com|label>") {
+		t.Fatal("unfinished code decorated as prose", got)
+	}
+}

@@ -22,6 +22,8 @@ type Config struct {
 	Accounts           map[string]core.Identity `json:"accounts,omitempty"`
 	AccountPreferences map[string]*Workspace    `json:"account_preferences,omitempty"`
 	DefaultAccount     string                   `json:"default_account,omitempty"`
+	// LegacyAccount records ownership and retires automatic single-token import.
+	LegacyAccount string `json:"legacy_account,omitempty"`
 }
 
 // Store owns preferences and disposable display metadata; an empty path disables disk I/O.

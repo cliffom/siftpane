@@ -7,7 +7,7 @@
 │▸ #studio              │  │ Keep the old contract.                                                │
 │  @Maya Chen        ●  │  • Check the parser                                                      │
 │  @Maya, Leo, you      │  • Preserve literal code mentions                                        │
-│                       │  ┌ code go                                                               │
+│                       │  ┌ code                                                                  │
 │                       │  │ if ready {                                                            │
 │                       │  │     send("<@U2>")                                                     │
 │                       │  │ }                                                                     │

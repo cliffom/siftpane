@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"charm.land/bubbles/v2/cursor"
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
@@ -80,6 +81,11 @@ func runAccountCommand(t *testing.T, a *Accounts, cmd tea.Cmd) {
 	}
 	if _, ok := msg.(tickMsg); ok {
 		return
+	}
+	if event, ok := msg.(accountEvent); ok {
+		if _, blink := event.message.(cursor.BlinkMsg); blink {
+			return
+		}
 	}
 	if msg != nil {
 		_, next := a.Update(msg)

@@ -229,7 +229,7 @@ func (m *Model) copyMessage() tea.Cmd {
 	t := m.line(m.key())
 	if len(t.Messages) > 0 {
 		m.setStatus("Copied message via OSC52 (terminal support required)", statusAction)
-		return tea.SetClipboard(slack.Body(slack.WithProfiles(t.Messages[min(m.index, len(t.Messages)-1)], m.profiles)))
+		return m.terminalCmd(tea.SetClipboard(slack.Body(slack.WithProfiles(t.Messages[min(m.index, len(t.Messages)-1)], m.profiles))))
 	}
 	return nil
 }
@@ -272,4 +272,23 @@ func (m *Model) confirmQuit() tea.Cmd {
 		return nil
 	}
 	return tea.Quit
+}
+
+// Coordinator-owned navigation interrupts every pending confirmation.
+func (m *Model) cancelConfirmations() {
+	m.mentionConfirm, m.cacheConfirm = false, false
+	m.broadcastConfirm = ""
+	m.gapConfirmation = nil
+	m.retryConfirm, m.quitConfirm = false, false
+}
+
+// Resume the virtual cursor after a modal or account epoch consumed its timer.
+func (m *Model) resumeInput() tea.Cmd {
+	if m.mode != pickerClosed {
+		return m.picker.Focus()
+	}
+	if m.focus == focusCompose {
+		return m.composer.Focus()
+	}
+	return nil
 }

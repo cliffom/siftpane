@@ -19,6 +19,8 @@ An environment variable is an explicit fallback when the OS credential store is 
 
 `SIFTPANE_SLACK_TOKEN` takes precedence over the keyring. Avoid pasting tokens into shell history. `--logout --account WORKSPACE_ID/USER_ID` deletes only that saved keyring entry; it does not revoke the token at Slack or remove an environment override. Revoke the app/token in Slack if necessary. Tokens with rotation enabled are not supported: the supplied manifest leaves rotation disabled. Expired/revoked credentials stop automatic refresh and leave drafts in memory; reinstall/replace the token and restart. Copy any drafts before restarting.
 
+Startup and `--login` identify legacy credentials through the same documented `auth.test` boundary before migrating them. Retired single-token entries cannot silently reimport after logout; see [migration and cleanup](CONFIGURATION.md#multiple-accounts-and-migration-07).
+
 OS storage uses macOS Keychain, Windows Credential Manager, or Linux Secret Service. A locked/missing Linux secret service causes `--login` to fail clearly, without silently writing a plaintext token file. Siftpane stores one active credential; switching workspaces is not a supported UI feature.
 
 ### Permissions

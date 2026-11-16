@@ -108,3 +108,14 @@ func (m *Model) nextTick() tea.Cmd {
 	}
 	return tick()
 }
+
+// Explicit terminal commands bypass widget-result routing. All other completions
+// belong to their originating account, including private Bubbles paste messages.
+type terminalResult struct{ message tea.Msg }
+
+func (m *Model) terminalCmd(cmd tea.Cmd) tea.Cmd {
+	if !m.multipleAccounts {
+		return cmd
+	}
+	return func() tea.Msg { return terminalResult{message: cmd()} }
+}

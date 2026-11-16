@@ -86,7 +86,7 @@ func TestFormattedMessageCodeQuotesLists(t *testing.T) {
 	body := "> quoted text\n- list item\n```go\n    literal <@USER>\n```\n`inline`"
 	rows := formattedBodyRows(body, 40)
 	rendered := ansi.Strip(strings.Join(rows, "\n"))
-	for _, want := range []string{"│ quoted text", "• list item", "┌ code go", "│     literal <@USER>", "└", "`inline`"} {
+	for _, want := range []string{"│ quoted text", "• list item", "┌ code", "│ go", "│     literal <@USER>", "└", "`inline`"} {
 		if !strings.Contains(rendered, want) {
 			t.Fatal("format lost", want, rendered)
 		}

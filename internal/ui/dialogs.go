@@ -124,12 +124,7 @@ func (m *Model) helpKey(k string) tea.Cmd {
 		m.help = false
 		// Help consumes blink messages. Restart the focused input's timer chain
 		// so dismissal cannot leave its virtual cursor hidden or frozen.
-		if m.mode != pickerClosed {
-			return m.picker.Focus()
-		}
-		if m.focus == focusCompose {
-			return m.composer.Focus()
-		}
+		return m.resumeInput()
 	}
 	return nil
 }
