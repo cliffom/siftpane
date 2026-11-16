@@ -91,7 +91,7 @@ func (s *cursorRecoveryService) History(_ context.Context, q core.Query) (core.P
 	return s.pages[i], s.errors[i]
 }
 
-func TestExpiredThreadCursorRecoversOnceAfterRetainedReply(t *testing.T) {
+func TestExpiredThreadCursorRecoversOnceAfterFetchedReply(t *testing.T) {
 	for _, failRecovery := range []bool{false, true} {
 		t.Run(fmt.Sprint(failRecovery), func(t *testing.T) {
 			m := fixture(t)
@@ -99,10 +99,11 @@ func TestExpiredThreadCursorRecoversOnceAfterRetainedReply(t *testing.T) {
 			line := m.line(m.key())
 			line.Messages, line.Loaded, line.More, line.Next = readingMessages(1, 3), true, true, "expired"
 			last := line.Messages[2].TS
+			line.ReplyThrough = last
 			fresh := readingMessages(4, 2)
-			svc := &cursorRecoveryService{Service: m.service, pages: []core.Page{{}, {Messages: fresh}}, errors: []error{&slack.APIError{Code: "invalid_cursor"}, nil}}
+			svc := &cursorRecoveryService{Service: m.service, pages: []core.Page{{}, {Messages: fresh}}, errors: []error{&slack.APIError{Code: threadInvalidCursorError}, nil}}
 			if failRecovery {
-				svc.errors[1] = &slack.APIError{Code: "invalid_cursor"}
+				svc.errors[1] = &slack.APIError{Code: threadInvalidCursorError}
 			}
 			m.service = svc
 			cmd := m.fetch(m.key(), true)

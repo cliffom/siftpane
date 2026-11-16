@@ -8,7 +8,7 @@ import (
 )
 
 // Accept useful partial pages, but abandon a nonadvancing cursor. The next
-// explicit page request can resume after the last retained reply, with no loop.
+// explicit page request can resume after the last fetched reply, with no loop.
 func (t *timeline) checkReplyPage(v historyResult) {
 	if v.QueryCursor == "" {
 		t.replyCursors = nil
@@ -30,9 +30,7 @@ func (t *timeline) checkReplyPage(v historyResult) {
 		return
 	}
 	t.Next = ""
-	if len(t.Messages) > 0 {
-		t.After = t.Messages[len(t.Messages)-1].TS
-	}
+	t.After = t.ReplyThrough
 	if last == "" || last <= v.QueryAfter {
 		t.Err = errors.New("reply pagination stalled; o retry or O inspect Slack")
 		t.PageErr = t.Err

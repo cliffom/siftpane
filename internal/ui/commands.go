@@ -50,8 +50,8 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		t.CachedRefreshErr = nil
 	}
 	q := core.Query{Conversation: cid, Thread: thread}
-	if !older && thread != "" && t.Loaded && !t.More && len(t.Messages) > 0 {
-		q.After = t.Messages[len(t.Messages)-1].TS
+	if !older && thread != "" && t.Loaded && !t.More {
+		q.After = t.ReplyThrough
 	}
 	if older {
 		q.Cursor = t.Next
@@ -65,10 +65,7 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		q.Target = m.openTargets[key]
 		q.After = ""
 	}
-	resumeAfter := ""
-	if thread != "" && len(t.Messages) > 0 {
-		resumeAfter = t.Messages[len(t.Messages)-1].TS
-	}
+	resumeAfter := t.ReplyThrough
 	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
 	return func() tea.Msg {

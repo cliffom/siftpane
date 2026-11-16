@@ -100,7 +100,7 @@ From navigation, select a message and press `1` for Acknowledged (👍), `2` for
 
 ## Refresh and credential recovery (0.8)
 
-From navigation, `v` opens scrollable refresh/recovery details. Inspect retained per-timeline last-success times, recent/page errors, partial thread coverage and source errors even after unrelated status messages. Arrows or PgUp/PgDn scroll; `R` retries current reads/sources; Esc closes. Paste and other action keys are consumed. In a partial thread, close the dialog and press `o` for the next page/retry. One invalid-cursor recovery uses the last retained reply; it does not automatically download a whole thread.
+From navigation, `v` opens scrollable refresh/recovery details. Inspect retained per-timeline last-success times, recent/page errors, partial thread coverage and source errors even after unrelated status messages. Arrows or PgUp/PgDn scroll; `R` retries current reads/sources; Esc closes. Paste and other action keys are consumed. In a partial thread, close the dialog and press `o` for the next page/retry. One invalid-cursor recovery uses the last successfully fetched reply; it does not automatically download a whole thread.
 
 For saved accounts, `--login --account WORKSPACE_ID/USER_ID` in another terminal replaces only that account’s credential; `Ctrl+R` in navigation reloads it in the running session. In a picker, Ctrl+R continues to reload the directory; composing, help, Workspaces and recovery details do not trigger credential reload. The [installation guide](INSTALLATION.md#connect-and-recover) covers identity refusal, locked Keychain and environment-override limits. No send/reaction retry happens automatically.
 

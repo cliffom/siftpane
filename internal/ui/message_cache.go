@@ -121,6 +121,8 @@ func (m *Model) purgeConversationCache(cid string, err error) {
 			t.Cached = false
 			t.CachedRefreshErr = nil
 			t.Saved = time.Time{}
+			t.ReplyThrough = ""
+			t.replyCursors = nil
 			t.Busy = false
 			t.Err = err
 		}

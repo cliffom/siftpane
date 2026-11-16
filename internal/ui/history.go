@@ -102,6 +102,7 @@ func (t *timeline) applyPage(v historyResult, thread string) {
 	if v.Target != "" {
 		t.Messages = nil
 		t.Loaded = false
+		t.ReplyThrough = ""
 	}
 	previous := t.Loaded
 	// Refresh replaces the observed range so edits/deletions within it are reflected.
@@ -131,6 +132,11 @@ func (t *timeline) applyPage(v historyResult, thread string) {
 		}
 	case thread != "":
 		t.Messages = mergeReplies(t.Messages, v.Page.Messages, thread)
+		for _, msg := range v.Page.Messages {
+			if msg.TS > t.ReplyThrough {
+				t.ReplyThrough = msg.TS
+			}
+		}
 	default:
 		t.Messages = core.Merge(t.Messages, v.Page.Messages, cacheLimit)
 	}

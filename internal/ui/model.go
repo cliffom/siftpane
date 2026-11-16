@@ -15,6 +15,7 @@ import (
 
 type timeline struct {
 	replyCursors       []string
+	ReplyThrough       string // Highest timestamp accepted from fetched reply pages, never sends.
 	After              string
 	Messages           []core.Message
 	Next               string
