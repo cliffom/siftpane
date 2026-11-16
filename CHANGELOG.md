@@ -1,13 +1,13 @@
 # Changelog
 
-## 0.7.0 — Unreleased
+## 0.7.0 — 2026-11-15
 
 - Save multiple account credentials in the OS keyring; switch explicitly with `Ctrl+W`. Restore each workspace/user session, thread, selection, scroll, drafts and send recovery. `--account WORKSPACE_ID/USER_ID` chooses the initial account.
 - Keep Needs Attention and Kept separate per account. Only the active account refreshes or discovers; activation resumes bounded catch-up with existing overlap, pacing and visible gaps. Late reads are rejected; sends finish for their original account. Exit checks unsent text across retained accounts.
 - Toggle your own Acknowledged (👍, `1`), Looking (👀, `2`) and Resolved (✅, `3`) reactions on the selected message, independently of local dismissal. Reinstall/re-authorize with `reactions:read` and `reactions:write`, then update each account token with `--login`. No automatic reaction or send retries.
 - Open selected messages in Slack with `O`. Improve fenced code, quote and list readability, preserving literal mentions and links inside code.
 - Migrate the single legacy keyring credential on first normal launch or login; retire its verified owner before deleting the old slot so logout cannot restore it. Legacy workspace inclusion/read preferences are claimed once by the verified legacy owner when available; copy the configuration before upgrading. Account preferences are not understood by older versions. Durable attention/cache identities retain their existing workspace/user hashes; drafts/outbox remain memory-only.
-- Multi-workspace/reaction/browser acceptance against live Slack remains outstanding; implementation evidence is offline.
+- The operator confirmed functionality and release acceptance. Assistant-run implementation evidence remains offline; bounded discovery, physical-terminal and cross-platform limitations remain.
 
 ## 0.6.0 — 2026-11-15
 
