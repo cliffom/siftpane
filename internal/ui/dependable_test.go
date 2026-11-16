@@ -64,6 +64,20 @@ func TestDeletedSelectionChoosesVisibleSuccessor(t *testing.T) {
 	assertVisibleSelection(t, m, want)
 }
 
+func TestEvictedSelectionFallsBackToLastRetainedMessage(t *testing.T) {
+	m := fixture(t)
+	line := m.line(m.key())
+	line.Messages, line.Loaded = readingMessages(1000, 20), true
+	m.index, m.scroll = 5, -1
+	page := readingMessages(1, cacheLimit)
+	m.Update(historyResult{Key: m.key(), Generation: m.generations[m.active], Older: true, Page: core.Page{Messages: page, More: true}})
+	want := page[len(page)-1]
+	if line.Messages[m.index].TS != want.TS {
+		t.Fatal("eviction did not choose nearest retained boundary", line.Messages[m.index].TS, want.TS)
+	}
+	assertVisibleSelection(t, m, want)
+}
+
 type cursorRecoveryService struct {
 	core.Service
 	queries []core.Query

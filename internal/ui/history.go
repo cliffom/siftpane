@@ -169,7 +169,7 @@ func (m *Model) selectTriggerResult(v historyResult, t *timeline) tea.Cmd {
 
 func (m *Model) restoreMessageSelection(v historyResult, t *timeline, selectedTS string) {
 	if selectedTS != "" && v.Target == "" {
-		m.index = min(m.index, max(0, len(t.Messages)-1))
+		m.index = max(0, len(t.Messages)-1)
 		for i, msg := range t.Messages {
 			if msg.TS >= selectedTS {
 				m.index = i
