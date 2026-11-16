@@ -102,3 +102,54 @@ func TestFormattedMessageCodeQuotesLists(t *testing.T) {
 		t.Fatal("repeat started reaction")
 	}
 }
+
+func (s *participationTestService) Permalink(context.Context, core.MessageTarget) (string, error) {
+	return "", errors.New("offline permalink fixture")
+}
+
+func TestParticipationKeyRepeatsRemainText(t *testing.T) {
+	for _, mode := range []pickerMode{pickerClosed, pickerSwitch, pickerInclude} {
+		for _, k := range []string{keyAcknowledged, keyLooking, keyResolved, keyOpenSlack} {
+			t.Run(string(mode)+k, func(t *testing.T) {
+				m := fixture(t)
+				m.focus = focusCompose
+				m.composer.Focus()
+				if mode != pickerClosed {
+					m.openPicker(mode)
+				}
+				m.Update(key(k))
+				for range 2 {
+					m.Update(tea.KeyPressMsg{Code: []rune(k)[0], Text: k, IsRepeat: true})
+				}
+				got := m.composer.Value()
+				if mode != pickerClosed {
+					got = m.picker.Value()
+				}
+				if got != strings.Repeat(k, 3) {
+					t.Fatal("participation repeat dropped from input", got)
+				}
+				if m.participationBusy {
+					t.Fatal("text input dispatched a reaction")
+				}
+			})
+		}
+	}
+}
+
+func TestParticipationRepeatGuardOnlyBlocksNavigationActions(t *testing.T) {
+	for _, k := range []string{keyAcknowledged, keyLooking, keyResolved, keyOpenSlack} {
+		t.Run(k, func(t *testing.T) {
+			m := fixture(t)
+			m.service = &participationTestService{Service: m.service}
+			m.focus = focusMessages
+			_, cmd := m.Update(tea.KeyPressMsg{Code: []rune(k)[0], Text: k, IsRepeat: true})
+			if cmd != nil || m.participationBusy {
+				t.Fatal("held navigation key dispatched a remote action")
+			}
+			_, cmd = m.Update(key(k))
+			if cmd == nil {
+				t.Fatal("physical navigation press did not dispatch action")
+			}
+		})
+	}
+}

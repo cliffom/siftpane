@@ -59,7 +59,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if k != keyRetry {
 		m.retryConfirm = false
 	}
-	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit || k == keyAcknowledgeGap || quickReaction(k) != "" || k == keyOpenSlack) {
+	if v.Key().IsRepeat && (k == keyRetry || k == keySend || k == keyQuit || k == keyAcknowledgeGap) {
 		return m, nil
 	}
 	if k == keyQuit {
@@ -91,6 +91,11 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.composer, cmd = m.composer.Update(v)
 		m.rememberDraft()
 		return m, cmd
+	}
+	// Participation shortcuts are ordinary text in either input widget. Only
+	// navigation ignores repeats, so held keys cannot repeat remote actions.
+	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack) {
+		return m, nil
 	}
 	return m.navigateKey(k)
 }
