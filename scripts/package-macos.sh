@@ -55,7 +55,7 @@ mkdir "$work/payload"
 export GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 MACOSX_DEPLOYMENT_TARGET=26.0
 go build -trimpath -ldflags='-linkmode=external -extldflags=-mmacosx-version-min=26.0' -o "$work/payload/siftpane" ./cmd/siftpane
 [[ $("$work/payload/siftpane" --version) == "siftpane $version" ]]
-/usr/bin/lipo -verify_arch arm64 "$work/payload/siftpane"
+/usr/bin/lipo "$work/payload/siftpane" -verify_arch arm64
 /usr/bin/vtool -show-build "$work/payload/siftpane" > "$work/build-info.txt"
 if ! /usr/bin/awk '$1 == "minos" && $2 == "26.0" { found=1 } END { exit !found }' "$work/build-info.txt"; then
   echo 'Binary does not declare the supported macOS 26.0 minimum.' >&2
