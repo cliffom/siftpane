@@ -103,7 +103,8 @@ func TestFormattedMessageCodeQuotesLists(t *testing.T) {
 	}
 }
 
-func (s *participationTestService) Permalink(context.Context, core.MessageTarget) (string, error) {
+func (s *participationTestService) Permalink(_ context.Context, target core.MessageTarget) (string, error) {
+	s.target = target
 	return "", errors.New("offline permalink fixture")
 }
 

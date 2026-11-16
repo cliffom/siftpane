@@ -1,0 +1,30 @@
+ siftpane                                                              Workspace 0 · @user0 · T0/U0 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│▸ #studio              │  New author  Nov 14 08:01                                                │
+│                       │  incoming message 6                                                      │
+│                       │                                                                          │
+│                       │  New author  Nov 14 08:01                                                │
+│                       │  incoming message 7                                                      │
+│                       │                                                                          │
+│                       │  New author  Nov 14 08:01                                                │
+│                       │  incoming message 8                                                      │
+│                       │                                                                          │
+│                       │  New author  Nov 14 08:01                                                │
+│                       │  incoming message 9                                                      │
+│                       │                                                                          │
+│                       │  New author  Nov 14 08:01                                                │
+│                       │  incoming message 10                                                     │
+│                       │                                                                          │
+│                       │▸ New author  Nov 14 08:01                                                │
+│                       │  Newest visible selection                                                │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │ ╭ Message · @user0 · Workspace 0 ──────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Refreshed                                                                                   ? help 
