@@ -7,16 +7,19 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"time"
 
 	"github.com/cliffom/siftpane/internal/core"
 )
 
 const (
-	methodReactionGet    = "reactions.get"
-	methodReactionAdd    = "reactions.add"
-	methodReactionRemove = "reactions.remove"
-	methodPermalink      = "chat.getPermalink"
-	paramTimestamp       = "timestamp"
+	// Tier 2 reaction removals permit 20+ starts per minute; server backoff wins.
+	reactionRemoveInterval = 3100 * time.Millisecond
+	methodReactionGet      = "reactions.get"
+	methodReactionAdd      = "reactions.add"
+	methodReactionRemove   = "reactions.remove"
+	methodPermalink        = "chat.getPermalink"
+	paramTimestamp         = "timestamp"
 )
 
 // ToggleReaction reads the authenticated user's current reaction, then performs

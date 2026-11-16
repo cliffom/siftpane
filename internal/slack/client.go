@@ -119,6 +119,9 @@ func (c *Client) wait(ctx context.Context, method string) error {
 			if method == methodDirectory {
 				gap = directoryInterval
 			}
+			if method == methodReactionRemove {
+				gap = reactionRemoveInterval
+			}
 			if method == methodMentions {
 				gap = mentionInterval
 			}
