@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you
+
+╭ [Messages] ───────────┬ #shipping ───────────────────────────────────────────────────────────────╮
+│ NEEDS ATTENTION ╌╌╌╌╌╌│ Channel · Release checks, rollout notes, and small wins                  │
+│▸ #shi… · mention+3    │  Leo Park  Nov 13 10:27                                                  │
+│  @Leo… · temporary    │  Confirmed. Main-message and thread drafts stay separate.                │
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│                                                                          │
+│  #design              │  You  Nov 13 10:30                                                       │
+│  #studio              │  The release checklist is at release notes                               │
+│  @Maya Chen        ●  │  (https://example.com/releases).                                         │
+│  @Maya, Leo, you      │                                                                          │
+│                       │  Nora Ellis  Nov 13 10:33  ↳ 3 replies                                   │
+│                       │  Should we ship the keyboard guide with this candidate?                  │
+│                       │                                                                          │
+│                       │  Maya Chen  Nov 13 10:36                                                 │
+│                       │  Yes, it answers the most common setup questions.                        │
+│                       │                                                                          │
+│                       │  Leo Park  Nov 13 10:39                                                  │
+│                       │  I'll run the install flow from a clean directory.                       │
+│                       │                                                                          │
+│                       │▸ You  Nov 13 10:42                                                       │
+│                       │  Clean install passed. Ready for the next review.                        │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Search 04:00 · limited search                                                               ? help

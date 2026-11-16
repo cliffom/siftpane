@@ -29,8 +29,14 @@ func (m *Model) quitKey() tea.Cmd {
 func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
 	// Ignore held-key events before they can alter navigation confirmations.
-	if v.Key().IsRepeat && k == keyMentions && m.mode == pickerClosed && m.focus != focusCompose && !m.help {
+	if v.Key().IsRepeat && (k == keyMentions || k == keyChannel || k == keyHere || k == keyFollow || k == keyMessageCache || k == keyClearCache) && m.mode == pickerClosed && m.focus != focusCompose && !m.help {
 		return m, nil
+	}
+	if broadcastReason(k) != m.broadcastConfirm {
+		m.broadcastConfirm = ""
+	}
+	if k != keyMessageCache {
+		m.cacheConfirm = false
 	}
 	if k != keyAcknowledgeGap {
 		m.gapConfirmation = nil
@@ -99,6 +105,14 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 		return m, m.dismissActive()
 	case keyAttention:
 		return m, m.nextAttention()
+	case keyChannel, keyHere:
+		return m, m.toggleBroadcast(k)
+	case keyFollow:
+		return m, m.toggleFollow()
+	case keyMessageCache:
+		m.toggleMessageCache()
+	case keyClearCache:
+		m.clearMessages()
 	case keyMentions:
 		return m, m.toggleMentions()
 	case keyQuitQuiet:

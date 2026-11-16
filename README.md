@@ -2,7 +2,7 @@
 
 # Siftpane
 
-A focused Slack client for your terminal. Choose the channels, DMs, and group DMs you want to keep close, then read and reply with the keyboard. Keep conversations close or bring them in temporarily, then dismiss handled attention. Optional direct-mention discovery can surface accessible conversations outside Kept.
+A focused Slack client for your terminal. Choose the channels, DMs, and group DMs you want to keep close, then read and reply with the keyboard. Keep conversations close or bring them in temporarily, then dismiss handled attention. Optional mention and broadcast discovery can surface accessible conversations outside Kept; locally followed threads recover later replies.
 
 ## Try it
 
@@ -31,7 +31,7 @@ Siftpane currently supports one workspace through your own internal Slack app.
 2. Run `./bin/siftpane --login` and paste your **User OAuth Token** into the hidden prompt. Siftpane saves it in your OS credential store.
 3. Run `./bin/siftpane`, press `p`, and choose which conversations to keep. Nothing is kept automatically. Use `Ctrl+T` in the picker for a temporary conversation.
 
-Read-only live mention discovery and exact thread opening have been exercised, and the operator confirmed live acceptance for 0.5.0. See the [verification record](docs/VERIFICATION.md) for the evidence and remaining coverage limitations.
+Read-only live mention discovery and exact thread opening have been exercised, and the operator confirmed live acceptance for 0.5.0 and 0.6.0. See the [verification record](docs/VERIFICATION.md) for the evidence and remaining coverage limitations.
 
 ## Find your way around
 
@@ -41,6 +41,9 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 | Picker `Ctrl+T` | Temporarily add and open |
 | `K` / `d` / `n` | Keep / dismiss attention / next attention |
 | `M` twice | Enable optional direct mentions; one `M` disables |
+| `B` / `H` twice | Enable independent channel/here broadcast search |
+| Opened thread `f` | Follow/unfollow future replies locally |
+| `Ctrl+B` twice / `Ctrl+X` | Opt into recent disk history / clear disk history |
 | `/` or `Ctrl+K` | Search existing conversations by `@person` or `#channel`; `Tab` completes |
 | `Tab` | Switch sidebar/message focus |
 | `j/k` or arrows | Move through conversations or messages |
@@ -60,7 +63,7 @@ Drafts stay with their conversation or thread while you switch, but remain in me
 
 - Updates arrive through bounded polling, so activity may appear after a delay. Unread dots and the `Siftpane *` window title mean **unread here**, independently of Slack's read position. The title depends on [terminal/multiplexer support](docs/TERMINALS.md#unread-window-title).
 - Dismissing an unkept attention entry stops its local refresh without leaving it in Slack. Drafts and unresolved sends must be recovered first.
-- Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Channel, people and resolved author names are cached separately for faster startup. Messages appear before remaining names finish loading. Handled attention identities persist separately so replay does not resurrect dismissed activity. Tokens and message bodies never go into preferences or the metadata cache.
+- Preferences are saved in your [platform's configuration directory](docs/CONFIGURATION.md). Channel, people and resolved author names are cached separately for faster startup. Messages appear before remaining names finish loading. Handled attention identities persist separately so replay does not resurrect dismissed activity. Tokens and message bodies never go into preferences or the metadata cache. Recent Kept history can be cached separately with explicit opt-in; see [privacy and bounds](docs/CONFIGURATION.md#optional-recent-message-cache).
 - Ordinary terminals work without patches. Rounded Unicode frames, bracketed amber focus titles, and a compact layout keep messages readable. See [terminal compatibility](docs/TERMINALS.md).
 - This version handles text messaging and threads. It does not include calls, huddles, file uploads, AI features, or a multi-workspace interface.
 

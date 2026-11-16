@@ -1,4 +1,4 @@
-// Package store persists non-secret preferences and display summaries. Message bodies stay in memory.
+// Package store persists preferences, attention and explicitly opted-in disposable display caches.
 package store
 
 import (

@@ -83,6 +83,17 @@ func validateAttention(a core.AttentionState) error {
 	if a.Kept == nil || a.Pending == nil || a.Handled == nil || len(a.Kept) > core.AttentionConversations || len(a.Pending) > core.AttentionConversations {
 		return errors.New("invalid attention maps or capacity")
 	}
+	if len(a.Followed) > core.FollowedThreads {
+		return errors.New("too many followed threads")
+	}
+	for key, f := range a.Followed {
+		if !validAttentionID(f.Conversation) || key != f.Conversation+"/"+f.Root || f.Checkpoint.IsZero() {
+			return errors.New("invalid followed thread")
+		}
+		if _, err := core.MessageTime(f.Root); err != nil {
+			return errors.New("invalid followed root")
+		}
+	}
 	count := len(a.Handled)
 	for cid, ts := range a.Pending {
 		if !validAttentionID(cid) || len(ts) == 0 {
@@ -124,7 +135,7 @@ func validTrigger(t core.AttentionTrigger) bool {
 	switch t.Reason {
 	case core.AttentionManual:
 		return t.TS == "" && t.Thread == ""
-	case core.AttentionMention:
+	case core.AttentionMention, core.AttentionChannel, core.AttentionHere, core.AttentionReply:
 		at, err := core.MessageTime(t.TS)
 		if err != nil || !at.Equal(t.At) {
 			return false

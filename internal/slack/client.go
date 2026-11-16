@@ -36,6 +36,10 @@ const (
 const (
 	wireTrue           = "true"
 	wireFalse          = "false"
+	paramCursor        = "cursor"
+	paramOldest        = "oldest"
+	paramPage          = "page"
+	paramCount         = "count"
 	paramText          = "text"
 	paramLatest        = "latest"
 	methodIdentity     = "auth.test"
@@ -59,6 +63,19 @@ func (err *APIError) Error() string {
 		return fmt.Sprintf("rate limited; retry in %s", err.RetryAfter.Round(time.Second))
 	}
 	return "Slack: " + err.Code
+}
+
+// IsAccess reports explicit conversation access revocation; cached content is disposable.
+func IsAccess(err error) bool {
+	var e *APIError
+	if !errors.As(err, &e) {
+		return false
+	}
+	switch e.Code {
+	case "channel_not_found", "not_in_channel", "access_denied", "ekm_access_denied", "restricted_action":
+		return true
+	}
+	return false
 }
 
 // IsAuth reports whether the error requires replacing the authenticated credential.
@@ -215,7 +232,7 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 			Next string `json:"next_cursor"`
 		} `json:"response_metadata"`
 	}
-	err := c.call(ctx, methodDirectory, url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {wireTrue}, "limit": {strconv.Itoa(directoryPageItems)}, "cursor": {cursor}}, &r)
+	err := c.call(ctx, methodDirectory, url.Values{"types": {"public_channel,private_channel,im,mpim"}, "exclude_archived": {wireTrue}, "limit": {strconv.Itoa(directoryPageItems)}, paramCursor: {cursor}}, &r)
 	if err != nil {
 		return core.DirectoryPage{}, err
 	}
@@ -246,17 +263,17 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 // History returns a bounded page immediately, without waiting for author lookups.
 func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 	method := methodHistory
-	v := url.Values{paramChannel: {q.Conversation}, "limit": {strconv.Itoa(historyPageItems)}, "cursor": {q.Cursor}}
+	v := url.Values{paramChannel: {q.Conversation}, "limit": {strconv.Itoa(historyPageItems)}, paramCursor: {q.Cursor}}
 	if q.Target != "" {
 		v.Set(paramLatest, q.Target)
 		v.Set("inclusive", wireTrue)
 		if q.Thread != "" {
 			v.Del(paramLatest)
-			v.Set("oldest", q.Target)
+			v.Set(paramOldest, q.Target)
 		}
 	}
 	if q.After != "" {
-		v.Set("oldest", q.After)
+		v.Set(paramOldest, q.After)
 	}
 	if q.Before != "" {
 		v.Set(paramLatest, q.Before)

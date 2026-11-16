@@ -1,9 +1,18 @@
 package ui
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/cliffom/siftpane/internal/core"
+)
 
 // Key identifiers use Bubble Tea names; presentation labels derive from them.
 const (
+	keyChannel         = "B"
+	keyHere            = "H"
+	keyFollow          = "f"
+	keyMessageCache    = "ctrl+b"
+	keyClearCache      = "ctrl+x"
 	keyAcknowledgeGap  = "ctrl+g"
 	keyTemporary       = "ctrl+t"
 	keyKeep            = "K"
@@ -72,3 +81,14 @@ func keyLabel(k string) string {
 }
 
 func isSearchKey(k string) bool { return k == keySwitch || k == keyCommandSwitch }
+
+func broadcastReason(k string) core.AttentionReason {
+	switch k {
+	case keyChannel:
+		return core.AttentionChannel
+	case keyHere:
+		return core.AttentionHere
+	default:
+		return ""
+	}
+}

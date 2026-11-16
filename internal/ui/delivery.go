@@ -69,7 +69,7 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 			m.setStatus("Delivery unknown; text kept. Check Slack before "+keyLabel(keyRetry)+" retry.", statusAction)
 		}
 		if slack.IsAuth(v.Err) {
-			m.stopped = true
+			m.stopReads()
 		}
 		return m, nil
 	}

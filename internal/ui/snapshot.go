@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/charmbracelet/x/ansi"
@@ -17,16 +18,20 @@ type SnapshotMode string
 
 // Snapshot modes are independent of the UI's navigation state.
 const (
-	SnapshotAttention SnapshotMode = "attention"
-	SnapshotMessages  SnapshotMode = "messages"
-	SnapshotCompose   SnapshotMode = "compose"
-	SnapshotPicker    SnapshotMode = "picker"
-	SnapshotSearch    SnapshotMode = "search"
-	SnapshotThread    SnapshotMode = "thread"
-	SnapshotHelp      SnapshotMode = "help"
-	SnapshotStartup   SnapshotMode = "startup"
-	SnapshotLoading   SnapshotMode = "loading"
-	SnapshotLoadError SnapshotMode = "load-error"
+	SnapshotCached     SnapshotMode = "cached"
+	SnapshotCacheError SnapshotMode = "cache-error"
+	SnapshotCoverage   SnapshotMode = "coverage"
+	SnapshotFollowed   SnapshotMode = "followed"
+	SnapshotAttention  SnapshotMode = "attention"
+	SnapshotMessages   SnapshotMode = "messages"
+	SnapshotCompose    SnapshotMode = "compose"
+	SnapshotPicker     SnapshotMode = "picker"
+	SnapshotSearch     SnapshotMode = "search"
+	SnapshotThread     SnapshotMode = "thread"
+	SnapshotHelp       SnapshotMode = "help"
+	SnapshotStartup    SnapshotMode = "startup"
+	SnapshotLoading    SnapshotMode = "loading"
+	SnapshotLoadError  SnapshotMode = "load-error"
 )
 
 // LoadSnapshot loads offline review data through the normal update path.
@@ -59,6 +64,16 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.resize()
 	m.focus = focusMessages
 	switch mode {
+	case SnapshotCached, SnapshotCacheError:
+		line := m.line(m.key())
+		line.Cached, line.Busy, line.Saved = true, true, time.Date(2026, time.November, 15, 12, 0, 0, 0, time.UTC)
+		if mode == SnapshotCacheError {
+			line.Busy = false
+			line.Err = errors.New("connection unavailable")
+		}
+		m.setStatus("Cached history", statusRoutine)
+	case SnapshotCoverage:
+		snapshotCoverage(m)
 	case SnapshotAttention:
 		snapshotAttention(m)
 	case SnapshotStartup:
@@ -96,22 +111,13 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 		m.composer.Focus()
 	case SnapshotHelp:
 		m.help = true
-	case SnapshotThread:
-		t := m.cache[m.active]
-		if t != nil {
-			for _, msg := range t.Messages {
-				if msg.Replies > 0 {
-					m.thread = msg.TS
-					p, err := m.service.History(m.ctx, core.Query{Conversation: m.active, Thread: m.thread})
-					if err != nil {
-						m.setStatus(err.Error(), statusRoutine)
-						break
-					}
-					m.cache[m.key()] = &timeline{Messages: core.Merge(nil, p.Messages, cacheLimit), Loaded: true}
-					break
-				}
-			}
-		}
+	case SnapshotThread, SnapshotFollowed:
+		snapshotThread(m)
+	}
+	if mode == SnapshotFollowed && m.thread != "" {
+		at := time.Date(2026, time.November, 15, 12, 0, 0, 0, time.UTC)
+		m.attention.Followed = map[string]core.FollowedThread{m.key(): {Conversation: m.active, Root: m.thread, Checkpoint: at, LastCheck: at}}
+		m.setStatus("", statusRoutine)
 	}
 	return ansi.Strip(m.View().Content)
 }
@@ -136,5 +142,39 @@ func snapshotAttention(m *Model) {
 	} else {
 		m.line(m.active)
 		m.Update(historyResult{Key: m.active, Generation: m.generations[m.active], Page: p})
+	}
+}
+
+func snapshotCoverage(m *Model) {
+	snapshotAttention(m)
+	for i, reason := range []core.AttentionReason{core.AttentionReply, core.AttentionChannel, core.AttentionHere} {
+		ts := fmt.Sprintf("1794672001.%06d", i+1)
+		trigger, err := core.MessageTrigger(ts, "1794671000.000001", reason)
+		if err != nil {
+			panic(err)
+		}
+		if err = m.attention.Add(m.active, trigger); err != nil {
+			panic(err)
+		}
+	}
+	m.attention.ChannelEnabled, m.attention.HereEnabled = true, true
+	m.setStatus("", statusRoutine)
+}
+
+func snapshotThread(m *Model) {
+	t := m.cache[m.active]
+	if t != nil {
+		for _, msg := range t.Messages {
+			if msg.Replies > 0 {
+				m.thread = msg.TS
+				p, err := m.service.History(m.ctx, core.Query{Conversation: m.active, Thread: m.thread})
+				if err != nil {
+					m.setStatus(err.Error(), statusRoutine)
+					break
+				}
+				m.cache[m.key()] = &timeline{Messages: core.Merge(nil, p.Messages, cacheLimit), Loaded: true}
+				break
+			}
+		}
 	}
 }

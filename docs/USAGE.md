@@ -21,6 +21,10 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Navigate | `d` | Dismiss observed attention after draft/send recovery |
 | Navigate | `n` | Open next attention trigger |
 | Navigate | `M` | Enable mentions with a second consecutive `M`; disable an enabled source |
+| Navigate | `B` / `H` twice | Enable independent channel/here broadcast search; one press disables an enabled source |
+| Opened thread, navigating | `f` | Follow/unfollow future replies locally |
+| Navigate | `Ctrl+B` twice | Enable disk content cache after disclosure; one press disables |
+| Navigate | `Ctrl+X` | Clear account disk content cache, retain drafts |
 | Navigate | `Ctrl+G` twice | Acknowledge known catch-up gaps without recovering missed history |
 | Picker | `↑/↓`, `Ctrl+P/N` | Move |
 | Search | `Tab` | Complete highlighted name; do not include or open |
@@ -44,7 +48,7 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Navigate | `q` | Quit; warns if there is unsent text |
 | Outside help | `Ctrl+C` | Quit; a second press explicitly discards unsent text |
 
-Unsent drafts survive conversation and thread switches and removal/re-inclusion during the session. Drafts and message bodies are **memory-only** and do not survive exit/crash. The composer stays locked while a send is pending, duplicate submissions are rejected, and its body is cleared only on a successful acknowledgement for that draft. Failed and pending states remain visible in the composer frame. A network timeout or server failure can mean Slack accepted a message without returning a response: inspect Slack before explicitly retrying. There are no automatic write retries, and exactly-once delivery is not promised. Retrying reuses the original body and client ID.
+Unsent drafts survive conversation and thread switches and removal/re-inclusion during the session. Drafts and outbox attempts are **memory-only** and do not survive exit/crash. Message bodies also stay in memory unless you explicitly enable the separate [recent message cache](CONFIGURATION.md#optional-recent-message-cache). The composer stays locked while a send is pending, duplicate submissions are rejected, and its body is cleared only on a successful acknowledgement for that draft. Failed and pending states remain visible in the composer frame. A network timeout or server failure can mean Slack accepted a message without returning a response: inspect Slack before explicitly retrying. There are no automatic write retries, and exactly-once delivery is not promised. Retrying reuses the original body and client ID.
 
 ## Search
 
@@ -71,3 +75,13 @@ Use `K` to keep an active conversation and `d` to dismiss its observed triggers.
 `M` twice opts into direct personal mentions from accessible unkept conversations using `search:read`; an intervening key cancels confirmation. The source starts disabled and its preference persists per account. One `M` disables it without removing entries. `R` retries discovery alongside current history. The footer shows checking, failure/retry, last successful check with limited coverage, or a catch-up gap. An empty list does not establish successful discovery. See [search limitations](SLACK.md#direct-mentions-and-coverage) before relying on it.
 
 Known catch-up gaps persist across successful scans, source toggles and restarts. The warning summarizes the earliest-to-latest uncovered bounds; some intervening periods may have been checked. `Ctrl+G` twice acknowledges that warning without fetching the missing interval, advancing the checkpoint, dismissing attention or changing drafts. An intervening key cancels confirmation; key repeat cannot confirm. If gap bounds change before confirmation, review and confirm the updated warning again.
+
+## Broadcasts, local follows and resume
+
+`B` twice enables exact `@channel` broadcast search; `H` twice independently enables `@here`. One press disables that enabled source. Direct mentions (`M`) remain independent. Confirmation discloses accessible unkept search using the existing `search:read` grant; an intervening key cancels, and held-key repeats cannot enable/disable. These sources are off by default. They detect tokens, not Slack notification eligibility: `@here` may surface while you were absent and broadcasts can come from accessible unkept channels. `@everyone`, user groups, saved Slack notification settings and subscriptions are not mirrored.
+
+Open a thread with `t`, then press `f` to follow future replies from others locally. Its context row shows local following and `f` to unfollow. A follow persists across restart and continues even after dismissing attention; explicitly unkeeping the conversation removes its local follows. Opening or replying alone never follows automatically. There are at most 32 local roots. Checks run at startup and at least three minutes apart per root through the existing paced replies API. Reconnect scans cover up to seven days after the last completed window; partial pages retain discovered identities without claiming completion. Longer absences show a durable gap. `R` retries due checks; errors, incomplete pagination and checking remain distinct from an empty attention list.
+
+Automatic sources share conversation/message identities. Duplicate discovery never adds another row or revives a handled message. A duplicate pending message uses the strongest label (mention, channel, here, reply); `+N` counts other distinct pending triggers in that conversation. Reading and replying still never dismiss. Local follow scans create attention, without switching selection, focus or drafts or loading an unkept conversation timeline.
+
+`Ctrl+B` twice enables local Slack content storage; `Ctrl+B` once disables it. `Ctrl+X` clears disk history while leaving the option enabled for future successful normal fetches. Defaults, bounds, account isolation and cleanup are in [configuration](CONFIGURATION.md#optional-recent-message-cache). Cached pages render immediately with cached/refreshing status, retain readable content after network failure, then reconcile with live results. They are display hints rather than proof of freshness/current access. Drafts, failed/pending sends and thread reply bodies are never restored from disk.

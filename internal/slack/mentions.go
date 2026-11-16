@@ -26,6 +26,15 @@ func (c *Client) Mentions(ctx context.Context, q core.MentionQuery) (core.Mentio
 		return core.MentionPage{}, errors.New("invalid bounded mention query")
 	}
 	token := "<@" + q.User + ">"
+	switch q.Reason {
+	case "", core.AttentionMention:
+	case core.AttentionChannel:
+		token = "<!channel>"
+	case core.AttentionHere:
+		token = "<!here>"
+	default:
+		return core.MentionPage{}, errors.New("unsupported attention search source")
+	}
 	query := token + " after:" + q.From.Add(-searchDatePadding).UTC().Format(time.DateOnly) + " before:" + q.Until.Add(searchDatePadding).UTC().Format(time.DateOnly)
 	var r struct {
 		Messages struct {
@@ -34,7 +43,7 @@ func (c *Client) Mentions(ctx context.Context, q core.MentionQuery) (core.Mentio
 		}
 	}
 
-	v := url.Values{"query": {query}, "sort": {"timestamp"}, "sort_dir": {"asc"}, "highlight": {wireFalse}, "count": {strconv.Itoa(mentionPageItems)}, "page": {strconv.Itoa(q.Page)}}
+	v := url.Values{"query": {query}, "sort": {"timestamp"}, "sort_dir": {"asc"}, "highlight": {wireFalse}, paramCount: {strconv.Itoa(mentionPageItems)}, paramPage: {strconv.Itoa(q.Page)}}
 	if err := c.call(ctx, methodMentions, v, &r); err != nil {
 		return core.MentionPage{}, err
 	}
@@ -109,5 +118,13 @@ func decodeMention(m mentionWireMatch, token string, q core.MentionQuery) (*core
 	if name == "" {
 		name = m.Channel.ID
 	}
-	return &core.MentionMatch{Conversation: core.Conversation{ID: m.Channel.ID, Name: name, Kind: kind}, Trigger: core.AttentionTrigger{ID: "mention:" + m.TS, TS: m.TS, Thread: root, Reason: core.AttentionMention, At: at}}, nil
+	reason := q.Reason
+	if reason == "" {
+		reason = core.AttentionMention
+	}
+	trigger, err := core.MessageTrigger(m.TS, root, reason)
+	if err != nil {
+		return nil, err
+	}
+	return &core.MentionMatch{Conversation: core.Conversation{ID: m.Channel.ID, Name: name, Kind: kind}, Trigger: trigger}, nil
 }

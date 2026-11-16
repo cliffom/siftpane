@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you
+
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  Leo Park  Nov 13 10:27                                                  │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
+│▸ #studio              │                                                                          │
+│  @Maya Chen        ●  │  You  Nov 13 10:30                                                       │
+│  @Maya, Leo, you      │  No rush. Pick this up when you have a quiet moment.                     │
+│                       │                                                                          │
+│                       │  Nora Ellis  Nov 13 10:33  ↳ 3 replies                                   │
+│                       │  How should the border hierarchy work on smaller terminals?              │
+│                       │                                                                          │
+│                       │  Maya Chen  Nov 13 10:36                                                 │
+│                       │  I'll check the composer at 60 columns after lunch.                      │
+│                       │                                                                          │
+│                       │  Leo Park  Nov 13 10:39                                                  │
+│                       │  The focused header is much easier to spot now.                          │
+│                       │                                                                          │
+│                       │▸ You  Nov 13 10:42                                                       │
+│                       │  Thanks, everyone. Let's leave some breathing room around the input.     │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Cached Nov 15 04:00 · refreshing / R refresh                                                ? help

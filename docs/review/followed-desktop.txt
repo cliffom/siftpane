@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you
+
+╭ Messages ─────────────┬ [#studio / Thread] ──────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Locally followed thread · f unfollow                                     │
+│  #design              │  Nora Ellis  Nov 13 10:33  ↳ 3 replies                                   │
+│  #shipping         ●  │  How should the border hierarchy work on smaller terminals?              │
+│▸ #studio              │                                                                          │
+│  @Maya Chen        ●  │  Leo Park  Nov 13 10:33                                                  │
+│  @Maya, Leo, you      │  Solid outlines for the main panes. Dashed for the transient picker.     │
+│                       │                                                                          │
+│                       │  You  Nov 13 10:33                                                       │
+│                       │  And dotted grouping inside the sidebar. No boxes around individual      │
+│                       │  messages.                                                               │
+│                       │                                                                          │
+│                       │  Nora Ellis  Nov 13 10:34                                                │
+│                       │  Agreed. Keep the messages at the center.                                │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │ ╭ Thread reply ────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ 1 local threads · 04:00                                                                     ? help

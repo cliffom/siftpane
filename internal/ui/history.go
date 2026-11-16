@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"errors"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -12,7 +13,7 @@ import (
 
 func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	cid, thread := split(v.Key)
-	if !m.included[cid] || m.generations[cid] != v.Generation {
+	if m.stopped || !m.included[cid] || m.generations[cid] != v.Generation {
 		return m, nil
 	}
 	t := m.cache[v.Key]
@@ -21,20 +22,28 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	}
 	t.Busy = false
 	t.Err = v.Err
+	t.recordFreshness(v)
 	if v.Err != nil {
+		if slack.IsAccess(v.Err) {
+			m.purgeConversationCache(cid, v.Err)
+		}
 		if !errors.Is(v.Err, context.Canceled) {
 			m.setStatus(v.Err.Error()+" · R refresh", statusRoutine)
 		}
 		if slack.IsAuth(v.Err) {
-			m.stopped = true
-			m.setStatus("Credentials expired/revoked. Drafts kept; reinstall or replace user token and restart.", statusRoutine)
+			m.stopReads()
 		}
 		return m, nil
 	}
 	previous := t.Loaded
 	oldLen := len(t.Messages)
+	selectedTS := ""
+	if v.Key == m.key() && m.scroll != 0 && m.index < oldLen {
+		selectedTS = t.Messages[m.index].TS
+	}
 	t.applyPage(v, thread)
-	if len(t.Messages) > 0 && thread == "" {
+	m.cacheHistory(v, cid, thread)
+	if len(t.Messages) > 0 && thread == "" && !t.Cached {
 		m.observeActivity(cid, t.Messages[len(t.Messages)-1].TS)
 	}
 	if v.Key == m.key() {
@@ -49,6 +58,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 			m.index = max(0, len(t.Messages)-1)
 		}
 	}
+	m.restoreMessageSelection(v, t, selectedTS)
 	if cmd := m.selectTriggerResult(v, t); cmd != nil {
 		return m, cmd
 	}
@@ -141,4 +151,31 @@ func (m *Model) selectTriggerResult(v historyResult, t *timeline) tea.Cmd {
 	m.scroll = -1
 	m.setStatus("Trigger unavailable in returned context · inspect Slack or R retry", statusAction)
 	return nil
+}
+
+func (m *Model) restoreMessageSelection(v historyResult, t *timeline, selectedTS string) {
+	if selectedTS != "" && !v.Older && v.Target == "" {
+		m.index = min(m.index, max(0, len(t.Messages)-1))
+		for i, msg := range t.Messages {
+			if msg.TS == selectedTS {
+				m.index = i
+				break
+			}
+		}
+	}
+}
+
+// Older pages cannot establish freshness for a retained recent disk window.
+func (t *timeline) recordFreshness(v historyResult) {
+	if v.Older {
+		return
+	}
+	if t.Cached {
+		t.CachedRefreshErr = v.Err
+	}
+	if v.Err == nil {
+		t.Cached = false
+		t.CachedRefreshErr = nil
+		t.Saved = time.Now()
+	}
 }
