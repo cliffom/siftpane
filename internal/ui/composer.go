@@ -30,7 +30,7 @@ func (m *Model) composerRows(w, h int) []string {
 		}
 	}
 	if m.multipleAccounts {
-		title += " · @" + m.identity.Username + " · " + m.identity.WorkspaceName
+		title += " · @" + accountText(m.identity.Username) + " · " + accountText(m.identity.WorkspaceName)
 	}
 	if m.focus == focusCompose {
 		title = "[" + title + "]"

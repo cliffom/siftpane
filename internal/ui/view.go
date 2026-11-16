@@ -39,7 +39,7 @@ func (m *Model) View() tea.View {
 		account = ansi.Truncate(" · @"+username, max(0, available-accountPrefixColumns), "…")
 	}
 	if m.multipleAccounts {
-		identity := slack.Safe(m.identity.Workspace) + "/" + slack.Safe(m.identity.User)
+		identity := accountText(m.identity.Workspace) + "/" + accountText(m.identity.User)
 		account = " · " + identity
 		if ansi.StringWidth(" · @"+username+account) <= available-accountPrefixColumns {
 			account = " · @" + username + account
@@ -158,3 +158,8 @@ func (m *Model) mainView() string {
 }
 
 const accountPrefixColumns = 4 // Space, separator, space and @ before username.
+
+// Account labels occupy one row even when remote display names contain controls.
+func accountText(text string) string {
+	return strings.Join(strings.Fields(slack.Safe(text)), " ")
+}

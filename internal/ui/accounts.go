@@ -10,7 +10,6 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/cliffom/siftpane/internal/core"
-	"github.com/cliffom/siftpane/internal/slack"
 	"github.com/cliffom/siftpane/internal/store"
 )
 
@@ -274,7 +273,7 @@ func (a *Accounts) View() tea.View {
 		if i == a.choice {
 			marker = "▸ "
 		}
-		label := fmt.Sprintf("%s%s/%s · @%s · %s", marker, slack.Safe(id.Workspace), slack.Safe(id.User), slack.Safe(id.Username), slack.Safe(id.WorkspaceName))
+		label := fmt.Sprintf("%s%s/%s · @%s · %s", marker, accountText(id.Workspace), accountText(id.User), accountText(id.Username), accountText(id.WorkspaceName))
 		rows = append(rows, fit(label, w-frameColumns))
 	}
 	content := a.current().modalOverlay(v.Content, dialogFrame("Workspaces", rows, w, h, lipgloss.RoundedBorder()), a.width, a.height)

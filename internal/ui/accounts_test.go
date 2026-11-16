@@ -345,3 +345,27 @@ func TestLongAbsenceRecordsGapAndAuthFailureIsAccountLocal(t *testing.T) {
 		t.Fatal("healthy account stopped polling")
 	}
 }
+
+func TestAccountDisplayNamesCannotInjectRows(t *testing.T) {
+	a, _ := accountFixture(t, 2)
+	id := a.current().identity
+	id.WorkspaceName = "Remote\nWorkspace\x1b[31m"
+	id.Username = "remote\nuser"
+	a.current().identity = id
+	a.sessions[0].account.Identity = id
+	for _, size := range [][2]int{{100, 30}, {60, 20}, {40, 14}} {
+		a.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+		for _, choosing := range []bool{false, true} {
+			a.choosing = choosing
+			rows := strings.Split(ansi.Strip(a.View().Content), "\n")
+			if len(rows) != size[1] {
+				t.Fatal("remote account name injected a row", size, choosing)
+			}
+			for _, row := range rows {
+				if ansi.StringWidth(row) != size[0] {
+					t.Fatal("remote account name broke width", row)
+				}
+			}
+		}
+	}
+}
