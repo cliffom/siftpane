@@ -110,3 +110,6 @@ When changing behavior, update the authoritative document and any affected READM
 
 
 The 0.8 review harness adds `--snapshot refresh-details`, `--snapshot credential-recovery` and `--snapshot partial-thread`. Review each at 100×30 and 60×20, plus 40×14 recovery. `make macos-candidate` builds an unsigned Apple silicon/macOS 26 development archive; [release preparation](RELEASING.md#macos-08-candidates-and-signing) documents the separate credentialed signing workflow. No live Slack, Keychain or signing credential is needed for `make check`.
+
+
+macOS CI also runs `python3 -m unittest discover -s scripts -p 'test_*macos*.py'`. These credential-helper tests use synthetic values and mocked commands only. The signed workflow uses the same tested setup/cleanup sequence as Bambustand; the setup helper refuses to run against a developer’s local Keychain. Local notarization uses an explicitly named profile as documented in [releasing](RELEASING.md#macos-08-candidates-and-signing).

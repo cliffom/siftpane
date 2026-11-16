@@ -13,7 +13,6 @@ concurrency:
 jobs:
   sign:
     runs-on: macos-26
-    environment: macos-signing
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -26,18 +25,39 @@ jobs:
             go.sum
             tools/go.sum
       - run: make check
+      - name: Test signing credential setup and cleanup
+        run: python3 -m unittest discover -s scripts -p 'test_*macos*.py'
+      - name: Install signing credentials in an isolated runner keychain
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: python3 scripts/setup-macos-ci-signing.py setup
       - name: Sign, notarize and staple the candidate disk image
         env:
-          SIFTPANE_CERTIFICATE_P12_BASE64: ${{ secrets.SIFTPANE_CERTIFICATE_P12_BASE64 }}
-          SIFTPANE_CERTIFICATE_PASSWORD: ${{ secrets.SIFTPANE_CERTIFICATE_PASSWORD }}
-          SIFTPANE_SIGN_IDENTITY: ${{ secrets.SIFTPANE_SIGN_IDENTITY }}
-          SIFTPANE_NOTARY_KEY_BASE64: ${{ secrets.SIFTPANE_NOTARY_KEY_BASE64 }}
-          SIFTPANE_NOTARY_KEY_ID: ${{ secrets.SIFTPANE_NOTARY_KEY_ID }}
-          SIFTPANE_NOTARY_ISSUER: ${{ secrets.SIFTPANE_NOTARY_ISSUER }}
-        run: bash scripts/sign-macos-ci.sh
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: bash scripts/package-macos.sh --signed
+      - name: Remove signing credentials and restore the keychain search list
+        if: always()
+        run: python3 scripts/setup-macos-ci-signing.py cleanup
+      - name: Preserve notarization reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: siftpane-notarization-diagnostics
+          path: |
+            dist/notarization/submission.json
+            dist/notarization/log.json
+          if-no-files-found: ignore
+          retention-days: 1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: siftpane-signed-macos-arm64
-          path: dist/*
+          path: |
+            dist/*.dmg
+            dist/*.SHA256SUMS
           if-no-files-found: error
           retention-days: 14

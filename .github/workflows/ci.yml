@@ -48,6 +48,8 @@ jobs:
             go.sum
             tools/go.sum
       - run: make check
+      - name: Check signing setup without credentials
+        run: python3 -m unittest discover -s scripts -p 'test_*macos*.py'
       - name: Build and inspect an unsigned candidate
         run: |
           bash scripts/package-macos.sh --unsigned

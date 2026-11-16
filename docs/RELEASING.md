@@ -31,17 +31,43 @@ Versions `0.6.0` and **0.7.0** are published. The 0.7 release added compatible m
 
 The manually dispatched **Signed macOS candidate** workflow runs on `macos-26`, checks the chosen revision, then builds a Developer ID Application-signed executable inside a signed/notarized/stapled DMG. It verifies codesign, notarization status/log, stapler and Gatekeeper before uploading candidate artifacts. It does not tag, publish a release or attach files to one. Official [GitHub runner labels](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job) identify `macos-26` as arm64. Apple's [custom notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow) explains container tickets and the inability to staple standalone binaries; hence the DMG distribution. These references were checked on 2026-11-15.
 
-Configure the `macos-signing` GitHub environment with appropriate required reviewers and these secrets before dispatching trusted reviewed code:
+The credential setup follows [Bambustand’s release workflow](https://github.com/cliffom/bambustand/blob/main/.github/workflows/release.yml): repository Actions secrets, an isolated runner Keychain, an app-specific-password notarization profile, and always-run cleanup. A dedicated App Store Connect API key is not required. Configure these secrets in **cliffom/siftpane**, independently of Bambustand:
 
 | Secret | Purpose |
 | --- | --- |
-| `SIFTPANE_CERTIFICATE_P12_BASE64` | Base64 Developer ID Application certificate/private-key export |
-| `SIFTPANE_CERTIFICATE_PASSWORD` | Password protecting that export |
-| `SIFTPANE_SIGN_IDENTITY` | Exact Developer ID Application identity |
-| `SIFTPANE_NOTARY_KEY_BASE64` | Base64 App Store Connect API private key |
-| `SIFTPANE_NOTARY_KEY_ID` | API key ID |
-| `SIFTPANE_NOTARY_ISSUER` | Team API issuer ID |
+| `MACOS_CERTIFICATE_P12_BASE64` | Base64 password-protected Developer ID Application certificate/private-key export |
+| `MACOS_CERTIFICATE_PASSWORD` | Fresh password protecting that export |
+| `MACOS_SIGN_IDENTITY` | Exact Developer ID Application identity fingerprint or name |
+| `APPLE_ID` | Your Developer Apple account email |
+| `APPLE_TEAM_ID` | Developer team ID matching the signing identity |
+| `APPLE_APP_SPECIFIC_PASSWORD` | New Apple app-specific password labeled for Siftpane notarization |
 
-The signing script creates a private temporary keychain/key files and deletes them on exit. It does not touch a user's login keychain or persist signing secrets in artifacts. Missing credentials fail before signing; there is no automatic unsigned fallback. Do not dispatch credentialed signing from untrusted revisions. The manual workflow's environment/credentials must be configured by the repository operator; this PR does not create secrets, change account permissions or claim a successful notarization.
+Use a new Siftpane app-specific password, created at [Apple Account → Sign-In and Security → App-Specific Passwords](https://support.apple.com/en-us/102654). The existing Apple ID, team and Developer ID Application certificate can be reused as the publisher identity. Export the identity with its private key from Keychain Access as a `.p12` protected with a fresh export password; keep that file outside the repository. Do not reuse Bambustand’s app-specific or export password. Repository secrets have the same names but separate values and storage. GitHub cannot return an existing secret’s value, so its secret list cannot be used to copy the Bambustand credentials.
+
+Set the certificate through stdin and use the hidden gh prompts for passwords:
+
+```sh
+base64 -i /path/to/siftpane-signing.p12 | gh secret set MACOS_CERTIFICATE_P12_BASE64 --repo cliffom/siftpane
+gh secret set MACOS_CERTIFICATE_PASSWORD --repo cliffom/siftpane
+gh secret set MACOS_SIGN_IDENTITY --repo cliffom/siftpane
+gh secret set APPLE_ID --repo cliffom/siftpane
+gh secret set APPLE_TEAM_ID --repo cliffom/siftpane
+gh secret set APPLE_APP_SPECIFIC_PASSWORD --repo cliffom/siftpane
+```
+
+The Python setup helper is adapted from Bambustand and runs only on a macOS GitHub Actions runner. It validates secrets, imports the selected identity into a private temporary Keychain, checks the identity, and stores the **siftpane-notary** profile in the same Keychain. Only `MACOS_NOTARY_PROFILE` and `MACOS_NOTARY_KEYCHAIN` paths/references are exported to subsequent steps. No password is written to GITHUB_ENV or logs. The decoded export is removed immediately; always-run cleanup restores the original Keychain search list and deletes temporary credentials. Missing credentials or notarization failure stop packaging without an unsigned fallback. Offline synthetic tests exercise setup, failures, secret redaction and cleanup; ordinary PR CI has no signing secrets.
+
+For a local notarized candidate, use the existing Developer ID identity in your Mac’s Keychain and store the **new** app-specific password interactively:
+
+```sh
+xcrun notarytool store-credentials siftpane-notary --team-id YOUR_TEAM_ID
+MACOS_SIGN_IDENTITY='Developer ID Application: Your Name (TEAMID)' \
+MACOS_NOTARY_PROFILE=siftpane-notary \
+bash scripts/package-macos.sh --signed /path/to/candidate-output
+```
+
+`notarytool` prompts for the Apple ID and password; keep them out of chat, shell history and repository files. `MACOS_NOTARY_KEYCHAIN` is optional locally and explicit on CI. CLI signatures use stable identifier **com.suitepotato.siftpane**, hardened runtime and a secure timestamp. Both executable and DMG must meet Apple’s Developer ID Application signing requirement. Apple must accept the submission; its JSON report/log is retained in ignored candidate-output/notarization, with only those allowlisted reports uploaded as a one-day diagnostic artifact. The DMG is stapled and validated, Gatekeeper assesses it, and the standalone CLI’s notarization record is verified before checksums are generated.
+
+The manual signing workflow must first exist on the default branch before GitHub will dispatch it, as [GitHub documents](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow). Adding the workflow to a PR does not register it, and local credentials do not configure Actions. Once registered, dispatch the trusted reviewed branch with `gh workflow run macos-signing.yml --repo cliffom/siftpane --ref BRANCH`. This workflow creates candidate artifacts only; it does not publish a release. No merge or default-branch write is implied by preparing signing.
 
 Before publication, run the signed workflow against the exact authorized release revision, download and verify the DMG/checksum, inspect the enclosed REVISION and binary version, exercise browser-downloaded Gatekeeper installation and record the actual supported-host Keychain/terminal/live checks in [0.8 acceptance](ACCEPTANCE-0.8.md). Check the notary log, including warnings. If the release merge changes the source revision, rebuild from that merge before attaching artifacts. Do not reuse a candidate from another commit. Source installs should be checked in a temporary GOBIN. Issues #32/#33 stay open until their corresponding signed/host/live evidence is accepted.

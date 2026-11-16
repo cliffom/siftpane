@@ -18,11 +18,8 @@ if (( ${major%%.*} < 26 )); then
   exit 1
 fi
 if [[ "$mode" == --signed ]]; then
-  : "${SIFTPANE_SIGN_IDENTITY:?Set the Developer ID Application signing identity}"
-  : "${SIFTPANE_SIGN_KEYCHAIN:?Set the dedicated signing keychain path}"
-  : "${SIFTPANE_NOTARY_KEY_PATH:?Set the App Store Connect API key path}"
-  : "${SIFTPANE_NOTARY_KEY_ID:?Set the App Store Connect key ID}"
-  : "${SIFTPANE_NOTARY_ISSUER:?Set the App Store Connect issuer ID}"
+  : "${MACOS_SIGN_IDENTITY:?Set the Developer ID Application signing identity}"
+  : "${MACOS_NOTARY_PROFILE:?Set the notarytool Keychain profile name}"
 fi
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
@@ -70,26 +67,39 @@ if [[ -n $(git status --porcelain) ]]; then
   printf '%s\n' 'Uncommitted development worktree; REVISION is only its base.' > "$work/payload/WORKTREE.txt"
 fi
 if [[ "$mode" == --signed ]]; then
-  /usr/bin/codesign --force --sign "$SIFTPANE_SIGN_IDENTITY" --keychain "$SIFTPANE_SIGN_KEYCHAIN" --options runtime --timestamp "$work/payload/siftpane"
-  /usr/bin/codesign --verify --strict --verbose=2 "$work/payload/siftpane"
+  signing_options=(--timestamp)
+  notary_credentials=(--keychain-profile "$MACOS_NOTARY_PROFILE")
+  if [[ -n "${MACOS_NOTARY_KEYCHAIN:-}" ]]; then
+    signing_options+=(--keychain "$MACOS_NOTARY_KEYCHAIN")
+    notary_credentials+=(--keychain "$MACOS_NOTARY_KEYCHAIN")
+  fi
+  developer_id_requirement='anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists'
+  /usr/bin/codesign --force --sign "$MACOS_SIGN_IDENTITY" "${signing_options[@]}" --identifier com.suitepotato.siftpane --options runtime "$work/payload/siftpane"
+  /usr/bin/codesign --verify --strict --verbose=2 -R="$developer_id_requirement" "$work/payload/siftpane"
   /usr/bin/hdiutil create -volname "Siftpane $version" -srcfolder "$work/payload" -format UDZO "$work/$stem.dmg"
-  /usr/bin/codesign --sign "$SIFTPANE_SIGN_IDENTITY" --keychain "$SIFTPANE_SIGN_KEYCHAIN" --timestamp "$work/$stem.dmg"
+  /usr/bin/codesign --sign "$MACOS_SIGN_IDENTITY" "${signing_options[@]}" "$work/$stem.dmg"
+  /usr/bin/codesign --verify --strict -R="$developer_id_requirement" "$work/$stem.dmg"
   /usr/bin/hdiutil verify "$work/$stem.dmg"
-  if ! xcrun notarytool submit "$work/$stem.dmg" --key "$SIFTPANE_NOTARY_KEY_PATH" --key-id "$SIFTPANE_NOTARY_KEY_ID" --issuer "$SIFTPANE_NOTARY_ISSUER" --wait --timeout 30m --output-format json > "$work/notarization.json"; then
-    cat "$work/notarization.json" >&2
+  mkdir -p "$output/notarization"
+  # Persist only Apple's JSON reports, never credential files or raw auth stderr.
+  if ! xcrun notarytool submit "$work/$stem.dmg" "${notary_credentials[@]}" --wait --timeout 30m --output-format json > "$output/notarization/submission.json" 2> "$work/notary-stderr.txt"; then
+    echo "Notarization failed or is still processing; inspect $output/notarization/submission.json before resubmitting." >&2
     exit 1
   fi
-  /usr/bin/plutil -extract status raw -o - "$work/notarization.json" | /usr/bin/grep -qx Accepted
-  submission=$(/usr/bin/plutil -extract id raw -o - "$work/notarization.json")
-  xcrun notarytool log "$submission" --key "$SIFTPANE_NOTARY_KEY_PATH" --key-id "$SIFTPANE_NOTARY_KEY_ID" --issuer "$SIFTPANE_NOTARY_ISSUER" "$work/notary-log.json"
-  if ! /usr/bin/osascript -l JavaScript scripts/check-notary-log.js "$work/notary-log.json"; then
+  submission=$(/usr/bin/plutil -extract id raw -o - "$output/notarization/submission.json")
+  if ! xcrun notarytool log "$submission" "${notary_credentials[@]}" "$output/notarization/log.json" > "$work/notary-log-output.txt" 2>&1; then
+    echo 'Cannot retrieve the notarization log; inspect the submission ID before resubmitting.' >&2
+    exit 1
+  fi
+  /usr/bin/plutil -extract status raw -o - "$output/notarization/submission.json" | /usr/bin/grep -qx Accepted
+  if ! /usr/bin/osascript -l JavaScript scripts/check-notary-log.js "$output/notarization/log.json"; then
     echo 'Notarization returned issues; inspect the log before distributing.' >&2
-    cat "$work/notary-log.json" >&2
     exit 1
   fi
   xcrun stapler staple "$work/$stem.dmg"
   xcrun stapler validate "$work/$stem.dmg"
   /usr/sbin/spctl --assess --type open --context context:primary-signature --verbose=2 "$work/$stem.dmg"
+  /usr/bin/codesign --verify --strict --check-notarization -R=notarized "$work/payload/siftpane"
 else
   printf '%s\n' 'UNSIGNED DEVELOPMENT CANDIDATE. Not a notarized release download.' > "$work/payload/UNSIGNED.txt"
   /usr/bin/tar -czf "$work/$stem.tar.gz" -C "$work/payload" .
