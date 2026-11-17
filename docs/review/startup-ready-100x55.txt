@@ -1,0 +1,55 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ [Messages] ───────────┬ #studio ─────────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
+│▸ #studio              │    Leo Park  Nov 13 10:03 · continued                                    │
+│                       │                                                                          │
+│                       │    You  Nov 13 10:06                                                     │
+│                       │    The new navigation is ready to try. Small details, fewer              │
+│                       │    interruptions.                                                        │
+│                       │                                                                          │
+│                       │    Nora Ellis  Nov 13 10:09                                              │
+│                       │    I like where this is going. Can we keep the shortcuts discoverable?   │
+│                       │                                                                          │
+│                       │    Maya Chen  Nov 13 10:12                                               │
+│                       │    Yes — a visible focus label makes a big difference.                   │
+│                       │                                                                          │
+│                       │    Leo Park  Nov 13 10:15                                                │
+│                       │    A note for @You: the empty states are in the design file.             │
+│                       │                                                                          │
+│                       │    You  Nov 13 10:18                                                     │
+│                       │    Let's keep the first version deliberately small. Channels, people,    │
+│                       │    and a good composer.                                                  │
+│                       │                                                                          │
+│                       │    Nora Ellis  Nov 13 10:21                                              │
+│                       │    *Ready for review*: keyboard navigation, thread replies, and drafts   │
+│                       │    that stay with you.                                                   │
+│                       │                                                                          │
+│                       │    Maya Chen  Nov 13 10:24                                               │
+│                       │    The spacing feels good at 80 columns, too.                            │
+│                       │                                                                          │
+│                       │    Leo Park  Nov 13 10:27                                                │
+│                       │    Here's the checklist: review notes (https://example.com/review)       │
+│                       │                                                                          │
+│                       │    You  Nov 13 10:30                                                     │
+│                       │    No rush. Pick this up when you have a quiet moment.                   │
+│                       │                                                                          │
+│                       │    Nora Ellis  Nov 13 10:33  ↳ 3 replies                                 │
+│                       │    How should the border hierarchy work on smaller terminals?            │
+│                       │                                                                          │
+│                       │    Maya Chen  Nov 13 10:36                                               │
+│                       │    I'll check the composer at 60 columns after lunch.                    │
+│                       │                                                                          │
+│                       │    Leo Park  Nov 13 10:39                                                │
+│                       │    The focused header is much easier to spot now.                        │
+│                       │                                                                          │
+│                       │    You  Nov 13 10:42                                                     │
+│                       │    Thanks, everyone. Let's leave some breathing room around the input.   │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Loading 4 saved conversations…                                                              ? help 

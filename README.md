@@ -57,7 +57,9 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 | `i` | Start composing |
 | `Ctrl+S` | Send; `Enter` inserts a newline |
 | `Esc` | Keep your draft and return to navigation |
-| `t` | Open the selected message's thread |
+| Messages `→`, `Enter` | Open the selected message’s existing thread |
+| `t` | Open any selected message’s thread |
+| Thread `←`, `Esc` | Return to the conversation |
 | `o` | Load older messages or the next thread page |
 | `?` / `F1` | Open scrollable keyboard help (`F1` also works while composing) |
 | `q` | Quit; warns if you have unsent text |

@@ -206,3 +206,25 @@ func TestProfileAuthenticationFailureStopsReadsWithoutHidingMessages(t *testing.
 		t.Fatal("auth error lost messages/draft or kept reading")
 	}
 }
+
+func TestSavedDMNameEnrichmentDoesNotBlockHistory(t *testing.T) {
+	const participant = "Udm"
+	m, svc := profileFixture(t)
+	m.active = demoDM
+	m.Init()
+	c := core.Conversation{ID: demoDM, Name: participant, User: participant, Kind: core.ConversationDM}
+	_, cmd := m.Update(conversationResult{ID: demoDM, Conversation: c, Generation: m.generations[demoDM]})
+	if cmd == nil || !m.cache[demoDM].Busy || len(svc.calls) != 0 {
+		t.Fatal("saved DM waited for name enrichment before loading messages")
+	}
+	m.composer.SetValue(mainDraft)
+	m.Update(cmd())
+	for _, item := range m.directory {
+		if item.ID == demoDM && (item.Name != "Name Udm" || item.User != participant) {
+			t.Fatal("DM identity not enriched", item)
+		}
+	}
+	if m.active != demoDM || m.composer.Value() != mainDraft || !m.cache[demoDM].Busy {
+		t.Fatal("name result changed the draft, selection or pending history")
+	}
+}

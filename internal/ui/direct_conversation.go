@@ -112,7 +112,7 @@ func (m *Model) resolveConversation(id string, action directAction) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return directConversationResult{ID: id, Generation: generation, Action: action, Err: err}
 		}
-		c, err := svc.Conversation(ctx, id)
+		c, err := svc.Conversation(slack.ForegroundRead(ctx), id)
 		return directConversationResult{ID: id, Generation: generation, Action: action, Conversation: c, Err: err}
 	}
 }
@@ -137,8 +137,11 @@ func (m *Model) updateDirectConversation(v directConversationResult) (tea.Model,
 		m.directErr = errors.New("conversation lookup returned another identity")
 		return m, nil
 	}
-	m.replaceConversation(v.Conversation)
+	v.Conversation = m.mergeDirectoryConversation(v.Conversation)
 	delete(m.directoryCached, v.ID)
+	if m.included[v.ID] {
+		m.metadataState[v.ID] = metadataValidated
+	}
 	m.saveDirectory([]core.Conversation{v.Conversation})
 	switch v.Action {
 	case directTemporary:

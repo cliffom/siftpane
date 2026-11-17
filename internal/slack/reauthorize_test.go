@@ -24,6 +24,9 @@ func TestReauthorizeRetainsOldTokenAndSharedBackoff(t *testing.T) {
 	if err != nil || actual.Workspace != id.Workspace || c.token != "xoxp-test" || next.token != "xoxp-replacement" {
 		t.Fatal("credential replacement mutated old client or identity", err)
 	}
+	if next.requests != c.requests {
+		t.Fatal("replacement did not share queued read priorities")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
 	if err = next.wait(ctx, methodHistory); !errors.Is(err, context.DeadlineExceeded) {

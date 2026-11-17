@@ -2,24 +2,24 @@
                                                                                                     
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
-│  #design              │  Leo Park  Nov 13 10:27                                                  │
-│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
-│▸ #studio              │                                                                          │
+│  #design              │    Maya Chen  Nov 13 10:24 · continued                                   │
+│  #shipping         ●  │    Leo Park  Nov 13 10:27                                                │
+│▸ #studio              │    Here's the checklist: review notes (https://example.com/review)       │
 │  @Maya Chen ╭ [Keyboard guide] ────────────────────────────────────────────────────╮             │
 │  @Maya, Leo,│ NAVIGATE                                                             │             │
 │             │ Ctrl+W  switch workspace/account; inactive accounts pause reads      │             │
 │             │ Tab  switch sidebar / messages                                       │             │
 │             │ j/k or ↑/↓  move / select                                            │             │
-│             │ PgUp/PgDn  scroll history                                            │             │
+│             │ PgUp/PgDn  scroll history                                            │?            │
 │             │ G / End  newest + local read                                         │             │
-│             │ i / Enter  compose                                                   │             │
-│             │ t  open selected thread                                              │             │
-│             │ Esc  leave thread / focus sidebar                                    │             │
+│             │ i  compose; Enter opens existing thread or composes                  │             │
+│             │ →  open existing thread; t  open any message thread                  │             │
+│             │ ←  leave thread; Esc  leave thread / focus sidebar                   │             │
 │             │ o  older history / next reply page                                   │             │
 │             │ R  refresh / retry saved metadata                                    │             │
 │             │ v  refresh ages, errors and recovery details                         │             │
-│             │ Ctrl+R  reload saved credential after --login --account elsewhere    │e input.     │
-│             │ 1–13/72 ↑/↓ · Esc close                                              │             │
+│             │ Ctrl+R  reload saved credential after --login --account elsewhere    │             │
+│             │ 1–13/72 ↑/↓ · Esc close                                              │the input.   │
 │             ╰──────────────────────────────────────────────────────────────────────╯             │
 │                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
 │                       │ │ › Write a message…                                                   │ │

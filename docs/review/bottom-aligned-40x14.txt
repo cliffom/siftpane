@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#studio] ───────────────────────────╮
+│ Channel                              │
+│ │▸ Leo  Nov 13 09:01                 │
+│ │  The newest message stays above    │
+│ │  the composer.                     │
+│                                      │
+│ ╭ Message ─────────────────────────╮ │
+│ │ › Write a message…               │ │
+│ │                                  │ │
+│ ╰──────────────────────────────────╯ │
+╰──────────────────────────────────────╯
+                                 ? help 

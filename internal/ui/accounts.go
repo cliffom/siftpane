@@ -94,7 +94,9 @@ func (a *Accounts) activate(index int) tea.Cmd {
 		cmds = append(cmds, m.fetch(m.key(), false))
 	}
 	for cid := range m.included {
-		cmds = append(cmds, m.conversationCmd(cid))
+		if cid == m.active || m.metadataState[cid] == metadataUnvalidated || m.metadataFailed[cid] {
+			cmds = append(cmds, m.conversationCmd(cid))
+		}
 	}
 	return a.wrap(index, s.epoch, tea.Batch(cmds...))
 }

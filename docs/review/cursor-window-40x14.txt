@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#studio] ───────────────────────────╮
+│ Channel                              │
+│ │▸ Reviewer 3  Nov 13 08:56          │
+│ │  A visible update.                 │
+│                                      │
+│    Reviewer 4  Nov 13 08:56          │
+│ ╭ Message ─────────────────────────╮ │
+│ │ › Write a message…               │ │
+│ │                                  │ │
+│ ╰──────────────────────────────────╯ │
+╰──────────────────────────────────────╯
+                                 ? help 

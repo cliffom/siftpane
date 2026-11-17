@@ -1,0 +1,55 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
+│▸ #studio              │    Maya  Nov 13 08:40 · continued                                        │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 9                                                       │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 10                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 11                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 12                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 13                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 14                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 15                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 16                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 17                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 18                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 19                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 08:40                                                    │
+│                       │    Older context 20                                                      │
+│                       │                                                                          │
+│                       │    Maya  Nov 13 09:00                                                    │
+│                       │    Earlier context.                                                      │
+│                       │                                                                          │
+│                       │ │▸ Leo  Nov 13 09:01                                                     │
+│                       │ │  The newest message stays above the composer.                          │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+                                                                                             ? help 

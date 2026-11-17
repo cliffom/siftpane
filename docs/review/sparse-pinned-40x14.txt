@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#studio] ───────────────────────────╮
+│ Channel · Daily collaboration, fewe… │
+│ │▸ Earlier  Dec 31 16:01             │
+│ │  Earlier context remains in its    │
+│ │  screen row.                       │
+│                                      │
+│ ╭ Message ─────────────────────────╮ │
+│ │ › Write a message…               │ │
+│ │                                  │ │
+│ ╰──────────────────────────────────╯ │
+╰──────────────────────────────────────╯
+                                 ? help 

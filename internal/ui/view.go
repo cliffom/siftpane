@@ -134,7 +134,7 @@ func (m *Model) mainView() string {
 		title = leftTitle
 		rrows = m.sidebar(right, inside)
 	} else {
-		rrows = []string{muted.Render(fit(" "+m.conversationContext(), right))}
+		rrows = padHistoryRows([]string{muted.Render(" " + m.conversationContext())}, right, contextRows)
 		rrows = append(rrows, m.history(right, hist)...)
 		rrows = append(rrows, m.composerRows(right, comp)...)
 	}

@@ -33,22 +33,17 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	delete(m.metadataFailed, v.ID)
-	delete(m.directoryCached, v.ID)
-	for i, c := range m.directory {
-		if c.ID == v.ID {
-			m.directory[i] = v.Conversation
-			m.reselectChoice(pickedID)
-			m.saveMetadata()
-			return m, nil
-		}
-	}
-	m.directory = append(m.directory, v.Conversation)
-	m.saveMetadata()
+	m.metadataState[v.ID] = metadataValidated
+	observed := m.mergeDirectoryConversation(v.Conversation)
+	m.saveDirectory([]core.Conversation{observed})
 	m.reselectChoice(pickedID)
+	m.saveMetadata()
 	if m.active == "" && m.attention.Kept[v.ID] {
-		return m, m.selectConversation(v.ID)
+		cmd := m.selectConversation(v.ID)
+		m.publishStartupConversation(v.ID)
+		return m, cmd
 	}
-	return m, nil
+	return m, m.profileCmd()
 }
 
 func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {

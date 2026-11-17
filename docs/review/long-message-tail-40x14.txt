@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#studio] ───────────────────────────╮
+│ Channel                              │
+│    Leo  Nov 13 09:00 · continued     │
+│ │▸ Nora  Nov 13 09:01                │
+│ │  Newest update.                    │
+│                                      │
+│ ╭ Message ─────────────────────────╮ │
+│ │ › Write a message…               │ │
+│ │                                  │ │
+│ ╰──────────────────────────────────╯ │
+╰──────────────────────────────────────╯
+                                 ? help 

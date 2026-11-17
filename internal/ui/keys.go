@@ -39,6 +39,8 @@ const (
 	keyCompose          = "enter"
 	keyDown             = "down"
 	keyUp               = "up"
+	keyRight            = "right"
+	keyLeft             = "left"
 	keyPageUp           = "pgup"
 	keyPageDown         = "pgdown"
 	keyNewest           = "end"
@@ -83,6 +85,10 @@ func keyLabel(k string) string {
 		return "↑"
 	case keyDown:
 		return "↓"
+	case keyRight:
+		return "→"
+	case keyLeft:
+		return "←"
 	}
 	return k
 }

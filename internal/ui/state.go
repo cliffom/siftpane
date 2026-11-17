@@ -149,7 +149,12 @@ func (m *Model) selectConversation(cid string) tea.Cmd {
 	m.rememberDraft()
 	m.opened[cid] = true
 	m.active = cid
+	var metadata tea.Cmd
+	if m.metadataState[cid] == metadataDeferred {
+		metadata = m.conversationCmd(cid)
+	}
 	m.thread = ""
+	m.resetHistoryFill()
 	m.index = 0
 	m.scroll = 0
 	m.focus = focusMessages
@@ -161,10 +166,10 @@ func (m *Model) selectConversation(cid string) tea.Cmd {
 		if t.TS != "" {
 			m.thread = t.Thread
 			m.restoreDraft()
-			return tea.Batch(m.fetchTrigger(t), m.profileCmd())
+			return tea.Batch(m.fetchTrigger(t), m.profileCmd(), metadata)
 		}
 	}
-	return tea.Batch(m.fetch(cid, false), m.profileCmd())
+	return tea.Batch(m.fetch(cid, false), m.profileCmd(), metadata)
 }
 
 func (m *Model) read(cid string) {
@@ -204,6 +209,7 @@ func (m *Model) toggleIncluded(cid string) {
 			m.startupSidebar = nil
 		}
 		delete(m.metadataFailed, cid)
+		delete(m.metadataState, cid)
 		delete(m.cancels, cid)
 		delete(m.unread, cid)
 		for k := range m.cache {

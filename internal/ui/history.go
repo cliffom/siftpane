@@ -54,18 +54,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	if len(t.Messages) > 0 && thread == "" && !t.Cached {
 		m.observeActivity(cid, t.Messages[len(t.Messages)-1].TS)
 	}
-	if v.Key == m.key() {
-		if v.Older {
-			if thread == "" {
-				m.index = 0
-			} else {
-				m.index = max(0, oldLen-1)
-			}
-			m.scroll = -1
-		} else if !previous || m.scroll == 0 {
-			m.index = max(0, len(t.Messages)-1)
-		}
-	}
+	m.positionHistoryResult(v, t, oldLen, previous)
 	m.restoreMessageSelection(v, t, selectedTS)
 	if v.Key == m.key() && v.Target == "" {
 		m.restoreReadingAnchor(anchor)
@@ -78,7 +67,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	if d := m.deliveries[m.key()]; !m.stopped && m.statusKind != statusAction && (d == nil || d.State == core.DeliverySent) {
 		m.setStatus("", statusRoutine)
 	}
-	return m, m.profileCmd()
+	return m, tea.Batch(m.profileCmd(), m.fillHistory())
 }
 
 func (m *Model) observeActivity(cid, ts string) {
@@ -126,6 +115,8 @@ func (t *timeline) applyPage(v historyResult, thread string) {
 		t.Messages = keep
 	}
 	switch {
+	case v.Fill:
+		t.Messages = core.Merge(t.Messages, v.Page.Messages, cacheLimit)
 	case v.Older && thread == "":
 		t.Messages = core.Merge(t.Messages, v.Page.Messages, len(t.Messages)+len(v.Page.Messages))
 		if len(t.Messages) > cacheLimit {
@@ -198,5 +189,20 @@ func (t *timeline) recordFreshness(v historyResult) {
 		t.Cached = false
 		t.CachedRefreshErr = nil
 		t.Saved = time.Now()
+	}
+}
+
+func (m *Model) positionHistoryResult(v historyResult, t *timeline, oldLen int, previous bool) {
+	if v.Key == m.key() {
+		if v.Older && !v.Fill {
+			if _, thread := split(v.Key); thread == "" {
+				m.index = 0
+			} else {
+				m.index = max(0, oldLen-1)
+			}
+			m.scroll = -1
+		} else if !previous || m.scroll == 0 {
+			m.index = max(0, len(t.Messages)-1)
+		}
 	}
 }

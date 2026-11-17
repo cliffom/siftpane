@@ -366,3 +366,72 @@ Regression coverage verifies a matching name arriving on a later page, name prec
 ## 0.8 operator release acceptance — 2026-11-16
 
 The operator requested `$release #34, verified` after the final review of `b657eee`. This confirms release acceptance for the daily-use changes. Assistant checks passed `make check`, all eight synthetic signing-helper tests, and a temporary source installation with ten desktop/small offline snapshots. Individual live/host cases were not separately reported; earlier limitations remain attributed in [acceptance](ACCEPTANCE-0.8.md). Exact merged-revision CI, credentialed signing and published-artifact verification are performed by the release workflow and reported in the release receipt rather than inferred from earlier local candidates.
+
+
+## Loading latency: foreground reads and deferred metadata
+
+Offline large-workspace regression checks a full 32-conversation inclusion set. With fresh account-isolated directory observations, startup schedules one metadata lookup instead of 32, retains all 32 sidebar entries and starts the selected history immediately. Without fresh observations, older display summaries still require startup validation. Explicit opening starts a deferred conversation's metadata and history together and retains the previous draft. Account switch-back retains validated inactive metadata; unresolved/failed entries and the active conversation remain eligible for validation. Individual metadata success updates only that entry in the existing age-bounded directory cache; merely saving summaries cannot renew deferred eligibility.
+
+Transport regressions queue background history reads behind an existing deadline, then add a foreground read: the foreground read wins the next permitted slot, background reads retain FIFO order, and other methods remain independent. Cancellation removes a waiting foreground request. Existing pacing/backoff and replacement-credential tests pass; replacement clients share the new queue. No API method, parameter, scope, page size or rate interval changed. Saved DM metadata performs zero profile requests; participant names resolve through the independent foreground profile stream while message loading continues, preserving drafts and useful cached names.
+
+`make fmt` and `make check` pass, including zero lint findings, vet, race tests, build and both modules' hygiene/checksums. Visually inspected new startup-ready text/PNG cell captures at 100×30, 60×20 and 40×14; the first usable row is visible while remaining summaries restore, with shared borders, focus title and composer preserved. An offline PTY demo at those sizes passed automatic directory paging, picker/search interaction, draft retention and clean exit. These checks establish request reduction and queue ordering, not live Slack elapsed-time improvement or physical-terminal behavior.
+
+Full directory enumeration still requires paced pages, uncached names still resolve individually, and an issued/background request or server backoff cannot be preempted. Cold startup without fresh hints still validates saved IDs. Large-team live time-to-first-message, first useful search result and complete directory/name coverage remain to be measured. No commit, push or publication was performed.
+
+
+## Bottom-aligned newest history
+
+A user screenshot exposed loaded messages clustered at the top of a tall pane despite the newest message being selected. The viewport padded unused rows below the list. Newest-following mode now pads above the visible message rows, including the space left after skipping a partial first message to retain its author. Explicit browsing, empty history, loading and errors retain their existing placement.
+
+Regression tests check a short history at 100×30, 60×20 and a tall 100×55 window, explicit browsing placement and author-boundary alignment. The author-context test now checks the first nonblank content row so it continues to reject orphaned message bodies while permitting the intended leading space. `make fmt` and `make check` pass with zero lint findings, vet, race tests, build and module checks. Reviewed synthetic bottom-aligned text/PNG captures at 100×30, 60×20, 40×14 and 100×55 and refreshed startup-ready captures. The normal composer, focus titles and shared frame remain visible. Captures establish offline cell layout, not live Slack or physical-terminal behavior; no private screenshot content was copied into fixtures or review artifacts.
+
+
+## Fill unused channel height with available older history
+
+The follow-up screenshot clarified that moving the same messages to the bottom left a large blank area above them. After a successful recent channel page, the selected newest-following view now loads preceding pages while its rendered rows do not fill the pane. Resizing can also start eligible fill work. The work is single-flight and limited to three older pages per opening/manual refresh; exhausted history, page failure, unchanged oldest timestamp, the cache bound, explicit browsing and thread views stop it. Filled pages retain the newest bounded window and selected message; explicit older browsing retains its prior behavior. If Slack reports no older messages, unused space remains.
+
+`make fmt` and `make check` pass, including lint, vet, race tests, build and module hygiene/checksums. Offline regressions cover continuation from a recent result, preceding-page parameters, the automatic page budget, no progress, failure with retained page-recovery details, composing/browsing during a pending fill, and complete/cached/busy/full/thread ineligibility. Reviewed synthetic filled-history captures at 100×30, 60×20, 40×14 and 100×55. No screenshot message content entered fixtures or artifacts. No Slack API method/parameter/limit or scope changed; the existing preceding-page request is now also scheduled for bounded viewport filling. This does not establish whether the screenshot's real channel has older accessible messages or verify live fill latency. No commit, push or publication was performed.
+
+
+## Long loaded messages skipped at the newest viewport boundary
+
+The paired user screenshots established that preceding messages were already loaded: moving selection upward revealed a long message hidden in newest-following mode. The renderer computed the bottom window, then advanced its start to the next message whenever the partially visible message could fit in the full pane. A long preceding message plus two newer messages therefore became just the two newer messages and a large blank area. The earlier alignment/fill changes did not fix this rendering defect.
+
+Two synthetic viewport regressions failed against the prior implementation. Newest-following now retains the partial message tail and repeats its author with a continuation label, reserving that header's row so the newest content remains visible. Explicit browsing retains its existing alignment. `make fmt` and `make check` passed, including zero lint findings, vet, race tests, build and module checks. Reviewed long-message-tail captures at 100×30, 60×20, 40×14 and 100×55, and refreshed bottom-aligned/filled-history captures. Reproduction and captures use synthetic text only. These are offline rendering checks; no live Slack request, private fixture copy, commit, push or publication was performed.
+
+
+## Message padding and selected-message rail
+
+Message/context rows now reserve one blank column beside the right border before wrapping/truncation. A shared left gutter leaves a blank column beside the pane border and adds a teal rail across the selected header, wrapped prose, quotes, lists, code and internal blank lines. The rail stops before the inter-message separator. The existing arrow and selected header remain; unselected messages use the same gutter width so selection does not reflow text. Clipboard and underlying Slack content are unchanged.
+
+`make fmt` and `make check` pass, including zero lint findings, vet, race tests, build and module hygiene/checksums. Focused rendering regressions cover rail continuity across rich/wrapped text and blank lines, separator boundaries, matching unselected gutters, right-padding width and wide Unicode text. Existing anchor, newest/continuation, layout and draft regressions remain in the full suite. Visually inspected synthetic selection-rail text/PNG captures at 100×30, 60×20, 40×14 and 100×55, including selected-message continuation in narrow panes, shared frame separation and composer spacing. Refreshed the associated startup/history captures. This is offline cell-layout evidence, not physical-terminal or live Slack verification. No screenshot message bodies entered fixtures, and no commit, push or publication was performed.
+
+
+## Cursor browsing retained the old message-skip rule
+
+The subsequent tall-window screenshot showed the newest selected message near the top and blank space below it. The previous continuation fix applied only to `scroll == 0`; cursor navigation sets selection-following mode (`scroll == -1`), which still advanced past a partially visible long message. New regressions failed against that implementation for selection-following and a 100×55 window. The new tall-window case uses the real navigation key handler to move from the preceding message to newest.
+
+All browsing modes now retain the partial loaded message and repeated author. Newest/selection-following reserve the continuation header without clipping the selected tail; positive page scrolling retains its top anchor. Existing draft, selection and anchor regressions pass. `make fmt` and `make check` pass with zero lint findings, vet, race tests, build and module checks. Reviewed synthetic browsing-filled captures at 100×30, 60×20, 40×14 and 100×55, retaining the teal selected-message rail, right padding and composer. No additional network request is needed to reveal this already-loaded context. This is offline rendering/input evidence, not live Slack verification. No private screenshot body was copied, and no commit, push or publication was performed.
+
+
+## Message cursor selection without viewport movement
+
+The requested cursor behavior now separates moving the selected action target from moving the visible row window. Up/Down and j/k retain the viewport while the target fits; an offscreen target scrolls into view and an oversized target reveals its header. A named pinned-newest state pauses automatic following without shifting the original newest window; incoming results preserve the reading anchor and selected identity. The selected-message rail and shared wrapping widths remain unchanged.
+
+`make fmt` and `make check` pass, including zero lint findings, vet, race tests, build and module checks. New real-key-handler regressions cover three Up presses without viewport movement, revealing the next offscreen header, three visible Down moves without scrolling, the lower-edge transition, oversized selection, retained drafts and incoming history while pinned. Visually inspected synthetic cursor-window captures at 100×30, 60×20, 40×14 and 100×55; the large captures show the first of four visible short messages selected after three Up moves with all four still visible in their original rows. These are offline input/cell-layout checks, not physical-terminal or live Slack verification. No private screenshot content entered fixtures, and no commit, push or publication was performed.
+
+
+## Thread arrow and context-sensitive Enter shortcuts
+
+Right Arrow now opens the selected channel message's existing thread from message navigation; it is inert without replies, inside an existing thread or in sidebar focus. Enter uses the same existing-thread action and otherwise starts composing. i remains direct composition, t still opens any message thread, and Left Arrow reuses the Esc return-to-conversation path. Composer arrows and Enter keep text editing/newline behavior; modal/picker routing precedes these shortcuts and held navigation events cannot chain transitions.
+
+`make fmt` and `make check` pass with zero lint findings, vet, race tests, build and module hygiene/checksums. Real-key-message regressions cover Right/Enter opening, Left returning with both drafts retained, inert arrows without replies/sidebar focus, Enter composition fallback, actual composer cursor editing/newline and help consuming the shortcut. Refreshed and visually inspected keyboard-help text/PNG captures at 100×30, 60×20 and 40×14, with wrapped rows remaining scrollable. This is offline input/layout evidence; no live Slack request, private screenshot fixture copy, commit, push or publication was performed.
+
+
+## Local review findings: sparse anchors, cached DM names and continuation ownership
+
+The latest local review reported two P2 issues and one P3 issue. All four original probes failed before the fixes: unchanged-size resize moved sparse browsing text from row 1 to row 39, an incoming pending read moved pinned sparse content from row 39 to row 36, direct cached-DM verification lost its known name after optional profile failure, and a five-row window displayed a continuation header with no body from that message.
+
+Pinned geometry now records the first source row and leading display padding. Shared viewport bounds drive rendering, reading anchors, selection visibility and navigation; Page Up derives its starting point from the pinned source row. Direct verification uses the same participant-aware merge as other metadata updates, persisting the retained known name/handle when profile enrichment fails. The renderer re-evaluates continuation ownership after adjusting its start and omits separator-only context. Permanent regressions cover the original failures, persisted directory hints and Page Up from a pinned view; the previous tiny-window assertion was corrected to reject the spurious header.
+
+`make fmt` and `make check` pass with zero lint findings, vet, race tests, build and module hygiene/checksums. Visually inspected synthetic sparse-pinned captures at 100×30, 60×20, 40×14 and 100×55. These are offline input/layout/cache checks, not live Slack or physical-terminal evidence. The reviewed changes were uncommitted on main and no open PR existed when the resolve workflow was invoked. The operator subsequently authorized a new PR for the accumulated changes and review fixes. Version 0.9.0 is prepared and unpublished under the compatible-feature policy; the branch, commit, CI and independent follow-up review are reported in the PR receipt. No tag or release publication was authorized.
