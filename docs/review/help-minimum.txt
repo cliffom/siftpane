@@ -1,14 +1,14 @@
  siftpane       Fieldwork · demo · @you 
                                         
 ╭ [#╭ [Keyboard guide] ────────────╮───╮
-│ Ch│ NAVIGATE                     │er…│
-│▸ Y│ Ctrl+W  switch               │   │
-│  T│ workspace/account; inactive  │e  │
-│  b│ accounts pause reads         │   │
+│ Ch│ NAVIGATE                     │e… │
+│ │▸│ Ctrl+W  switch               │   │
+│ │ │ workspace/account; inactive  │   │
+│ │ │ accounts pause reads         │   │
 │   │ Tab  switch sidebar /        │   │
 │ ╭ │ messages                     │─╮ │
 │ │ │ j/k or ↑/↓  move / select    │ │ │
-│ │ │ 1–7/127 ↑/↓ · Esc close      │ │ │
+│ │ │ 1–7/129 ↑/↓ · Esc close      │ │ │
 │ ╰─╰──────────────────────────────╯─╯ │
 ╰──────────────────────────────────────╯
                                  ? help 

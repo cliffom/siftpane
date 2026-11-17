@@ -99,7 +99,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	// Participation shortcuts are ordinary text in either input widget. Only
 	// navigation ignores repeats, so held keys cannot repeat remote actions.
-	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack || k == keyKeep) {
+	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack || k == keyKeep || k == keyRight || k == keyLeft || k == keyCompose) {
 		return m, nil
 	}
 	return m.navigateKey(k)
@@ -146,6 +146,9 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 			m.focus = focusChannels
 		}
 	case keyWrite, keyCompose:
+		if k == keyCompose && m.canOpenExistingThread() {
+			return m, m.openThread()
+		}
 		if m.active != "" {
 			m.focus = focusCompose
 			return m, m.composer.Focus()
@@ -163,10 +166,10 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyNext, keyDown, keyPrevious, keyUp:
 		return m, m.moveSelection(k)
 	case keyPageUp:
-		m.scroll = max(0, m.scroll) + max(minScrollRows, m.height/scrollPageDivisor)
+		m.scroll = m.historyScrollOffset() + max(minScrollRows, m.height/scrollPageDivisor)
 		m.keepSelectionVisible()
 	case keyPageDown:
-		m.scroll = max(0, m.scroll-max(minScrollRows, m.height/scrollPageDivisor))
+		m.scroll = max(0, m.historyScrollOffset()-max(minScrollRows, m.height/scrollPageDivisor))
 		if m.scroll == 0 {
 			if t := m.cache[m.key()]; t != nil {
 				m.index = max(0, len(t.Messages)-1)
@@ -187,6 +190,14 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyRead:
 		m.read(m.active)
 		m.setStatus("Marked read locally; Slack read position unchanged", statusAction)
+	case keyRight:
+		if m.canOpenExistingThread() {
+			return m, m.openThread()
+		}
+	case keyLeft:
+		if m.thread != "" {
+			return m.navigateKey(keyEscape)
+		}
 	case keyThread:
 		return m, m.openThread()
 	case keyCopy:
@@ -219,11 +230,17 @@ func (m *Model) moveSelection(k string) tea.Cmd {
 			return cmd
 		}
 	} else {
-		t := m.line(m.key())
-		m.index = max(0, min(len(t.Messages)-1, m.index+delta))
-		m.scroll = -1
+		m.moveMessageSelection(delta)
 	}
 	return nil
+}
+
+func (m *Model) canOpenExistingThread() bool {
+	if m.focus != focusMessages || m.thread != "" {
+		return false
+	}
+	t := m.cache[m.key()]
+	return t != nil && m.index >= 0 && m.index < len(t.Messages) && t.Messages[m.index].Replies > 0
 }
 
 func (m *Model) openThread() tea.Cmd {

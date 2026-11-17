@@ -515,7 +515,7 @@ func (m *Model) fetchTrigger(t core.AttentionTrigger) tea.Cmd {
 	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[m.active], m.service, m.generations[m.active]
 	return func() tea.Msg {
-		p, err := svc.History(ctx, q)
+		p, err := svc.History(slack.ForegroundRead(ctx), q)
 		after := ""
 		if q.Thread != "" {
 			after = q.Target

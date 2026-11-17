@@ -182,7 +182,7 @@ func TestPacingPolicyPreservesMethodIntervals(t *testing.T) {
 		{methodDirectory, 3100 * time.Millisecond},
 	} {
 		t.Run(tc.method, func(t *testing.T) {
-			c := New("offline-test")
+			c := New(testPacingToken)
 			if c.http.Timeout != 20*time.Second {
 				t.Fatal("request timeout changed", c.http.Timeout)
 			}
@@ -200,6 +200,7 @@ func TestPacingPolicyPreservesMethodIntervals(t *testing.T) {
 }
 
 func TestSearchMetadataRetainsDisplayNameAndHandle(t *testing.T) {
+	const searchUser = "U_SEARCH"
 	var userCalls atomic.Int32
 	c := clientFor(t, func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -218,12 +219,15 @@ func TestSearchMetadataRetainsDisplayNameAndHandle(t *testing.T) {
 	if err != nil || len(page.Conversations) != 1 {
 		t.Fatal(page, err)
 	}
-	if userCalls.Load() != 0 || page.Conversations[0].User != "U_SEARCH" || page.Conversations[0].Name != "U_SEARCH" {
+	if userCalls.Load() != 0 || page.Conversations[0].User != searchUser || page.Conversations[0].Name != searchUser {
 		t.Fatal("directory waited for a user lookup", page, userCalls.Load())
 	}
 	conversation, err := c.Conversation(context.Background(), "D_SEARCH")
-	if err != nil || conversation.Name != "Maya at work" || conversation.Handle != "mchen" || conversation.Kind != core.ConversationDM || userCalls.Load() != 1 {
+	if err != nil || conversation.Name != searchUser || conversation.User != searchUser || conversation.Kind != core.ConversationDM || userCalls.Load() != 0 {
 		t.Fatal("display name/handle lost or lookup was not cached", conversation, err, userCalls.Load())
+	}
+	if _, err := c.Profile(context.Background(), searchUser); err != nil {
+		t.Fatal(err)
 	}
 	page, err = c.Directory(context.Background(), "")
 	if err != nil {

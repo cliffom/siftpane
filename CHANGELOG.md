@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 — 2026-11-17
+
+- Prioritize selected-view reads ahead of queued background reads without bypassing per-method pacing or server backoff. Reuse fresh account-isolated directory observations to defer inactive metadata validation until opening, and avoid repeating healthy inactive metadata requests on account switch-back.
+- Return saved DM metadata without waiting for profile lookups. Enrich participant names independently and preserve known cached names/handles through direct verification failures.
+- Fill short selected-channel views with bounded older-page requests when more history is available, keeping newest selected. Keep partial loaded messages visible in every scrolling mode rather than skipping long context at the top edge.
+- Move message selection through the visible window before scrolling at an edge. Preserve sparse viewport source rows and leading padding through resize and delayed results; keep paging relative to pinned context.
+- Add one column of right padding and a teal rail spanning the selected message, including wrapped content and internal blank lines.
+- Open existing threads with Right Arrow or context-sensitive Enter; return with Left Arrow. Preserve composer cursor editing, newline behavior and separate conversation/thread drafts.
+- No new Slack scopes, API parameters, persisted formats or automatic mutation retries. Large-team live latency and physical-terminal coverage remain outstanding; recorded checks are offline.
+
 ## 0.8.0 — 2026-11-16
 
 - Toggle Kept directly with navigation `K`; retain pending attention and guard recoverable drafts/sends when removing a row.
@@ -15,7 +25,7 @@
 - Open scrollable refresh/recovery details with `v`, retaining per-timeline freshness and separate recent/page failures after unrelated activity.
 - Replace a registered account’s token with `--login --account WORKSPACE_ID/USER_ID` in another terminal, then navigation `Ctrl+R` to reload in-session. Preserve drafts, failed/uncertain delivery and original in-flight sends; reject another account’s token and retain pacing/backoff. Environment sessions revalidate only the inherited override.
 - Improve first-run and missing-grant diagnostics; retain the internal-app user-token model and existing scopes/formats. No automatic send/reaction retry or disk draft persistence is added.
-- Prepare Apple silicon/macOS 26+ candidate packaging, checksums, macOS CI and a manual Developer ID signing/notarization/stapled-DMG workflow. A local signed/notarized/stapled candidate passed Gatekeeper and mounted CLI checks. Credentialed Actions, browser-downloaded installation and real Keychain/terminal/live acceptance remain pending; no 0.8 release is published.
+- Prepare Apple silicon/macOS 26+ candidate packaging, checksums, macOS CI and a manual Developer ID signing/notarization/stapled-DMG workflow. A local signed/notarized/stapled candidate passed Gatekeeper and mounted CLI checks. Version 0.8.0 was subsequently published with credentialed signing/notarization CI and downloaded-artifact verification; browser-download, clean-host and detailed live coverage remain distinct. See the published release receipt.
 
 ## 0.7.0 — 2026-11-15
 

@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -44,8 +45,8 @@ func TestStartupMetadataOrderAndEarlyHistory(t *testing.T) {
 				t.Fatal("metadata changed selection or draft")
 			}
 			sidebar := ansi.Strip(strings.Join(m.sidebar(60, 30), "\n"))
-			if step < len(order)-1 && len(m.sidebarConversations()) != 0 {
-				t.Fatal("uncached sidebar published partial batch")
+			if step < len(order)-1 && len(m.sidebarConversations()) != 1 {
+				t.Fatal("uncached sidebar did not retain only its usable active conversation")
 			}
 			if strings.Count(sidebar, "KEPT") > 1 || strings.Count(sidebar, "NEEDS ATTENTION") > 1 {
 				t.Fatal(sidebar)
@@ -197,5 +198,50 @@ func TestStoppedRestorationShowsRestartInsteadOfRetry(t *testing.T) {
 	rows := strings.Join(m.history(60, 12), "\n")
 	if !strings.Contains(rows, "restart") || strings.Contains(rows, "R retry") {
 		t.Fatal(rows)
+	}
+}
+
+func TestLargeCachedStartupDefersInactiveMetadata(t *testing.T) {
+	st, err := store.Open(filepath.Join(t.TempDir(), testConfigName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := core.Identity{Workspace: startupWorkspace, User: "Ucached"}
+	cs := make([]core.Conversation, selectionLimit)
+	for i := range cs {
+		cid := fmt.Sprintf("C%03d", i)
+		cs[i] = core.Conversation{ID: cid, Name: cid, Kind: core.ConversationChannel}
+		st.AccountWorkspace(id).Included[cid] = true
+	}
+	if err := st.SaveConversations(id, cs); err != nil {
+		t.Fatal(err)
+	}
+	uncached := New(context.Background(), demo.New(), id, st, false)
+	uncached.Init()
+	if len(uncached.metadataBusy) != selectionLimit {
+		t.Fatal("old summaries without fresh observations skipped validation")
+	}
+	if err := st.SaveDirectory(id, cs); err != nil {
+		t.Fatal(err)
+	}
+	m := New(context.Background(), demo.New(), id, st, false)
+	m.Init()
+	if len(m.metadataBusy) != 1 || !m.metadataBusy[m.active] || len(m.metadataState) != selectionLimit {
+		t.Fatal("cached startup launched inactive metadata reads", m.metadataBusy)
+	}
+	for _, c := range cs {
+		if c.ID != m.active && m.metadataState[c.ID] != metadataDeferred {
+			t.Fatal("inactive cached metadata was not deferred", c.ID)
+		}
+	}
+	if len(m.sidebarConversations()) != selectionLimit || !m.cache[m.key()].Busy {
+		t.Fatal("cached sidebar or immediate message request unavailable")
+	}
+	m.composer.SetValue(mainDraft)
+	old := m.active
+	target := cs[len(cs)-1].ID
+	m.selectConversation(target)
+	if m.drafts[old] != mainDraft || !m.metadataBusy[target] || m.metadataState[target] == metadataDeferred || !m.cache[target].Busy {
+		t.Fatal("opening deferred metadata blocked history or lost the draft")
 	}
 }

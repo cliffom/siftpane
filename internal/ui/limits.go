@@ -4,6 +4,7 @@ import "time"
 
 // Session resource bounds; drafts are deliberately outside the timeline cache.
 const (
+	historyFillPages   = 3                // Maximum automatic older channel pages per opening or manual refresh.
 	directoryAutoPages = 100              // Maximum directory pages per picker opening or explicit continuation.
 	profileLookupLimit = 512              // Name lookups attempted per focused view/manual refresh.
 	cacheLimit         = 300              // Messages per timeline.

@@ -51,6 +51,8 @@ func (m *Model) syncProfiles() {
 	}
 	anchor := m.captureReadingAnchor()
 	m.profiles = next
+	m.enrichConversationNames(m.directory)
+	m.enrichConversationNames(m.startupSidebar)
 	m.restoreReadingAnchor(anchor)
 	m.preserveVisibleSelection()
 	if changed || m.profileCacheErr != "" {
@@ -67,37 +69,52 @@ func (m *Model) profileCmd() tea.Cmd {
 		return nil
 	}
 	m.syncProfiles()
-	line := m.cache[m.key()]
-	if line == nil {
+	if len(m.profileAttempted) >= profileLookupLimit {
 		return nil
 	}
-	for i := len(line.Messages) - 1; i >= 0; i-- {
-		msg := line.Messages[i]
-		ids := []string{msg.User}
-		ids = append(ids, slack.MentionIDs(msg.Text)...)
-		for _, id := range ids {
-			if id == "" || m.profiles[id].Name != "" || m.profileAttempted[id] {
-				continue
+	id := m.nextProfileID()
+	if id == "" {
+		return nil
+	}
+	m.profileAttempted[id] = true
+	ctx, cancel := context.WithCancel(m.contexts[m.active])
+	m.profileCancel = cancel
+	m.profileBusy = true
+	m.profileKey = m.key()
+	key, gen, lookupGen := m.key(), m.generations[m.active], m.profileLookupGeneration
+	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return profileResult{ID: id, Key: key, Generation: gen, LookupGeneration: lookupGen, Err: err}
+		}
+		p, err := svc.Profile(slack.ForegroundRead(ctx), id)
+		return profileResult{ID: id, Key: key, Generation: gen, LookupGeneration: lookupGen, Profile: p, Err: err}
+	}
+}
+
+func (m *Model) needsProfile(id string) bool {
+	return id != "" && m.profiles[id].Name == "" && !m.profileAttempted[id]
+}
+
+func (m *Model) nextProfileID() string {
+	for _, c := range m.directory {
+		if c.ID == m.active && c.Kind == core.ConversationDM && m.needsProfile(c.User) {
+			return c.User
+		}
+	}
+	if line := m.cache[m.key()]; line != nil {
+		for i := len(line.Messages) - 1; i >= 0; i-- {
+			msg := line.Messages[i]
+			if m.needsProfile(msg.User) {
+				return msg.User
 			}
-			if len(m.profileAttempted) >= profileLookupLimit {
-				return nil
-			}
-			m.profileAttempted[id] = true
-			ctx, cancel := context.WithCancel(m.contexts[m.active])
-			m.profileCancel = cancel
-			m.profileBusy = true
-			m.profileKey = m.key()
-			key, gen, lookupGen := m.key(), m.generations[m.active], m.profileLookupGeneration
-			return func() tea.Msg {
-				if err := ctx.Err(); err != nil {
-					return profileResult{ID: id, Key: key, Generation: gen, LookupGeneration: lookupGen, Err: err}
+			for _, id := range slack.MentionIDs(msg.Text) {
+				if m.needsProfile(id) {
+					return id
 				}
-				p, err := svc.Profile(ctx, id)
-				return profileResult{ID: id, Key: key, Generation: gen, LookupGeneration: lookupGen, Profile: p, Err: err}
 			}
 		}
 	}
-	return nil
+	return ""
 }
 
 func (m *Model) updateProfile(v profileResult) (tea.Model, tea.Cmd) {
@@ -122,4 +139,15 @@ func (m *Model) updateProfile(v profileResult) (tea.Model, tea.Cmd) {
 	}
 	m.syncProfiles()
 	return m, m.profileCmd()
+}
+
+// Keep existing useful labels while uncached DM identities resolve separately.
+func (m *Model) enrichConversationNames(cs []core.Conversation) {
+	for i, c := range cs {
+		if c.Kind == core.ConversationDM {
+			if p := m.profiles[c.User]; p.Name != "" {
+				cs[i].Name, cs[i].Handle = p.Name, p.Handle
+			}
+		}
+	}
 }

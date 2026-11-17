@@ -11,7 +11,7 @@ import (
 // Both clients share method deadlines and name caches under the same lock, so
 // in-flight writes keep their original token and Retry-After survives reload.
 func (c *Client) Reauthorize(ctx context.Context, token string, expected core.Identity) (*Client, core.Identity, error) {
-	next := &Client{token: token, base: c.base, http: c.http, mu: c.mu, next: c.next, names: c.names, profilesInFlight: c.profilesInFlight}
+	next := &Client{token: token, base: c.base, http: c.http, mu: c.mu, next: c.next, names: c.names, profilesInFlight: c.profilesInFlight, requests: c.requests}
 	id, err := next.Identity(ctx)
 	if err != nil {
 		return nil, core.Identity{}, err

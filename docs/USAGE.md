@@ -9,7 +9,9 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Messages | `j/k`, `↓/↑` | Select a message; scroll it into view |
 | Messages | `PgUp/PgDn` | Scroll text |
 | Navigate | `G`, `End` | Newest messages and mark read locally |
-| Navigate | `i`, `Enter` | Compose |
+| Navigate | `i` | Compose |
+| Messages | `Enter` | Open an existing thread when the selected message has replies; otherwise compose |
+| Messages | `→` | Open the selected message’s existing thread; no action without replies |
 | Compose | `Ctrl+S` | Send (turn off terminal XON/XOFF with `stty -ixon` if intercepted) |
 | Compose | `Enter` | Newline |
 | Compose | `Esc` | Keep draft, return to navigation |
@@ -34,7 +36,7 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Picker | `Ctrl+R` | Reload first directory page |
 | Picker | `Esc` | Close |
 | Navigate | `t` | Open selected message's thread |
-| Thread, navigating | `Esc` | Return to conversation, retain thread draft |
+| Thread, navigating | `←`, `Esc` | Return to conversation, retain thread draft |
 | Navigate | `o` | Load older history; in threads, load next reply page |
 | Navigate | `R` | Refresh current conversation/thread |
 | Navigate | `m` | Mark locally observed messages read |
@@ -109,3 +111,9 @@ From navigation, `v` opens scrollable refresh/recovery details. Inspect retained
 For saved accounts, `--login --account WORKSPACE_ID/USER_ID` in another terminal replaces only that account’s credential; `Ctrl+R` in navigation reloads it in the running session. In a picker, Ctrl+R continues to reload the directory; composing, help, Workspaces and recovery details do not trigger credential reload. The [installation guide](INSTALLATION.md#connect-and-recover) covers identity refusal, locked Keychain and environment-override limits. No send/reaction retry happens automatically.
 
 Older-page loads, edits before the reading anchor, resize and author-name enrichment retain the visible message/row where the bounded cache and available height permit. A deleted selected message falls forward to the next retained timestamp, or the last retained message; cache eviction uses the nearest retained context. Scroll keys keep action selection in the visible window; `G` resumes newest following. A large thread retains its available root plus at most 299 recent retained replies; the thread title remains context even when opening directly at an older trigger without the root body. This is a bounded view rather than an archive.
+
+When following newest in a channel, Siftpane fetches a few older pages automatically if the message pane has unused space. The latest message stays above the composer. Use `o` to load further history explicitly; threads continue to use explicit next-page loading. Empty space can remain when Slack has no more history, a page fails, or automatic loading reaches its bound.
+
+Up/Down (or `j`/`k`) select messages within the visible window before scrolling. The pane moves when the next message crosses an edge or needs room for a long body. Selecting an earlier message pauses newest-following; `G` resumes it.
+
+Thread arrows apply only in message navigation. In the sidebar, Right Arrow does not open a selected message’s thread. In the composer, Left/Right keep editing text and Enter inserts a newline. Within an opened thread, Enter composes a reply; `t` remains available to open a thread on a message without existing replies.

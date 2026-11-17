@@ -22,34 +22,37 @@ const (
 
 // Layout measurements are terminal columns/rows, including shared edges.
 const (
-	sidebarBreakpoint      = 76
-	sidebarColumns         = 23
-	compactHeight          = 22
-	composerRows           = 3
-	compactComposerRows    = 2
-	chromeRows             = 3 // Header, blank separator, status with help entry.
-	frameRows              = 2 // Top and bottom shared frame.
-	frameColumns           = 2
-	composerBorderRows     = 2
-	contextRows            = 1
-	composerInsetColumns   = 4 // Outer padding plus inset border.
-	composerPaddingColumns = 2
-	minInputColumns        = 5
-	helpInsetColumns       = 4 // Transient frame and text padding.
-	helpFooterRows         = 1 // Scroll position and controls, outside scrollable text.
-	focusedTitleColumns    = 4 // Two brackets and surrounding spaces.
-	scrollPageDivisor      = 3
-	minScrollRows          = 3
-	modalColumns           = 72
-	accountNameColumns     = 2 // Workspace and username share selector name space.
-	modalRows              = 16
-	modalMarginColumns     = 4
-	modalMarginRows        = 3
-	modalMinRows           = 10
-	modalReservedRows      = 8 // Frame, input, scope hint, action, coverage, state, directory keys.
-	sidebarRestorationRows = 1 // Keep recovery visible even when the list fills.
-	sidebarMarkerColumns   = 4 // Gap, unread slot, gap, draft slot.
-	sidebarSelectionRows   = 2 // At most two lifecycle group headings.
+	historyRightPaddingColumns = 1 // Keep message/context text off the outer border.
+	historyRailColumns         = 2 // A blank column separates the selection rail from the pane border.
+	messagePaddingColumns      = 2 // Text inset inside the shared message gutter.
+	sidebarBreakpoint          = 76
+	sidebarColumns             = 23
+	compactHeight              = 22
+	composerRows               = 3
+	compactComposerRows        = 2
+	chromeRows                 = 3 // Header, blank separator, status with help entry.
+	frameRows                  = 2 // Top and bottom shared frame.
+	frameColumns               = 2
+	composerBorderRows         = 2
+	contextRows                = 1
+	composerInsetColumns       = 4 // Outer padding plus inset border.
+	composerPaddingColumns     = 2
+	minInputColumns            = 5
+	helpInsetColumns           = 4 // Transient frame and text padding.
+	helpFooterRows             = 1 // Scroll position and controls, outside scrollable text.
+	focusedTitleColumns        = 4 // Two brackets and surrounding spaces.
+	scrollPageDivisor          = 3
+	minScrollRows              = 3
+	modalColumns               = 72
+	accountNameColumns         = 2 // Workspace and username share selector name space.
+	modalRows                  = 16
+	modalMarginColumns         = 4
+	modalMarginRows            = 3
+	modalMinRows               = 10
+	modalReservedRows          = 8 // Frame, input, scope hint, action, coverage, state, directory keys.
+	sidebarRestorationRows     = 1 // Keep recovery visible even when the list fills.
+	sidebarMarkerColumns       = 4 // Gap, unread slot, gap, draft slot.
+	sidebarSelectionRows       = 2 // At most two lifecycle group headings.
 )
 
 func fit(s string, w int) string {

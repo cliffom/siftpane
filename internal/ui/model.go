@@ -14,6 +14,8 @@ import (
 )
 
 type timeline struct {
+	FillPages          int
+	FillBefore         string
 	replyCursors       []string
 	ReplyThrough       string // Highest timestamp accepted from fetched reply pages, never sends.
 	After              string
@@ -38,6 +40,7 @@ type historyResult struct {
 	Generation  uint64
 	Page        core.Page
 	Older       bool
+	Fill        bool
 	Err         error
 }
 type conversationResult struct {
@@ -110,6 +113,7 @@ type Model struct {
 	metadataErr      string
 	metadataBusy     map[string]bool
 	metadataFailed   map[string]bool
+	metadataState    map[string]metadataValidation
 	startupSidebar   []core.Conversation
 	startupRestoring bool
 	service          core.Service
@@ -161,6 +165,7 @@ type Model struct {
 
 	composer                     textarea.Model
 	width, height, index, scroll int
+	pinnedHistory                *historyViewportPosition
 
 	status     string
 	statusKind statusKind
@@ -212,6 +217,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		service:        s,
 		metadataBusy:   map[string]bool{},
 		metadataFailed: map[string]bool{},
+		metadataState:  map[string]metadataValidation{},
 		identity:       id,
 		store:          st,
 		prefs:          p,
@@ -256,16 +262,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 			m.profiles[p.ID] = p
 		}
 	}
-	m.directoryCached = make(map[string]bool)
-	for _, c := range st.Directory(id) {
-		m.replaceConversation(c)
-		m.directoryCached[c.ID] = true
-	}
-	for _, c := range st.Conversations(id) {
-		if m.included[c.ID] {
-			m.replaceConversation(c)
-		}
-	}
+	m.restoreConversationMetadata()
 	m.restoreMessages()
 	if cs := m.selected(); len(cs) > 0 {
 		for _, c := range cs {
@@ -292,7 +289,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{m.directoryCmd(""), m.nextTick(), m.checkMentions(time.Now()), m.checkFollowed(time.Now())}
 	for cid, included := range m.included {
-		if included {
+		if included && (cid == m.active || m.metadataState[cid] != metadataDeferred) {
 			cmds = append(cmds, m.conversationCmd(cid))
 		}
 	}
@@ -308,13 +305,8 @@ func (m *Model) Init() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch v := msg.(type) {
 	case tea.WindowSizeMsg:
-		anchor := m.captureReadingAnchor()
-		m.width = v.Width
-		m.height = v.Height
-		m.resize()
-		m.restoreReadingAnchor(anchor)
-		m.preserveVisibleSelection()
-		return m, nil
+		m.resizeWindow(v)
+		return m, m.fillHistory()
 	case conversationResult:
 		return m.updateConversation(v)
 	case directoryResult:
@@ -364,4 +356,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, c
 	}
 	return m, nil
+}
+
+// Layout updates are local-only so inactive account sessions can resize safely.
+func (m *Model) resizeWindow(size tea.WindowSizeMsg) {
+	anchor := m.captureReadingAnchor()
+	m.width, m.height = size.Width, size.Height
+	m.resize()
+	m.restoreReadingAnchor(anchor)
+	m.preserveVisibleSelection()
 }

@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you 
+                                                            
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Channel                                                  │
+│    Maya  Nov 13 08:58 · continued                        │
+│    Earlier context that should remain visible.           │
+│    Earlier context that should remain visible.           │
+│                                                          │
+│    Leo  Nov 13 09:00                                     │
+│    Recent update.                                        │
+│                                                          │
+│ │▸ Nora  Nov 13 09:01                                    │
+│ │  Newest update.                                        │
+│                                                          │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+                                                     ? help 

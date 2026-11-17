@@ -109,48 +109,12 @@ type Client struct {
 	next             map[string]time.Time
 	names            map[string]core.Profile
 	profilesInFlight map[string]*profileCall
+	requests         *requestQueue
 }
 
 // New constructs a user-token client without making network requests.
 func New(token string) *Client {
-	return &Client{mu: &sync.Mutex{}, token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]core.Profile{}, profilesInFlight: map[string]*profileCall{}}
-}
-
-// Pacing is per method and workspace. A 429 blocks that method, including manual calls.
-func (c *Client) wait(ctx context.Context, method string) error {
-	for {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		c.mu.Lock()
-		delay := time.Until(c.next[method])
-		if delay <= 0 {
-			gap := methodInterval
-			if method == methodUser {
-				gap = userLookupInterval
-			}
-			if method == methodDirectory {
-				gap = directoryInterval
-			}
-			if method == methodReactionRemove {
-				gap = reactionRemoveInterval
-			}
-			if method == methodMentions {
-				gap = mentionInterval
-			}
-			c.next[method] = time.Now().Add(gap)
-			c.mu.Unlock()
-			return nil
-		}
-		c.mu.Unlock()
-		t := time.NewTimer(delay)
-		select {
-		case <-ctx.Done():
-			t.Stop()
-			return ctx.Err()
-		case <-t.C:
-		}
-	}
+	return &Client{mu: &sync.Mutex{}, token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]core.Profile{}, profilesInFlight: map[string]*profileCall{}, requests: newRequestQueue()}
 }
 
 func (c *Client) call(ctx context.Context, method string, v url.Values, out any) error {
@@ -386,13 +350,15 @@ func (c *Client) Conversation(ctx context.Context, id string) (core.Conversation
 	}
 	if v.IM {
 		kind = core.ConversationDM
-		profile, _ := c.Profile(ctx, v.User)
+		c.mu.Lock()
+		profile := c.names[v.User]
+		c.mu.Unlock()
 		name, handle = profile.Name, profile.Handle
 		if name == "" {
 			name = v.User
 		}
 	}
-	return core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members}, nil
+	return core.Conversation{ID: v.ID, Name: name, Handle: handle, User: v.User, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members}, nil
 }
 
 // paramChannel is the shared Web API conversation parameter.

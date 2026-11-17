@@ -6,7 +6,7 @@ A focused Slack client for your terminal. Choose the channels, DMs, and group DM
 
 ## Try it
 
-The 0.8 download target is **Apple silicon, macOS 26+**, with Developer ID signing/notarization support. Download the signed, notarized disk image from the [0.8.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.8.0); see [installation and upgrades](docs/INSTALLATION.md).
+The 0.9 download target is **Apple silicon, macOS 26+**, with Developer ID signing/notarization support. Download the signed, notarized disk image from the [0.9.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.9.0); see [installation and upgrades](docs/INSTALLATION.md).
 
 For source builds, use Go **1.26.7 or newer**. From this checkout:
 
@@ -57,7 +57,9 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 | `i` | Start composing |
 | `Ctrl+S` | Send; `Enter` inserts a newline |
 | `Esc` | Keep your draft and return to navigation |
-| `t` | Open the selected message's thread |
+| Messages `→`, `Enter` | Open the selected message’s existing thread |
+| `t` | Open any selected message’s thread |
+| Thread `←`, `Esc` | Return to the conversation |
 | `o` | Load older messages or the next thread page |
 | `?` / `F1` | Open scrollable keyboard help (`F1` also works while composing) |
 | `q` | Quit; warns if you have unsent text |

@@ -37,6 +37,10 @@ func (m *Model) directoryCmd(cursor string) tea.Cmd {
 }
 
 func (m *Model) fetch(key string, older bool) tea.Cmd {
+	return m.fetchHistory(key, older, false)
+}
+
+func (m *Model) fetchHistory(key string, older, fill bool) tea.Cmd {
 	cid, thread := split(key)
 	if !m.canRead(cid) || m.stopped {
 		return nil
@@ -75,6 +79,9 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 	resumeAfter := t.ReplyThrough
 	epoch := m.cacheEpoch
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
+	if key == m.key() {
+		ctx = slack.ForegroundRead(ctx)
+	}
 	return func() tea.Msg {
 		if err := ctx.Err(); err != nil {
 			return historyResult{Key: key, Generation: gen, Err: err}
@@ -88,7 +95,7 @@ func (m *Model) fetch(key string, older bool) tea.Cmd {
 		if q.Target != "" && q.Thread != "" {
 			after = q.Target
 		}
-		return historyResult{CacheEpoch: epoch, Key: key, Generation: gen, Page: p, Older: older, Err: err, QueryCursor: q.Cursor, QueryAfter: after, Target: q.Target}
+		return historyResult{CacheEpoch: epoch, Key: key, Generation: gen, Page: p, Older: older, Fill: fill, Err: err, QueryCursor: q.Cursor, QueryAfter: after, Target: q.Target}
 	}
 }
 
@@ -96,9 +103,13 @@ func (m *Model) conversationCmd(cid string) tea.Cmd {
 	if m.metadataBusy[cid] || !m.included[cid] || m.stopped {
 		return nil
 	}
+	m.metadataState[cid] = metadataUnvalidated
 	m.metadataBusy[cid] = true
 	delete(m.metadataFailed, cid)
 	ctx, svc, gen := m.contexts[cid], m.service, m.generations[cid]
+	if cid == m.active {
+		ctx = slack.ForegroundRead(ctx)
+	}
 	return func() tea.Msg {
 		if err := ctx.Err(); err != nil {
 			return conversationResult{ID: cid, Generation: gen, Err: err}
@@ -109,6 +120,7 @@ func (m *Model) conversationCmd(cid string) tea.Cmd {
 }
 
 func (m *Model) refresh() tea.Cmd {
+	m.resetHistoryFill()
 	m.profileAttempted = map[string]bool{}
 	m.discoveryNext = time.Time{}
 	cmds := []tea.Cmd{m.fetch(m.key(), false), m.profileCmd(), m.checkMentions(time.Now()), m.retryFollowed()}

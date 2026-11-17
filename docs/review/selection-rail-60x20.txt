@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you 
+                                                            
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Channel                                                  │
+│ │▸ Leo  Nov 13 09:01 · continued                         │
+│ │  paragraph without sitting against the pane border.    │
+│ │                                                        │
+│ │  │ Quoted context stays distinct.                      │
+│ │  • A useful detail                                     │
+│ │  ┌ code                                                │
+│ │  │ literal code                                        │
+│ │  │ second line                                         │
+│ │  └                                                     │
+│                                                          │
+│ ╭ Message ─────────────────────────────────────────────╮ │
+│ │ › Write a message…                                   │ │
+│ │                                                      │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+                                                     ? help 

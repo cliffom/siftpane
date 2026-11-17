@@ -275,7 +275,13 @@ func TestHistoryViewportStartsWithAuthor(t *testing.T) {
 			for _, scroll := range []int{0, 2, 5, -1} {
 				m.scroll = scroll
 				rows := m.history(w, h)
-				first := ansi.Strip(rows[0])
+				first := ""
+				for _, row := range rows {
+					if text := strings.TrimSpace(ansi.Strip(row)); text != "" {
+						first = text
+						break
+					}
+				}
 				if !strings.Contains(first, "Nov 13") {
 					t.Fatalf("viewport %dx%d scroll %d starts without author: %q", w, h, scroll, first)
 				}
@@ -290,7 +296,7 @@ func TestOversizedMessageKeepsAuthorWhileScrolling(t *testing.T) {
 	m.index = 0
 	m.scroll = 5
 	rows := m.history(50, 8)
-	if !strings.Contains(ansi.Strip(rows[0]), demoAuthor) || !strings.Contains(ansi.Strip(rows[0]), "continued") {
+	if !strings.Contains(ansi.Strip(rows[0]), demoAuthor) || !strings.Contains(ansi.Strip(rows[0]), testContinuationLabel) {
 		t.Fatal("missing continuation context", rows[0])
 	}
 	if !strings.Contains(strings.Join(rows[1:], "\n"), "A longer message line.") {

@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
+│▸ #studio              │    Maya  Nov 13 08:40 · continued                                        │
+│                       │    Earlier context.                                                      │
+│                       │    Earlier context.                                                      │
+│                       │    Earlier context.                                                      │
+│                       │    Earlier context.                                                      │
+│                       │    Earlier context.                                                      │
+│                       │                                                                          │
+│                       │ │▸ Reviewer 1  Nov 13 08:56                                              │
+│                       │ │  A visible update.                                                     │
+│                       │                                                                          │
+│                       │    Reviewer 2  Nov 13 08:56                                              │
+│                       │    A visible update.                                                     │
+│                       │                                                                          │
+│                       │    Reviewer 3  Nov 13 08:56                                              │
+│                       │    A visible update.                                                     │
+│                       │                                                                          │
+│                       │    Reviewer 4  Nov 13 08:56                                              │
+│                       │    A visible update.                                                     │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+                                                                                             ? help 

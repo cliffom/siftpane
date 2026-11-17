@@ -33,22 +33,17 @@ func (m *Model) updateConversation(v conversationResult) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	delete(m.metadataFailed, v.ID)
-	delete(m.directoryCached, v.ID)
-	for i, c := range m.directory {
-		if c.ID == v.ID {
-			m.directory[i] = v.Conversation
-			m.reselectChoice(pickedID)
-			m.saveMetadata()
-			return m, nil
-		}
-	}
-	m.directory = append(m.directory, v.Conversation)
-	m.saveMetadata()
+	m.metadataState[v.ID] = metadataValidated
+	observed := m.mergeDirectoryConversation(v.Conversation)
+	m.saveDirectory([]core.Conversation{observed})
 	m.reselectChoice(pickedID)
+	m.saveMetadata()
 	if m.active == "" && m.attention.Kept[v.ID] {
-		return m, m.selectConversation(v.ID)
+		cmd := m.selectConversation(v.ID)
+		m.publishStartupConversation(v.ID)
+		return m, cmd
 	}
-	return m, nil
+	return m, m.profileCmd()
 }
 
 func (m *Model) updateDirectory(v directoryResult) (tea.Model, tea.Cmd) {
@@ -107,9 +102,7 @@ func (m *Model) mergeDirectoryConversation(c core.Conversation) core.Conversatio
 		if old.ID != c.ID {
 			continue
 		}
-		if unresolvedDirectoryName(c) && old.Kind == core.ConversationDM && (old.User == "" || old.User == c.User) && old.Name != "" && old.Name != old.ID && old.Name != old.User && old.Name != c.User {
-			c.Name, c.Handle = old.Name, old.Handle
-		}
+		c = withKnownDMName(c, old)
 		m.directory[i] = c
 		return c
 	}

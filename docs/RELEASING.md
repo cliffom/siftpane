@@ -25,7 +25,7 @@ Versions `0.6.0` and **0.7.0** are published. The 0.7 release added compatible m
 
 ## macOS 0.8 candidates and signing
 
-**0.8.0** is prepared and unpublished: compatible in-session credential recovery, read/pagination hardening, setup diagnostics and macOS packaging warrant a minor version. No new persistence schema, scopes, OAuth grant or migration beyond 0.7 is introduced. The supported download target is Apple silicon on macOS 26+. Additional platforms are deferred.
+**0.8.0** is published; its implementation included: compatible in-session credential recovery, read/pagination hardening, setup diagnostics and macOS packaging warrant a minor version. No new persistence schema, scopes, OAuth grant or migration beyond 0.7 is introduced. The supported download target is Apple silicon on macOS 26+. Additional platforms are deferred.
 
 `bash scripts/package-macos.sh --unsigned OUTPUT` builds an explicitly unsigned development archive plus checksum, version-checks the executable and inspects its arm64 architecture/macOS 26 minimum. macOS CI runs this without credentials. It is not a distributable signed release.
 
@@ -74,3 +74,7 @@ Before publication, run the signed workflow against the exact authorized release
 
 
 A local **signed, Apple-accepted, stapled 0.8.0 candidate** from source `6d0234e` has passed Gatekeeper, checksum and read-only mounted CLI checks; see [the exact receipt](VERIFICATION.md#local-signed-and-notarized-080-candidate). This is local candidate verification, not a published release or credentialed Actions run. Keep the source revision attached to the evidence and rebuild from the exact authorized release revision before publishing. The local siftpane-notary profile is configured; all six repository secrets are configured for the credentialed CI run.
+
+## Release 0.9.0
+
+Version **0.9.0** adds compatible loading, viewport, message-selection and thread-navigation improvements. The compatible UI features warrant a minor release under the pre-1.0 policy. Existing configuration, directory/profile/message caches, account identities and Slack grants remain compatible; the new pinned viewport state is memory-only. The Apple silicon/macOS 26+ distribution target remains unchanged. Release execution is authorized for PR #35; verify post-merge CI and signed artifacts from its exact merge commit before publication. Live large-team latency is not established by offline request-order and cache-count tests.

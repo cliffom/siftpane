@@ -1,6 +1,6 @@
 # Install and upgrade
 
-The 0.8 download target is **Apple silicon (arm64), macOS 26 or later**. Intel macOS, Linux and Windows are outside the supported download matrix. Source builds remain possible but do not establish platform support. The [0.8.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.8.0) provides the signed, notarized disk image and checksum.
+The 0.9 download target is **Apple silicon (arm64), macOS 26 or later**. Intel macOS, Linux and Windows are outside the supported download matrix. Source builds remain possible but do not establish platform support. The [0.9.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.9.0) provides the signed, notarized disk image and checksum.
 
 ## Download installation
 
@@ -32,8 +32,8 @@ For a saved account that expires, is revoked, or needs new grants:
 
 A wrong-account token is refused. A failed validation/store write leaves recovery available. In-flight sends use their original service and may finish; credential replacement does not resend them. Inspect Slack before explicitly retrying uncertain delivery. Environment-override sessions can revalidate only the inherited process environment token; changing the parent shell environment cannot replace it. To use a different environment token, copy drafts before restarting, or use a registered account for in-session replacement. No environment credential is persisted automatically.
 
-## Upgrade from 0.7
+## Upgrade from 0.7 or 0.8
 
-Copy your configuration before upgrading and exit the old process after sending or copying any drafts. Drafts/outbox remain memory-only. Install the new binary in your chosen path and check `--version`; do not run old/new clients concurrently against one config. Existing registered identities, preferences, durable dismissals/follows and opted-in message-cache consent retain their formats. No new Slack scopes or OAuth model are introduced by 0.8. See [configuration](CONFIGURATION.md) for paths and historical 0.7 migration restrictions.
+Copy your configuration before upgrading and exit the old process after sending or copying any drafts. Drafts/outbox remain memory-only. Install the new binary in your chosen path and check `--version`; do not run old/new clients concurrently against one config. Existing registered identities, preferences, durable dismissals/follows and opted-in message-cache consent retain their formats. No new Slack scopes or OAuth model are introduced by 0.8 or 0.9. See [configuration](CONFIGURATION.md) for paths and historical 0.7 migration restrictions.
 
 Physical-terminal, Keychain and live Slack acceptance must be recorded on the supported hosts before declaring the 0.8 release accepted; see [the acceptance protocol](ACCEPTANCE-0.8.md).

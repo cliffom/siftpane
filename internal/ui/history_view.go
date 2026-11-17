@@ -24,32 +24,32 @@ func stamp(ts string) string {
 func (m *Model) history(w, h int) []string {
 	if m.active == "" {
 		if len(m.metadataBusy) > 0 && !m.stopped {
-			return padRows(nil, w, h)
+			return padHistoryRows(nil, w, h)
 		}
 		if text := m.restorationState(); text != "" {
 			rows := []string{"", " " + text}
 			if !m.stopped {
 				rows = append(rows, " "+keyLabel(keyRefresh)+" retry saved conversations")
 			}
-			return padRows(rows, w, h)
+			return padHistoryRows(rows, w, h)
 		}
-		return padRows([]string{"", " Your channels. Your people.", " Your terminal.", "", " p  choose what belongs here", "", " Only included conversations refresh."}, w, h)
+		return padHistoryRows([]string{"", " Your channels. Your people.", " Your terminal.", "", " p  choose what belongs here", "", " Only included conversations refresh."}, w, h)
 	}
 	t := m.cache[m.key()]
 	if t != nil && !t.Loaded && t.Err != nil {
 		if m.stopped {
-			return padRows([]string{"", " Credentials expired/revoked.", " " + m.credentialRecovery()}, w, h)
+			return padHistoryRows([]string{"", " Credentials expired/revoked.", " " + m.credentialRecovery()}, w, h)
 		}
-		return padRows([]string{"", " Could not load messages.", " " + slack.Safe(t.Err.Error()), " " + keyLabel(keyRefresh) + " retry / refresh"}, w, h)
+		return padHistoryRows([]string{"", " Could not load messages.", " " + slack.Safe(t.Err.Error()), " " + keyLabel(keyRefresh) + " retry / refresh"}, w, h)
 	}
 	if t == nil || !t.Loaded {
-		return padRows(nil, w, h)
+		return padHistoryRows(nil, w, h)
 	}
 	rows, starts, selectedStart, selectedEnd := m.historyRows(t, w)
 	if len(rows) == 0 {
-		rows = []string{" No messages yet. i to write the first one."}
+		return padHistoryRows([]string{" No messages yet. i to write the first one."}, w, h)
 	}
-	return historyWindow(rows, starts, selectedStart, selectedEnd, w, h, m.scroll)
+	return renderHistoryWindow(rows, m.historyViewport(rows, starts, selectedStart, selectedEnd, w, h), w, h)
 }
 
 func (m *Model) historyRows(t *timeline, w int) ([]string, []int, int, int) {
@@ -69,18 +69,60 @@ func (m *Model) historyRows(t *timeline, w int) ([]string, []int, int, int) {
 	return rows, starts, selectedStart, selectedEnd
 }
 
+// historyViewportPosition separates source rows from leading blank display rows.
+// Keeping both is necessary to freeze a sparse bottom-aligned viewport.
+type historyViewportPosition struct {
+	start, padding, height int
+}
+
+type historyViewport struct {
+	historyViewportPosition
+	continuation string
+}
+
+func (v historyViewport) end(rowCount, height int) int {
+	available := max(0, height-v.padding)
+	if v.continuation != "" {
+		available = max(0, available-1)
+	}
+	return min(rowCount, v.start+available)
+}
+
+func defaultHistoryViewport(rows []string, starts []int, selectedStart, selectedEnd, width, height, scroll int) historyViewport {
+	start, continuation := historyStart(rows, starts, selectedStart, selectedEnd, width, height, scroll)
+	view := historyViewport{historyViewportPosition: historyViewportPosition{start: start, height: height}, continuation: continuation}
+	if scroll == 0 || scroll == scrollPinnedNewest {
+		used := view.end(len(rows), height) - start
+		if continuation != "" {
+			used++
+		}
+		view.padding = max(0, height-used)
+	}
+	return view
+}
+
+func (m *Model) historyViewport(rows []string, starts []int, selectedStart, selectedEnd, width, height int) historyViewport {
+	if m.scroll != scrollPinnedNewest || m.pinnedHistory == nil {
+		return defaultHistoryViewport(rows, starts, selectedStart, selectedEnd, width, height, m.scroll)
+	}
+	position := *m.pinnedHistory
+	position.start = historySourceStart(rows, max(0, min(position.start, len(rows))), height)
+	position.padding = max(0, min(position.padding+height-position.height, height-1))
+	position.height = height
+	return historyViewport{historyViewportPosition: position, continuation: historyContinuation(rows, starts, position.start, width)}
+}
+
 func historyWindow(rows []string, starts []int, selectedStart, selectedEnd, w, h, scroll int) []string {
-	start, continuation := historyStart(rows, starts, selectedStart, selectedEnd, w, h, scroll)
-	available := h
-	if continuation != "" {
-		available--
+	return renderHistoryWindow(rows, defaultHistoryViewport(rows, starts, selectedStart, selectedEnd, w, h, scroll), w, h)
+}
+
+func renderHistoryWindow(rows []string, view historyViewport, width, height int) []string {
+	visible := rows[view.start:view.end(len(rows), height)]
+	if view.continuation != "" {
+		visible = append([]string{view.continuation}, visible...)
 	}
-	end := min(len(rows), start+available)
-	visible := rows[start:end]
-	if continuation != "" {
-		visible = append([]string{continuation}, visible...)
-	}
-	return padRows(visible, w, h)
+	visible = append(make([]string, view.padding), visible...)
+	return padHistoryRows(visible, width, height)
 }
 
 func historyStart(rows []string, starts []int, selectedStart, selectedEnd, w, h, scroll int) (int, string) {
@@ -91,30 +133,43 @@ func historyStart(rows []string, starts []int, selectedStart, selectedEnd, w, h,
 			start = selectedStart
 		}
 	}
-	// Prefer the next complete message, preserving the newest messages below it.
-	// For oversized messages, retain scroll access and repeat the author as context.
-	continuation := ""
+	// Reserve a context header without retaining a separator-only fragment.
+	if historyContinuation(rows, starts, start, w) != "" && scroll <= 0 {
+		start++
+	}
+	start = historySourceStart(rows, start, h)
+	return start, historyContinuation(rows, starts, start, w)
+}
+
+func historySourceStart(rows []string, start, height int) int {
+	for start < len(rows) && rows[start] == "" {
+		start++
+	}
+	if start >= len(rows) {
+		return max(0, len(rows)-height)
+	}
+	return start
+}
+
+// Derive ownership after adjusting the start: it may now be the next message.
+func historyContinuation(rows []string, starts []int, start, width int) string {
+	if start >= len(rows) || rows[start] == "" {
+		return ""
+	}
 	for i, boundary := range starts {
 		next := len(rows)
 		if i+1 < len(starts) {
 			next = starts[i+1]
 		}
 		if start > boundary && start < next {
-			if next-boundary <= h {
-				start = next
-			} else {
-				continuation = ansi.Truncate(rows[boundary]+" · continued", w, "…")
-			}
-			break
+			return ansi.Truncate(rows[boundary]+" · continued", historyContentWidth(width), "…")
 		}
 	}
-	if start >= len(rows) {
-		start = max(0, len(rows)-h)
-	}
-	return start, continuation
+	return ""
 }
 
 func messageRows(msg core.Message, w int, focused bool) []string {
+	w = max(0, historyContentWidth(w)-historyRailColumns)
 	rows := []string{}
 	prefix := "  "
 	if focused {
@@ -138,13 +193,18 @@ func messageRows(msg core.Message, w int, focused bool) []string {
 	}
 	rows = append(rows, ansi.Truncate(head, w, "…"))
 	rows = append(rows, formattedBodyRows(slack.Body(msg), w)...)
+	rail := strings.Repeat(" ", historyRailColumns)
+	if focused {
+		rail = strings.Repeat(" ", historyRailColumns-1) + accent.Render("│")
+	}
+	for i := range rows {
+		rows[i] = rail + rows[i]
+	}
 	rows = append(rows, "")
 	return rows
 }
 
 const codeFence = "```"
-
-const messagePaddingColumns = 2 // History text inset in display cells.
 
 // Visual rails distinguish quoted and fenced text; clipboard content stays plain.
 // Slack permits content directly after opening fences and before closing fences.
@@ -203,4 +263,17 @@ func wrappedBodyRows(text, prefix string, width int) []string {
 		rows = append(rows, "  "+marker+part)
 	}
 	return rows
+}
+
+// Use the same content width for wrapping, continuation headers and padding.
+func historyContentWidth(width int) int {
+	return max(0, width-historyRightPaddingColumns)
+}
+
+func padHistoryRows(rows []string, width, height int) []string {
+	out := padRows(rows, historyContentWidth(width), height)
+	for i := range out {
+		out[i] = fit(out[i]+strings.Repeat(" ", historyRightPaddingColumns), width)
+	}
+	return out
 }

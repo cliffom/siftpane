@@ -375,3 +375,31 @@ func TestAccountDisplayNamesCannotInjectRows(t *testing.T) {
 		}
 	}
 }
+
+func TestAccountSwitchBackDoesNotRevalidateHealthyInactiveMetadata(t *testing.T) {
+	a, _ := accountFixture(t, 2)
+	m := a.current()
+	for _, cid := range []string{demoDM, demoGroup} {
+		c, err := m.service.Conversation(m.ctx, cid)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m.included[cid] = true
+		m.attention.Kept[cid] = true
+		m.addContext(cid)
+		m.Update(conversationResult{ID: cid, Conversation: c, Generation: m.generations[cid]})
+	}
+	m.metadataFailed[demoGroup] = true
+	m.metadataState[demoGroup] = metadataUnvalidated
+	m.composer.SetValue(mainDraft)
+	a.deactivate()
+	runAccountCommand(t, a, a.activate(1))
+	a.deactivate()
+	a.activate(0)
+	if len(m.metadataBusy) != 2 || !m.metadataBusy[m.active] || !m.metadataBusy[demoGroup] || m.metadataBusy[demoDM] {
+		t.Fatal("switch-back repeated healthy inactive metadata or skipped recovery", m.metadataBusy)
+	}
+	if m.composer.Value() != mainDraft {
+		t.Fatal("switch-back lost composed text")
+	}
+}

@@ -2,18 +2,18 @@
                                                             
 ╭ [#studio] ───────────────────────────────────────────────╮
 │ Ch╭ [Keyboard guide] ────────────────────────────────╮   │
-│  M│ NAVIGATE                                         │   │
-│  I│ Ctrl+W  switch workspace/account; inactive       │   │
+│   │ NAVIGATE                                         │   │
+│   │ Ctrl+W  switch workspace/account; inactive       │   │
 │   │ accounts pause reads                             │   │
-│  L│ Tab  switch sidebar / messages                   │   │
-│  T│ j/k or ↑/↓  move / select                        │   │
+│   │ Tab  switch sidebar / messages                   │   │
+│   │ j/k or ↑/↓  move / select                        │   │
 │   │ PgUp/PgDn  scroll history                        │   │
-│▸ Y│ G / End  newest + local read                     │   │
-│  T│ i / Enter  compose                               │und│
-│  t│ t  open selected thread                          │   │
-│   │ Esc  leave thread / focus sidebar                │   │
-│ ╭ │ o  older history / next reply page               │─╮ │
-│ │ │ 1–11/83 ↑/↓ · Esc close                          │ │ │
+│ │▸│ G / End  newest + local read                     │   │
+│ │ │ i  compose; Enter opens existing thread or       │   │
+│ │ │ composes                                         │   │
+│   │ →  open existing thread; t  open any message     │   │
+│ ╭ │ thread                                           │─╮ │
+│ │ │ 1–11/86 ↑/↓ · Esc close                          │ │ │
 │ │ ╰──────────────────────────────────────────────────╯ │ │
 │ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
