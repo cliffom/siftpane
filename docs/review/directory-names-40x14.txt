@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#╭ [Search conversations] ──────╮───╮
+│ Ch│ / @pending-name              │er…│
+│▸ Y│ @ people · # channels        │   │
+│  T│ No matches in resolved names…│e  │
+│  b│                              │   │
+│   │ Esc close · try another name │   │
+│ ╭ │ 9 loaded · names incomplete  │─╮ │
+│ │ │ Resolving DM names…          │ │ │
+│ │ │ Ctrl+L continue · Ctrl+R rel…│ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                F1 help 

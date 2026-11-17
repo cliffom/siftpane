@@ -3,8 +3,20 @@ package ui
 import (
 	"strings"
 
+	"charm.land/bubbles/v2/textarea"
+
 	"github.com/cliffom/siftpane/internal/core"
 )
+
+func composerStyles() textarea.Styles {
+	styles := textarea.DefaultDarkStyles()
+	styles.Focused.Placeholder = muted
+	styles.Blurred.Placeholder = muted
+	// Keep the editing row on the terminal background instead of relying on
+	// the theme's ANSI black, which can wash out placeholder text.
+	styles.Focused.CursorLine = styles.Focused.Text
+	return styles
+}
 
 // The inset frame keeps the editing surface separate from both history and
 // application chrome. Its two border rows are reserved by dimensions().

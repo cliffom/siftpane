@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ Messages ─────────────┬ [Choose conversations · p] ──────────────────────────────────────────────╮
+│ Nothing included yet. │ Choose what belongs here · p                                             │
+│ p  choose conversatio…│  Leo Park  Nov 13 10:27                                                  │
+│                       │  Here's the checklist: review notes (https://example.com/review)         │
+│                       │                                                                          │
+│             ╭ [Search conversations] ──────────────────────────────────────────────╮             │
+│             │ / CLOUD2025                                                          │             │
+│             │ @ people · # channels                                                │             │
+│             │ No matches yet · loading directory…                                  │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │ Enter verify & open conversation                                     │             │
+│             │ 0 loaded · searching directory…                                      │             │
+│             │ Loading directory…                                                   │e input.     │
+│             │ Ctrl+L continue · Ctrl+R reload                                      │             │
+│             ╰──────────────────────────────────────────────────────────────────────╯             │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+                                                                                            F1 help 

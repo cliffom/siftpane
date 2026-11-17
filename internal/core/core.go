@@ -15,6 +15,7 @@ type (
 	Conversation struct {
 		ID, Name       string
 		Handle         string // Available user handle for an existing direct conversation.
+		User           string // Other participant for lazy direct-conversation name lookup.
 		Kind           ConversationKind
 		Topic, Purpose string
 		Members        int

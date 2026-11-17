@@ -1,0 +1,63 @@
+name: Signed macOS candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-signing-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.26.7'
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - run: make check
+      - name: Test signing credential setup and cleanup
+        run: python3 -m unittest discover -s scripts -p 'test_*macos*.py'
+      - name: Install signing credentials in an isolated runner keychain
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: python3 scripts/setup-macos-ci-signing.py setup
+      - name: Sign, notarize and staple the candidate disk image
+        env:
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: bash scripts/package-macos.sh --signed
+      - name: Remove signing credentials and restore the keychain search list
+        if: always()
+        run: python3 scripts/setup-macos-ci-signing.py cleanup
+      - name: Preserve notarization reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: siftpane-notarization-diagnostics
+          path: |
+            dist/notarization/submission.json
+            dist/notarization/log.json
+          if-no-files-found: ignore
+          retention-days: 1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: siftpane-signed-macos-arm64
+          path: |
+            dist/*.dmg
+            dist/*.SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14

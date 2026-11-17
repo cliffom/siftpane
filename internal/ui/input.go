@@ -44,12 +44,17 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if k != keyMentions {
 		m.mentionConfirm = false
 	}
+	if m.refreshDetails {
+		return m, m.refreshDetailsKey(k)
+	}
 	if m.help {
 		return m, m.helpKey(k)
 	}
 	// The next explicit key dismisses transient action priority; handlers can
 	// publish fresh feedback without losing the underlying delivery text.
-	m.statusKind = statusRoutine
+	if m.statusKind == statusAction {
+		m.setStatus("", statusRoutine)
+	}
 	if k == keyHelpGlobal {
 		m.quitConfirm = false
 		m.retryConfirm = false
@@ -94,7 +99,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	// Participation shortcuts are ordinary text in either input widget. Only
 	// navigation ignores repeats, so held keys cannot repeat remote actions.
-	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack) {
+	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack || k == keyKeep) {
 		return m, nil
 	}
 	return m.navigateKey(k)
@@ -102,6 +107,8 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	switch k {
+	case keyRefreshDetails:
+		m.refreshDetails, m.detailsScroll = true, 0
 	case keyAcknowledged, keyLooking, keyResolved:
 		return m, m.toggleReaction(quickReaction(k))
 	case keyOpenSlack:
@@ -109,7 +116,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyAcknowledgeGap:
 		m.acknowledgeGap()
 	case keyKeep:
-		m.keepActive()
+		m.toggleActiveKept()
 	case keyDismiss:
 		return m, m.dismissActive()
 	case keyAttention:
@@ -157,11 +164,16 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 		return m, m.moveSelection(k)
 	case keyPageUp:
 		m.scroll = max(0, m.scroll) + max(minScrollRows, m.height/scrollPageDivisor)
+		m.keepSelectionVisible()
 	case keyPageDown:
 		m.scroll = max(0, m.scroll-max(minScrollRows, m.height/scrollPageDivisor))
 		if m.scroll == 0 {
+			if t := m.cache[m.key()]; t != nil {
+				m.index = max(0, len(t.Messages)-1)
+			}
 			m.read(m.active)
 		}
+		m.keepSelectionVisible()
 	case keyLast, keyNewest:
 		delete(m.openTargets, m.key())
 		m.scroll = 0
@@ -290,7 +302,7 @@ func (m *Model) cancelConfirmations() {
 // Resume the virtual cursor after a modal or account epoch consumed its timer.
 func (m *Model) resumeInput() tea.Cmd {
 	if m.mode != pickerClosed {
-		return m.picker.Focus()
+		return tea.Batch(m.picker.Focus(), m.continueDirectory(), m.directoryProfileCmd())
 	}
 	if m.focus == focusCompose {
 		return m.composer.Focus()

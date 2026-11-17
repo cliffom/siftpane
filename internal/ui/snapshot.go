@@ -11,6 +11,8 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+const demoThreadTimestamp = "1794672000.000001" // Shared offline thread identity.
+
 const demoShippingConversation = "Cshipping" // Shared offline seed identity, not a domain state.
 
 // SnapshotMode is an offline review identifier accepted by the CLI.
@@ -18,24 +20,27 @@ type SnapshotMode string
 
 // Snapshot modes are independent of the UI's navigation state.
 const (
-	SnapshotWorkspaces     SnapshotMode = "workspaces"
-	SnapshotAccountCompose SnapshotMode = "account-compose"
-	SnapshotAccountFailed  SnapshotMode = "account-failed"
-	SnapshotReadability    SnapshotMode = "readability"
-	SnapshotCached         SnapshotMode = "cached"
-	SnapshotCacheError     SnapshotMode = "cache-error"
-	SnapshotCoverage       SnapshotMode = "coverage"
-	SnapshotFollowed       SnapshotMode = "followed"
-	SnapshotAttention      SnapshotMode = "attention"
-	SnapshotMessages       SnapshotMode = "messages"
-	SnapshotCompose        SnapshotMode = "compose"
-	SnapshotPicker         SnapshotMode = "picker"
-	SnapshotSearch         SnapshotMode = "search"
-	SnapshotThread         SnapshotMode = "thread"
-	SnapshotHelp           SnapshotMode = "help"
-	SnapshotStartup        SnapshotMode = "startup"
-	SnapshotLoading        SnapshotMode = "loading"
-	SnapshotLoadError      SnapshotMode = "load-error"
+	SnapshotRefreshDetails     SnapshotMode = "refresh-details"
+	SnapshotCredentialRecovery SnapshotMode = "credential-recovery"
+	SnapshotPartialThread      SnapshotMode = "partial-thread"
+	SnapshotWorkspaces         SnapshotMode = "workspaces"
+	SnapshotAccountCompose     SnapshotMode = "account-compose"
+	SnapshotAccountFailed      SnapshotMode = "account-failed"
+	SnapshotReadability        SnapshotMode = "readability"
+	SnapshotCached             SnapshotMode = "cached"
+	SnapshotCacheError         SnapshotMode = "cache-error"
+	SnapshotCoverage           SnapshotMode = "coverage"
+	SnapshotFollowed           SnapshotMode = "followed"
+	SnapshotAttention          SnapshotMode = "attention"
+	SnapshotMessages           SnapshotMode = "messages"
+	SnapshotCompose            SnapshotMode = "compose"
+	SnapshotPicker             SnapshotMode = "picker"
+	SnapshotSearch             SnapshotMode = "search"
+	SnapshotThread             SnapshotMode = "thread"
+	SnapshotHelp               SnapshotMode = "help"
+	SnapshotStartup            SnapshotMode = "startup"
+	SnapshotLoading            SnapshotMode = "loading"
+	SnapshotLoadError          SnapshotMode = "load-error"
 )
 
 // LoadSnapshot loads offline review data through the normal update path.
@@ -68,6 +73,23 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 	m.resize()
 	m.focus = focusMessages
 	switch mode {
+	case SnapshotRefreshDetails:
+		line := m.line(m.key())
+		line.RecentErr = errors.New("connection failed; retry current view with R")
+		line.Checked = time.Date(2026, time.November, 15, 12, 0, 0, 0, time.UTC)
+		m.multipleAccounts, m.refreshDetails = true, true
+		m.composer.SetValue("Draft retained during recovery.")
+	case SnapshotCredentialRecovery:
+		m.multipleAccounts = true
+		m.composer.SetValue("Draft retained while replacing the account credential.")
+		m.stopReads()
+	case SnapshotPartialThread:
+		m.thread = demoThreadTimestamp
+		line := m.line(m.key())
+		line.Messages = []core.Message{{TS: m.thread, Author: "Maya", Text: "Original thread context"}, {TS: "1794672000.000002", Author: "Leo", Text: "Partial replies retained after a failed next page."}}
+		line.Loaded, line.More = true, true
+		line.PageErr = errors.New("next reply page unavailable")
+		m.index, m.scroll = 1, -1
 	case SnapshotWorkspaces:
 		m.multipleAccounts = true
 		other := m.identity
@@ -85,7 +107,7 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 			m.setStatus("Delivery unknown · check Slack before r retry", statusAction)
 		}
 	case SnapshotReadability:
-		m.line(m.key()).Messages = []core.Message{{Author: "Maya", TS: "1794672000.000001", Text: "@you Please review:\n> Keep the old contract.\n- Check the parser\n- Preserve literal code mentions\n```if ready {\n    send(\"<@U2>\")\n}```\nUse `dryRun` before sending."}}
+		m.line(m.key()).Messages = []core.Message{{Author: "Maya", TS: demoThreadTimestamp, Text: "@you Please review:\n> Keep the old contract.\n- Check the parser\n- Preserve literal code mentions\n```if ready {\n    send(\"<@U2>\")\n}```\nUse `dryRun` before sending."}}
 		m.line(m.key()).Loaded = true
 		m.index, m.scroll = 0, -1
 
@@ -150,7 +172,7 @@ func Snapshot(m *Model, width, height int, mode SnapshotMode) string {
 func snapshotAttention(m *Model) {
 	m.focus = focusChannels
 	at := time.Date(2026, time.November, 15, 12, 0, 0, 0, time.UTC)
-	if err := m.attention.Add(demoShippingConversation, core.AttentionTrigger{ID: "review:mention", TS: "1794672000.000001", Reason: core.AttentionMention, At: at}); err != nil {
+	if err := m.attention.Add(demoShippingConversation, core.AttentionTrigger{ID: "review:mention", TS: demoThreadTimestamp, Reason: core.AttentionMention, At: at}); err != nil {
 		m.setStatus(err.Error(), statusAction)
 	}
 	if err := m.attention.Add("Dleo", core.AttentionTrigger{ID: "review:temporary", Reason: core.AttentionManual, At: at.Add(time.Second)}); err != nil {

@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you 
+                                                            
+╭ [Choose conversations · p] ──────────────────────────────╮
+│ Ch╭ [Search conversations] ──────────────────────────╮   │
+│  M│ / CLOUD2025                                      │   │
+│  I│ @ people · # channels                            │   │
+│   │ No matches yet · loading directory…              │   │
+│  L│                                                  │   │
+│  T│                                                  │   │
+│   │                                                  │   │
+│▸ Y│                                                  │   │
+│  T│                                                  │und│
+│  t│ Enter verify & open conversation                 │   │
+│   │ 0 loaded · searching directory…                  │   │
+│ ╭ │ Loading directory…                               │─╮ │
+│ │ │ Ctrl+L continue · Ctrl+R reload                  │ │ │
+│ │ ╰──────────────────────────────────────────────────╯ │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+                                                    F1 help 

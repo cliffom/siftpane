@@ -49,7 +49,10 @@ func (m *Model) syncProfiles() {
 			changed = true
 		}
 	}
+	anchor := m.captureReadingAnchor()
 	m.profiles = next
+	m.restoreReadingAnchor(anchor)
+	m.preserveVisibleSelection()
 	if changed || m.profileCacheErr != "" {
 		m.profileCacheErr = ""
 		if err := m.store.SaveProfiles(m.identity, ps); err != nil {

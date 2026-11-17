@@ -5,8 +5,8 @@
 │  M│ Enter switch · Esc close                         │   │
 │  I│ Inactive accounts pause reads                    │   │
 │   │                                                  │   │
-│  L│  DEMO/U2 · @you · Fieldwork · demo               │   │
-│  T│▸ DEMO2/U2 · @maya · Workshop · demo              │   │
+│  L│  Fieldwork · demo · @you                         │   │
+│  T│▸ Workshop · demo  · @maya                        │   │
 │   │                                                  │   │
 │▸ Y│                                                  │   │
 │  T│                                                  │und│
@@ -17,4 +17,4 @@
 │ │ ╰──────────────────────────────────────────────────╯ │ │
 │ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
- Refreshed                                           ? help 
+                                                     ? help 

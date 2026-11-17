@@ -88,7 +88,7 @@ func TestIncludePickerTabStillToggles(t *testing.T) {
 	}
 }
 
-// searchService records only explicit metadata page reads; other calls use the offline demo.
+// searchService records metadata page reads; other calls use the offline demo.
 type searchService struct {
 	core.Service
 	cursors []string
@@ -108,13 +108,13 @@ func TestSearchDirectoryPaginationAndFailure(t *testing.T) {
 	m.directoryLoaded = false
 	m.directoryNext = ""
 	m.directory = nil
-	m.openPicker(pickerSwitch)
 	cmd := m.directoryCmd("")
+	m.openPicker(pickerSwitch)
 	if !strings.Contains(m.directoryState(), "Loading") || m.directoryCmd("") != nil {
 		t.Fatal("loading state or duplicate directory guard failed")
 	}
-	m.Update(cmd())
-	if m.directoryNext != searchPageCursor || !m.directoryLoaded {
+	_, next := m.Update(cmd())
+	if next == nil || m.directoryNext != searchPageCursor || !m.directoryLoaded {
 		t.Fatal("first page cursor not retained")
 	}
 	m.Update(tea.PasteMsg{Content: "@maya"})
@@ -123,8 +123,7 @@ func TestSearchDirectoryPaginationAndFailure(t *testing.T) {
 		t.Fatal("search or completion fetched directory")
 	}
 	s.err = &slack.APIError{Code: "ratelimited"}
-	_, cmd = m.Update(tea.KeyPressMsg{Code: 'l', Mod: tea.ModCtrl})
-	m.Update(cmd())
+	m.Update(next())
 	if m.directoryNext != searchPageCursor || m.directoryErr == nil || m.directoryBusy || !strings.Contains(m.directoryState(), "Error:") {
 		t.Fatal("failed next page lost cursor/error state")
 	}
@@ -254,7 +253,7 @@ func TestSearchModalDirectoryStatesFitViewport(t *testing.T) {
 					t.Fatalf("%s: wrong viewport width: %q", state, row)
 				}
 			}
-			if !strings.Contains(view, "[Search conversations]") || !strings.Contains(view, "No matches") {
+			if !strings.Contains(view, "[Search conversations]") || !strings.Contains(view, "No match") {
 				t.Fatalf("%s: modal lost focus title or empty suggestions", state)
 			}
 		}

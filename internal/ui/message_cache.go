@@ -109,6 +109,7 @@ func (m *Model) trimPersisted() {
 }
 
 func (m *Model) purgeConversationCache(cid string, err error) {
+	m.removeDirectory(cid)
 	m.invalidateConversationReads(cid)
 	m.cacheEpoch++
 	delete(m.persisted, cid)
@@ -121,6 +122,8 @@ func (m *Model) purgeConversationCache(cid string, err error) {
 			t.Cached = false
 			t.CachedRefreshErr = nil
 			t.Saved = time.Time{}
+			t.ReplyThrough = ""
+			t.replyCursors = nil
 			t.Busy = false
 			t.Err = err
 		}
@@ -129,6 +132,7 @@ func (m *Model) purgeConversationCache(cid string, err error) {
 
 func (m *Model) stopReads() {
 	m.stopped = true
+	m.cancelDirectory()
 	m.discoveryGeneration++
 	m.finishDiscovery()
 	m.cancelFollowed()
@@ -136,5 +140,12 @@ func (m *Model) stopReads() {
 		cancel()
 	}
 	m.clearMessages()
-	m.setStatus("Credentials expired · login & restart", statusAction)
+	m.setStatus(m.credentialRecovery(), statusAction)
+}
+
+func (m *Model) credentialRecovery() string {
+	if m.multipleAccounts {
+		return "Expired · " + keyLabel(keyRefreshDetails) + " steps · " + keyLabel(keyReloadCredential) + " reload"
+	}
+	return "Credentials expired · login & restart"
 }

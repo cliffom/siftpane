@@ -1,0 +1,14 @@
+ siftpane  Fieldwork … · @you · DEMO/U2 
+                                        
+╭ [#╭ [Refresh and recovery] ──────╮───╮
+│ Ch│ R retry current view/sources │er…│
+│▸ Y│ · Esc close                  │   │
+│  T│                              │e  │
+│  b│ Credential recovery: --login │   │
+│   │ --account DEMO/U2 in another │   │
+│ ╭ │ terminal, then Ctrl+R here   │o╮ │
+│ │ │ from navigation. Drafts stay │ │ │
+│ │ │ 1–7/17 ↑/↓ · Esc close       │ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+ Refresh failed · v details · R… ? help 

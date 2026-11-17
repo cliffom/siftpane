@@ -106,7 +106,7 @@ func (m *Model) syncAttentionInclusion() {
 	}
 }
 
-// toggle retains the chooser's explicit Kept action; attention is independent.
+// toggle changes Kept independently of pending attention.
 func (m *Model) toggle(cid string) {
 	a := m.attention.Clone()
 	if a.Kept[cid] {
@@ -140,7 +140,14 @@ func (m *Model) toggle(cid string) {
 		m.saveMessages()
 	}
 	m.save()
-	m.setStatus("Kept preference saved; attention requires explicit dismissal", statusAction)
+	switch {
+	case a.Kept[cid]:
+		m.setStatus("Kept conversation", statusAction)
+	case len(a.Pending[cid]) > 0:
+		m.setStatus("Unkept · attention retained", statusAction)
+	default:
+		m.setStatus("Unkept conversation", statusAction)
+	}
 }
 
 func (m *Model) temporaryChoice(cs []core.Conversation) tea.Cmd {
@@ -148,6 +155,9 @@ func (m *Model) temporaryChoice(cs []core.Conversation) tea.Cmd {
 		return nil
 	}
 	c := cs[max(0, min(m.pickIndex, len(cs)-1))]
+	if m.directoryCached[c.ID] {
+		return m.resolveConversation(c.ID, directTemporary)
+	}
 	a := m.attention.Clone()
 	if err := a.Add(c.ID, core.AttentionTrigger{ID: "manual:" + rand.Text(), Reason: core.AttentionManual, At: time.Now().UTC()}); err != nil {
 		m.setStatus(err.Error(), statusAction)
@@ -163,15 +173,18 @@ func (m *Model) temporaryChoice(cs []core.Conversation) tea.Cmd {
 	return m.selectConversation(c.ID)
 }
 
-func (m *Model) keepActive() {
+func (m *Model) toggleActiveKept() {
 	if m.active == "" {
 		return
 	}
-	if m.attention.Kept[m.active] {
-		m.setStatus("Already kept; attention is still pending", statusAction)
+	if m.attention.Kept[m.active] && len(m.attention.Pending[m.active]) == 0 && m.attentionDirty(m.active) {
+		m.setStatus("Draft/send · recover before unkeeping", statusAction)
 		return
 	}
 	m.toggle(m.active)
+	if m.active == "" {
+		m.focus = focusChannels
+	}
 }
 
 func (m *Model) attentionDirty(cid string) bool {

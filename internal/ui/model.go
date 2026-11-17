@@ -14,6 +14,8 @@ import (
 )
 
 type timeline struct {
+	replyCursors       []string
+	ReplyThrough       string // Highest timestamp accepted from fetched reply pages, never sends.
 	After              string
 	Messages           []core.Message
 	Next               string
@@ -22,17 +24,21 @@ type timeline struct {
 	Saved              time.Time
 	More, Loaded, Busy bool
 	Err                error
+	RecentErr          error
+	PageErr            error
+	Checked            time.Time
 	Touched            uint64
 }
 type historyResult struct {
-	CacheEpoch uint64
-	Target     string
-	QueryAfter string
-	Key        string
-	Generation uint64
-	Page       core.Page
-	Older      bool
-	Err        error
+	CacheEpoch  uint64
+	Target      string
+	QueryCursor string
+	QueryAfter  string
+	Key         string
+	Generation  uint64
+	Page        core.Page
+	Older       bool
+	Err         error
 }
 type conversationResult struct {
 	Conversation core.Conversation
@@ -41,18 +47,24 @@ type conversationResult struct {
 	Err          error
 }
 type directoryResult struct {
-	Page core.DirectoryPage
-	Err  error
+	Page       core.DirectoryPage
+	Cursor     string
+	Generation uint64
+	Err        error
 }
 type sendResult struct {
-	Key     string
-	Message core.Message
-	Err     error
+	ServiceGeneration uint64
+	Key               string
+	Message           core.Message
+	Err               error
 }
 type tickMsg time.Time
 
 // Model owns application state; only the Bubble Tea event loop may mutate it.
 type Model struct {
+	serviceGeneration   uint64
+	refreshDetails      bool
+	detailsScroll       int
 	participationBusy   bool
 	broadcastConfirm    core.AttentionReason
 	discoverySources    []core.AttentionReason
@@ -108,18 +120,32 @@ type Model struct {
 	sendCtx          context.Context
 	multipleAccounts bool
 
-	directory       []core.Conversation
-	directoryNext   string
-	directoryBusy   bool
-	directoryLoaded bool
-	directoryErr    error
-	included        map[string]bool
-	contexts        map[string]context.Context
-	cancels         map[string]context.CancelFunc
-	generations     map[string]uint64
-	readGeneration  uint64
-	cache           map[string]*timeline
-	clock           uint64
+	directory                 []core.Conversation
+	directoryNext             string
+	directoryBusy             bool
+	directoryLoaded           bool
+	directoryErr              error
+	directoryCancel           context.CancelFunc
+	directoryGeneration       uint64
+	directoryPagesLeft        int
+	directorySeen             map[string]bool
+	directoryCached           map[string]bool
+	directoryCacheErr         error
+	directBusy                bool
+	directCancel              context.CancelFunc
+	directErr                 error
+	directoryProfileCancel    context.CancelFunc
+	directoryProfileBusy      bool
+	directoryProfileUser      string
+	directoryProfileAttempted map[string]bool
+	directoryProfilePending   map[string]bool
+	included                  map[string]bool
+	contexts                  map[string]context.Context
+	cancels                   map[string]context.CancelFunc
+	generations               map[string]uint64
+	readGeneration            uint64
+	cache                     map[string]*timeline
+	clock                     uint64
 
 	drafts     map[string]string
 	deliveries map[string]*core.Delivery
@@ -138,6 +164,7 @@ type Model struct {
 
 	status     string
 	statusKind statusKind
+	statusNow  time.Time
 	stopped    bool
 	pollIndex  int
 	pollCount  int
@@ -155,6 +182,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		}
 	}
 	t := textarea.New()
+	t.SetStyles(composerStyles())
 	t.Placeholder = "Write a message…"
 	t.SetPromptFunc(composerPromptColumns, func(info textarea.PromptInfo) string {
 		if info.LineNumber == 0 {
@@ -204,6 +232,7 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		height:         DefaultHeight,
 		focus:          focusChannels,
 		status:         "Choose your conversations with " + keyLabel(keyInclude) + " · local read state",
+		statusNow:      time.Now(),
 	}
 	m.initAttention()
 	if m.attentionErr == "" {
@@ -226,6 +255,11 @@ func New(ctx context.Context, s core.Service, id core.Identity, st *store.Store,
 		for _, p := range ps {
 			m.profiles[p.ID] = p
 		}
+	}
+	m.directoryCached = make(map[string]bool)
+	for _, c := range st.Directory(id) {
+		m.replaceConversation(c)
+		m.directoryCached[c.ID] = true
 	}
 	for _, c := range st.Conversations(id) {
 		if m.included[c.ID] {
@@ -274,14 +308,21 @@ func (m *Model) Init() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch v := msg.(type) {
 	case tea.WindowSizeMsg:
+		anchor := m.captureReadingAnchor()
 		m.width = v.Width
 		m.height = v.Height
 		m.resize()
+		m.restoreReadingAnchor(anchor)
+		m.preserveVisibleSelection()
 		return m, nil
 	case conversationResult:
 		return m.updateConversation(v)
 	case directoryResult:
 		return m.updateDirectory(v)
+	case directoryProfileResult:
+		return m.updateDirectoryProfile(v)
+	case directConversationResult:
+		return m.updateDirectConversation(v)
 	case mentionResult:
 		return m.updateMentions(v)
 	case followedResult:
@@ -306,7 +347,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m.updateKey(v)
 	}
-	if m.help {
+	if m.help || m.refreshDetails {
 		return m, nil
 	}
 	// Picker paste/blink messages take precedence even when the underlying send is pending.

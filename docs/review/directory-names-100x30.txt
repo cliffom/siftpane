@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  Leo Park  Nov 13 10:27                                                  │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
+│▸ #studio              │                                                                          │
+│  @Maya Chen ╭ [Search conversations] ──────────────────────────────────────────────╮             │
+│  @Maya, Leo,│ / @pending-name                                                      │             │
+│             │ @ people · # channels                                                │             │
+│             │ No matches in resolved names yet.                                    │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │                                                                      │             │
+│             │ Esc close · try another name                                         │             │
+│             │ 9 loaded · names incomplete                                          │             │
+│             │ Resolving DM names…                                                  │e input.     │
+│             │ Ctrl+L continue · Ctrl+R reload                                      │             │
+│             ╰──────────────────────────────────────────────────────────────────────╯             │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+                                                                                            F1 help 

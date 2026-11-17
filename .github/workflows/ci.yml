@@ -32,3 +32,37 @@ jobs:
             tools/go.sum
       - name: Format, lint, vet, race tests, build, and module hygiene
         run: make check
+
+  macos:
+    name: macOS 26 arm64
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.26.7'
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - run: make check
+      - name: Check signing setup without credentials
+        run: python3 -m unittest discover -s scripts -p 'test_*macos*.py'
+      - name: Build and inspect an unsigned candidate
+        run: |
+          bash scripts/package-macos.sh --unsigned
+          cd dist
+          shasum -a 256 -c *.SHA256SUMS
+          candidate=$(mktemp -d)
+          tar -xzf ./*-unsigned.tar.gz -C "$candidate"
+          "$candidate/siftpane" --version
+          "$candidate/siftpane" --snapshot messages --width 100 --height 30
+          "$candidate/siftpane" --snapshot refresh-details --width 60 --height 20
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: siftpane-unsigned-macos-arm64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7

@@ -2,12 +2,12 @@ package ui
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/store"
@@ -18,13 +18,16 @@ type Account struct {
 	Service  core.Service
 	Identity core.Identity
 	Offline  bool
+	// Reload reads and validates the credential at the CLI boundary. No token is returned.
+	Reload func(context.Context) (core.Service, core.Identity, error)
 }
 
 type accountSession struct {
-	account Account
-	model   *Model
-	cancel  context.CancelFunc
-	epoch   uint64
+	account   Account
+	model     *Model
+	cancel    context.CancelFunc
+	epoch     uint64
+	reloading bool
 }
 
 type accountEvent struct {
@@ -100,6 +103,7 @@ func (a *Accounts) deactivate() {
 	s := &a.sessions[a.active]
 	m := s.model
 	m.rememberDraft()
+	m.cancelDirectory()
 	s.cancel()
 	s.epoch++
 	m.cancelProfileLookup()
@@ -150,6 +154,8 @@ func (a *Accounts) Init() tea.Cmd { return tea.Batch(a.activate(a.active), tick(
 // Update preserves ownership across switches, including delayed send completion.
 func (a *Accounts) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch v := msg.(type) {
+	case credentialResult:
+		return a, a.updateCredential(v)
 	case accountEvent:
 		s := &a.sessions[v.index]
 		if accountWriteResult(v.message) {
@@ -205,7 +211,7 @@ func (a *Accounts) dirty() bool {
 func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	k := v.String()
 	m := a.current()
-	if k == keyQuit && !m.help {
+	if k == keyQuit && !m.help && !m.refreshDetails {
 		if v.Key().IsRepeat {
 			return a, nil
 		}
@@ -222,16 +228,24 @@ func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.cancelConfirmations()
 		return a.chooseKey(k, v.Key().IsRepeat)
 	}
-	if k == keyAccounts && !m.help {
+	if k == keyReloadCredential && !m.help && !m.refreshDetails && m.mode == pickerClosed && m.focus != focusCompose {
+		m.cancelConfirmations()
+		if v.Key().IsRepeat {
+			return a, nil
+		}
+		return a, a.reloadCredential()
+	}
+	if k == keyAccounts && !m.help && !m.refreshDetails {
 		if v.Key().IsRepeat {
 			return a, nil
 		}
 		m.cancelConfirmations()
 		m.rememberDraft()
+		m.cancelDirectory()
 		a.choosing, a.choice = true, a.active
 		return a, nil
 	}
-	if k == keyQuitQuiet && !m.help && m.mode == pickerClosed && m.focus != focusCompose && a.dirty() {
+	if k == keyQuitQuiet && !m.help && !m.refreshDetails && m.mode == pickerClosed && m.focus != focusCompose && a.dirty() {
 		m.cancelConfirmations()
 		m.setStatus("Unsent text in an account · "+keyLabel(keyQuit)+" twice to exit", statusAction)
 		return a, nil
@@ -274,13 +288,21 @@ func (a *Accounts) View() tea.View {
 	rows := []string{" " + keyLabel(keyCompose) + " switch · " + keyLabel(keyEscape) + " close", " Inactive accounts pause reads", ""}
 	visible := max(1, h-frameRows-len(rows))
 	start := max(0, a.choice-visible+1)
+	const separator = " · "
+	markerColumns := ansi.StringWidth("▸ ")
+	nameColumns := w - frameColumns - markerColumns - ansi.StringWidth(separator)
+	workspaceColumns := 0
+	for _, session := range a.sessions {
+		workspaceColumns = max(workspaceColumns, ansi.StringWidth(accountText(session.account.Identity.WorkspaceName)))
+	}
+	workspaceColumns = min(workspaceColumns, nameColumns/accountNameColumns)
 	for i := start; i < len(a.sessions) && i < start+visible; i++ {
 		id := a.sessions[i].account.Identity
 		marker := "  "
 		if i == a.choice {
 			marker = "▸ "
 		}
-		label := fmt.Sprintf("%s%s/%s · @%s · %s", marker, accountText(id.Workspace), accountText(id.User), accountText(id.Username), accountText(id.WorkspaceName))
+		label := marker + fit(accountText(id.WorkspaceName), workspaceColumns) + separator + "@" + accountText(id.Username)
 		rows = append(rows, fit(label, w-frameColumns))
 	}
 	content := a.current().modalOverlay(v.Content, dialogFrame("Workspaces", rows, w, h, lipgloss.RoundedBorder()), a.width, a.height)
@@ -298,7 +320,7 @@ func accountWriteResult(msg tea.Msg) bool {
 
 func accountReadResult(msg tea.Msg) bool {
 	switch msg.(type) {
-	case historyResult, conversationResult, directoryResult, mentionResult, followedResult, profileResult:
+	case historyResult, conversationResult, directoryResult, directoryProfileResult, directConversationResult, mentionResult, followedResult, profileResult:
 		return true
 	}
 	return false

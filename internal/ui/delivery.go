@@ -52,8 +52,11 @@ func (m *Model) send(retry bool) tea.Cmd {
 	}
 	m.retryConfirm = false
 	m.setStatus("Sending… draft retained until acknowledged", statusAction)
-	svc, ctx, o := m.service, m.sendCtx, d.Outgoing
-	return func() tea.Msg { msg, err := svc.Send(ctx, o); return sendResult{key, msg, err} }
+	svc, ctx, o, generation := m.service, m.sendCtx, d.Outgoing, m.serviceGeneration
+	return func() tea.Msg {
+		msg, err := svc.Send(ctx, o)
+		return sendResult{Key: key, Message: msg, Err: err, ServiceGeneration: generation}
+	}
 }
 
 func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
@@ -68,7 +71,7 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 		if uncertain {
 			m.setStatus("Delivery unknown; text kept. Check Slack before "+keyLabel(keyRetry)+" retry.", statusAction)
 		}
-		if slack.IsAuth(v.Err) {
+		if slack.IsAuth(v.Err) && v.ServiceGeneration == m.serviceGeneration {
 			m.stopReads()
 		}
 		return m, nil
@@ -80,8 +83,25 @@ func (m *Model) updateSend(v sendResult) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	t := m.line(v.Key)
+	anchor := m.captureReadingAnchor()
+	selectedTS := ""
+	if v.Key == m.key() && m.scroll != 0 && m.index >= 0 && m.index < len(t.Messages) {
+		selectedTS = t.Messages[m.index].TS
+	}
 	v.Message.Author = "You"
-	t.Messages = core.Merge(t.Messages, []core.Message{v.Message}, cacheLimit)
+	if _, thread := split(v.Key); thread != "" {
+		t.Messages = mergeReplies(t.Messages, []core.Message{v.Message}, thread)
+	} else {
+		t.Messages = core.Merge(t.Messages, []core.Message{v.Message}, cacheLimit)
+	}
+	if v.Key == m.key() {
+		if m.scroll == 0 {
+			m.index = max(0, len(t.Messages)-1)
+		}
+		m.restoreMessageSelection(historyResult{}, t, selectedTS)
+		m.restoreReadingAnchor(anchor)
+		m.preserveVisibleSelection()
+	}
 	if m.drafts[v.Key] == d.Text {
 		delete(m.drafts, v.Key)
 	}

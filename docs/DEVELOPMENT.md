@@ -94,7 +94,7 @@ go run ./cmd/siftpane --demo
 
 Check borders/corners, display-cell width, wrapping, the first visible author, amber title isolation, drafts, pending/failed/retry states, and the status/help entry plus scrollable help modal. Follow [design guidelines](DESIGN.md). Refresh affected captures in `docs/review/` when the appearance changes; don't update a capture to conceal a regression.
 
-CI runs `make check` on Linux with the minimum Go version and the current stable Go version. Its action revisions are pinned. A local success does not establish that hosted CI or real Slack verification passed; report those separately in [the verification record](VERIFICATION.md).
+CI runs `make check` on Linux with the minimum Go version and the current stable Go version, plus Apple silicon macOS 26 with the minimum Go version. macOS CI also packages an explicitly unsigned candidate and checks its checksum/version/offline snapshots. Its action revisions are pinned. A local success does not establish that hosted CI or real Slack verification passed; report those separately in [the verification record](VERIFICATION.md).
 
 ## Documentation ownership
 
@@ -107,3 +107,9 @@ CI runs `make check` on Linux with the minimum Go version and the current stable
 - `docs/VERIFICATION.md`: evidence and outstanding checks; `docs/BACKLOG.md`: future work.
 
 When changing behavior, update the authoritative document and any affected README summary. Keep facts consistent without copying the entire explanation between files.
+
+
+The 0.8 review harness adds `--snapshot refresh-details`, `--snapshot credential-recovery` and `--snapshot partial-thread`. Review each at 100×30 and 60×20, plus 40×14 recovery. `make macos-candidate` builds an unsigned Apple silicon/macOS 26 development archive; [release preparation](RELEASING.md#macos-08-candidates-and-signing) documents the separate credentialed signing workflow. No live Slack, Keychain or signing credential is needed for `make check`.
+
+
+macOS CI also runs `python3 -m unittest discover -s scripts -p 'test_*macos*.py'`. These credential-helper tests use synthetic values and mocked commands only. The signed workflow uses the same tested setup/cleanup sequence as Bambustand; the setup helper refuses to run against a developer’s local Keychain. Local notarization uses an explicitly named profile as documented in [releasing](RELEASING.md#macos-08-candidates-and-signing).

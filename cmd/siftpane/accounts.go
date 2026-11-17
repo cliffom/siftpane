@@ -41,7 +41,7 @@ func saveAccount(st *store.Store, id core.Identity, token string) error {
 	return st.Save()
 }
 
-func loginToken(ctx context.Context, st *store.Store) error {
+func loginToken(ctx context.Context, st *store.Store, selected string) error {
 	fmt.Fprint(os.Stderr, "User OAuth token (hidden): ")
 	b, err := term.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Fprintln(os.Stderr)
@@ -53,7 +53,12 @@ func loginToken(ctx context.Context, st *store.Store) error {
 	if err != nil {
 		return err
 	}
-	if err = saveLoginAccount(ctx, st, id, token, tokenIdentity); err != nil {
+	if selected != "" {
+		err = replaceAccountCredential(st, selected, id, token)
+	} else {
+		err = saveLoginAccount(ctx, st, id, token, tokenIdentity)
+	}
+	if err != nil {
 		return err
 	}
 	fmt.Println("Saved account", store.AccountKey(id), "for", slack.Safe(id.WorkspaceName), "@"+slack.Safe(id.Username))
@@ -102,7 +107,7 @@ func loadAccountsWith(ctx context.Context, st *store.Store, selected string, aut
 		if selected != "" && selected != store.AccountKey(id) {
 			return nil, fmt.Errorf("--account does not match the environment token")
 		}
-		return []ui.Account{{Service: slack.New(token), Identity: id}}, nil
+		return []ui.Account{connectedAccount(id, token, true)}, nil
 	}
 	if err := migrateCredential(ctx, st, authenticate); err != nil {
 		return nil, err
@@ -136,7 +141,7 @@ func loadAccountsWith(ctx context.Context, st *store.Store, selected string, aut
 			var id core.Identity
 			id, err = authenticate(ctx, token)
 			if err == nil && store.AccountKey(id) == key {
-				accounts = append(accounts, ui.Account{Service: slack.New(token), Identity: id})
+				accounts = append(accounts, connectedAccount(id, token, false))
 				continue
 			}
 		}
@@ -161,7 +166,10 @@ func migrateCredential(ctx context.Context, st *store.Store, authenticate accoun
 
 	token, err := keyring.Get(credentialService, credentialAccount)
 	if err != nil {
-		return fmt.Errorf("no user token: run siftpane --login, set SIFTPANE_SLACK_TOKEN, or use --demo")
+		if !errors.Is(err, keyring.ErrNotFound) {
+			return fmt.Errorf("OS credential store unavailable; unlock it, or supply SIFTPANE_SLACK_TOKEN explicitly; --demo needs no credentials")
+		}
+		return fmt.Errorf("no user token: create/install your internal Slack app using docs/SLACK.md, then run siftpane --login; --demo works offline")
 	}
 	id, err := authenticate(ctx, token)
 	if err != nil {

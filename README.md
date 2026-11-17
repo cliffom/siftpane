@@ -6,7 +6,9 @@ A focused Slack client for your terminal. Choose the channels, DMs, and group DM
 
 ## Try it
 
-Requires Go **1.26.7 or newer**. From this checkout:
+The 0.8 download target is **Apple silicon, macOS 26+**, with Developer ID signing/notarization support. Download the signed, notarized disk image from the [0.8.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.8.0); see [installation and upgrades](docs/INSTALLATION.md).
+
+For source builds, use Go **1.26.7 or newer**. From this checkout:
 
 ```sh
 go build -o bin/siftpane ./cmd/siftpane
@@ -37,12 +39,14 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 
 | Key | Action |
 | --- | --- |
+| `v` | Inspect refresh ages, errors and recovery details |
+| Navigation `Ctrl+R` | Reload this account’s saved credential after `--login --account …` elsewhere |
 | `Ctrl+W` | Switch workspace/account; inactive accounts pause refresh |
 | `1` / `2` / `3` | Toggle your Acknowledged / Looking / Resolved reaction |
 | `O` | Open the selected message in Slack |
 | `p` | Choose conversations; `Tab` keeps or unkeeps an item |
 | Picker `Ctrl+T` | Temporarily add and open |
-| `K` / `d` / `n` | Keep / dismiss attention / next attention |
+| `K` / `d` / `n` | Keep/unkeep / dismiss attention / next attention |
 | `M` twice | Enable optional direct mentions; one `M` disables |
 | `B` / `H` twice | Enable independent channel/here broadcast search |
 | Opened thread `f` | Follow/unfollow future replies locally |
@@ -58,7 +62,7 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 | `?` / `F1` | Open scrollable keyboard help (`F1` also works while composing) |
 | `q` | Quit; warns if you have unsent text |
 
-Search opens over a dimmed main view. `Enter` explicitly includes and opens an excluded result; typing or completing a name changes no inclusion. Supported terminals can also deliver `Cmd+K`; see [terminal compatibility](docs/TERMINALS.md#command-k).
+Search opens over a dimmed main view. Paste a Slack channel link or conversation ID and press `Enter` to open it directly. `Enter` explicitly includes and opens an excluded result; typing or completing a name changes no inclusion. Supported terminals can also deliver `Cmd+K`; see [terminal compatibility](docs/TERMINALS.md#command-k).
 
 Drafts stay with their conversation or thread while you switch, but remain in memory and do not survive exit. Failed sends keep their text. See the [full keyboard and retry guide](docs/USAGE.md).
 

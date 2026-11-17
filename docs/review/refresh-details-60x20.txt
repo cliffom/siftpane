@@ -1,0 +1,20 @@
+ siftpane                 Fieldwork · demo · @you · DEMO/U2 
+                                                            
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Ch╭ [Refresh and recovery] ──────────────────────────╮   │
+│  M│ R retry current view/sources · Esc close         │   │
+│  I│                                                  │   │
+│   │ Credential recovery: --login --account DEMO/U2   │   │
+│  L│ in another terminal, then Ctrl+R here from       │   │
+│  T│ navigation. Drafts stay in this session.         │   │
+│   │                                                  │   │
+│▸ Y│ Cstudio: Last refresh Nov 15 04:00               │   │
+│  T│ Refresh failed: connection failed; retry current │und│
+│  t│ view with R                                      │   │
+│   │                                                  │   │
+│ ╭ │ Discovery: Mentions off · M enable               │─╮ │
+│ │ │ 1–11/11 ↑/↓ · Esc close                          │ │ │
+│ │ ╰──────────────────────────────────────────────────╯ │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+ Refresh failed · v details · R retry                ? help 

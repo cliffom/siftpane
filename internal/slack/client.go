@@ -28,7 +28,7 @@ const (
 	responseByteLimit  = 4 << 20 // Bound decoded response input to 4 MiB.
 	errorCodeByteLimit = 80
 	authorCacheEntries = 512
-	directoryPageItems = 30
+	directoryPageItems = 200 // Slack recommends at most 200 results per directory page.
 	historyPageItems   = 50
 )
 
@@ -54,6 +54,7 @@ const (
 // APIError reports a sanitized Slack failure, retry delay, and delivery uncertainty.
 type APIError struct {
 	Code       string
+	Method     string
 	RetryAfter time.Duration
 	Ambiguous  bool
 }
@@ -61,6 +62,12 @@ type APIError struct {
 func (err *APIError) Error() string {
 	if err.RetryAfter > 0 {
 		return fmt.Sprintf("rate limited; retry in %s", err.RetryAfter.Round(time.Second))
+	}
+	if err.Code == "missing_scope" && err.Method != "" {
+		return "Slack: missing_scope for " + err.Method + "; reinstall app with documented user scopes, then replace its saved token (--login --account)"
+	}
+	if err.Code == "not_allowed_token_type" {
+		return "Slack: use the internal app's xoxp- User OAuth Token, not a bot or app token"
 	}
 	return "Slack: " + err.Code
 }
@@ -84,6 +91,12 @@ func IsAuth(err error) bool {
 	return errors.As(err, &apiErr) && (apiErr.Code == "invalid_auth" || apiErr.Code == "token_revoked" || apiErr.Code == "token_expired" || apiErr.Code == "account_inactive" || apiErr.Code == "not_authed")
 }
 
+// IsInvalidCursor identifies an expired/rejected pagination cursor.
+func IsInvalidCursor(err error) bool {
+	var apiErr *APIError
+	return errors.As(err, &apiErr) && apiErr.Code == "invalid_cursor"
+}
+
 // DeliveryUncertain reports whether Slack might have accepted the failed write.
 func (err *APIError) DeliveryUncertain() bool { return err.Ambiguous }
 
@@ -92,7 +105,7 @@ type Client struct {
 	token            string
 	base             string
 	http             *http.Client
-	mu               sync.Mutex
+	mu               *sync.Mutex
 	next             map[string]time.Time
 	names            map[string]core.Profile
 	profilesInFlight map[string]*profileCall
@@ -100,7 +113,7 @@ type Client struct {
 
 // New constructs a user-token client without making network requests.
 func New(token string) *Client {
-	return &Client{token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]core.Profile{}, profilesInFlight: map[string]*profileCall{}}
+	return &Client{mu: &sync.Mutex{}, token: token, base: apiBaseURL, http: &http.Client{Timeout: requestTimeout}, next: map[string]time.Time{}, names: map[string]core.Profile{}, profilesInFlight: map[string]*profileCall{}}
 }
 
 // Pacing is per method and workspace. A 429 blocks that method, including manual calls.
@@ -201,7 +214,7 @@ func (c *Client) callHTTP(ctx context.Context, httpMethod, method string, v url.
 		if len(code) > errorCodeByteLimit || strings.ContainsAny(code, " \n\r\x1b") {
 			code = "request_failed"
 		}
-		return &APIError{Code: code, Ambiguous: code == "internal_error" || code == "fatal_error" || code == "request_timeout" || code == "service_unavailable"}
+		return &APIError{Code: code, Method: method, Ambiguous: code == "internal_error" || code == "fatal_error" || code == "request_timeout" || code == "service_unavailable"}
 	}
 	if err = json.Unmarshal(b, out); err != nil {
 		return &APIError{Code: "invalid payload", Ambiguous: isWriteMethod(method)}
@@ -268,13 +281,15 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 		}
 		if v.IM {
 			kind = core.ConversationDM
-			profile, _ := c.Profile(ctx, v.User)
+			c.mu.Lock()
+			profile := c.names[v.User]
+			c.mu.Unlock()
 			name, handle = profile.Name, profile.Handle
 			if name == "" {
 				name = v.User
 			}
 		}
-		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
+		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Handle: handle, User: v.User, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
 	}
 	return p, nil
 }
@@ -316,7 +331,7 @@ func (c *Client) History(ctx context.Context, q core.Query) (core.Page, error) {
 		m.Link = "slack://channel?id=" + url.QueryEscape(q.Conversation) + "&message=" + url.QueryEscape(m.TS)
 	}
 
-	return core.Page{Messages: r.Messages, Next: r.Meta.Next, More: r.More}, nil
+	return core.Page{Messages: r.Messages, Next: r.Meta.Next, More: r.More || r.Meta.Next != ""}, nil
 }
 
 // Send posts once as the authenticated user; it never retries a write.

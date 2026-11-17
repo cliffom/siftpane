@@ -18,7 +18,7 @@ func stamp(ts string) string {
 	if err != nil {
 		return ""
 	}
-	return time.Unix(n, 0).Local().Format("Jan 02 15:04")
+	return time.Unix(n, 0).Local().Format(messageTimeFormat)
 }
 
 func (m *Model) history(w, h int) []string {
@@ -38,13 +38,21 @@ func (m *Model) history(w, h int) []string {
 	t := m.cache[m.key()]
 	if t != nil && !t.Loaded && t.Err != nil {
 		if m.stopped {
-			return padRows([]string{"", " Credentials expired/revoked.", " Replace user token and restart; drafts kept."}, w, h)
+			return padRows([]string{"", " Credentials expired/revoked.", " " + m.credentialRecovery()}, w, h)
 		}
 		return padRows([]string{"", " Could not load messages.", " " + slack.Safe(t.Err.Error()), " " + keyLabel(keyRefresh) + " retry / refresh"}, w, h)
 	}
 	if t == nil || !t.Loaded {
 		return padRows(nil, w, h)
 	}
+	rows, starts, selectedStart, selectedEnd := m.historyRows(t, w)
+	if len(rows) == 0 {
+		rows = []string{" No messages yet. i to write the first one."}
+	}
+	return historyWindow(rows, starts, selectedStart, selectedEnd, w, h, m.scroll)
+}
+
+func (m *Model) historyRows(t *timeline, w int) ([]string, []int, int, int) {
 	rows := []string{}
 	starts := []int{}
 	selectedStart, selectedEnd := 0, 0
@@ -58,13 +66,24 @@ func (m *Model) history(w, h int) []string {
 			selectedEnd = len(rows)
 		}
 	}
-	if len(rows) == 0 {
-		rows = []string{" No messages yet. i to write the first one."}
-	}
-	return historyWindow(rows, starts, selectedStart, selectedEnd, w, h, m.scroll)
+	return rows, starts, selectedStart, selectedEnd
 }
 
 func historyWindow(rows []string, starts []int, selectedStart, selectedEnd, w, h, scroll int) []string {
+	start, continuation := historyStart(rows, starts, selectedStart, selectedEnd, w, h, scroll)
+	available := h
+	if continuation != "" {
+		available--
+	}
+	end := min(len(rows), start+available)
+	visible := rows[start:end]
+	if continuation != "" {
+		visible = append([]string{continuation}, visible...)
+	}
+	return padRows(visible, w, h)
+}
+
+func historyStart(rows []string, starts []int, selectedStart, selectedEnd, w, h, scroll int) (int, string) {
 	start := max(0, len(rows)-h-max(0, scroll))
 	if scroll == -1 {
 		start = max(0, selectedEnd-h)
@@ -92,16 +111,7 @@ func historyWindow(rows []string, starts []int, selectedStart, selectedEnd, w, h
 	if start >= len(rows) {
 		start = max(0, len(rows)-h)
 	}
-	available := h
-	if continuation != "" {
-		available--
-	}
-	end := min(len(rows), start+available)
-	visible := rows[start:end]
-	if continuation != "" {
-		visible = append([]string{continuation}, visible...)
-	}
-	return padRows(visible, w, h)
+	return start, continuation
 }
 
 func messageRows(msg core.Message, w int, focused bool) []string {

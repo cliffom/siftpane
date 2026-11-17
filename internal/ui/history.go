@@ -20,9 +20,11 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	if t == nil {
 		return m, nil
 	}
+	m.statusNow = time.Now()
 	t.Busy = false
 	t.Err = v.Err
 	t.recordFreshness(v)
+	t.recordReadResult(v)
 	if v.Err != nil {
 		if slack.IsAccess(v.Err) {
 			m.purgeConversationCache(cid, v.Err)
@@ -37,13 +39,17 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	}
 	previous := t.Loaded
 	oldLen := len(t.Messages)
+	anchor := m.captureReadingAnchor()
 	selectedTS := ""
 	// At newest, selection follows the viewport. Preserve message identity only
 	// while browsing, so incoming pages cannot leave actions targeting offscreen text.
-	if v.Key == m.key() && m.scroll != 0 && m.index < oldLen {
+	if v.Key == m.key() && m.scroll != 0 && m.index >= 0 && m.index < oldLen {
 		selectedTS = t.Messages[m.index].TS
 	}
 	t.applyPage(v, thread)
+	if thread != "" {
+		t.checkReplyPage(v)
+	}
 	m.cacheHistory(v, cid, thread)
 	if len(t.Messages) > 0 && thread == "" && !t.Cached {
 		m.observeActivity(cid, t.Messages[len(t.Messages)-1].TS)
@@ -61,12 +67,16 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 		}
 	}
 	m.restoreMessageSelection(v, t, selectedTS)
+	if v.Key == m.key() && v.Target == "" {
+		m.restoreReadingAnchor(anchor)
+		m.preserveVisibleSelection()
+	}
 	if cmd := m.selectTriggerResult(v, t); cmd != nil {
 		return m, cmd
 	}
 
 	if d := m.deliveries[m.key()]; !m.stopped && m.statusKind != statusAction && (d == nil || d.State == core.DeliverySent) {
-		m.setStatus("Refreshed", statusRoutine)
+		m.setStatus("", statusRoutine)
 	}
 	return m, m.profileCmd()
 }
@@ -93,6 +103,7 @@ func (t *timeline) applyPage(v historyResult, thread string) {
 	if v.Target != "" {
 		t.Messages = nil
 		t.Loaded = false
+		t.ReplyThrough = ""
 	}
 	previous := t.Loaded
 	// Refresh replaces the observed range so edits/deletions within it are reflected.
@@ -114,12 +125,20 @@ func (t *timeline) applyPage(v historyResult, thread string) {
 		}
 		t.Messages = keep
 	}
-	if v.Older && thread == "" {
+	switch {
+	case v.Older && thread == "":
 		t.Messages = core.Merge(t.Messages, v.Page.Messages, len(t.Messages)+len(v.Page.Messages))
 		if len(t.Messages) > cacheLimit {
 			t.Messages = t.Messages[:cacheLimit]
 		}
-	} else {
+	case thread != "":
+		t.Messages = mergeReplies(t.Messages, v.Page.Messages, thread)
+		for _, msg := range v.Page.Messages {
+			if msg.TS > t.ReplyThrough {
+				t.ReplyThrough = msg.TS
+			}
+		}
+	default:
 		t.Messages = core.Merge(t.Messages, v.Page.Messages, cacheLimit)
 	}
 	if !previous || v.Older || thread == "" {
@@ -156,10 +175,10 @@ func (m *Model) selectTriggerResult(v historyResult, t *timeline) tea.Cmd {
 }
 
 func (m *Model) restoreMessageSelection(v historyResult, t *timeline, selectedTS string) {
-	if selectedTS != "" && !v.Older && v.Target == "" {
-		m.index = min(m.index, max(0, len(t.Messages)-1))
+	if selectedTS != "" && v.Target == "" {
+		m.index = max(0, len(t.Messages)-1)
 		for i, msg := range t.Messages {
-			if msg.TS == selectedTS {
+			if msg.TS >= selectedTS {
 				m.index = i
 				break
 			}

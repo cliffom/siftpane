@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#╭ [Search conversations] ──────╮───╮
+│ Ch│ / k.com/archives/C0123456789 │er…│
+│▸ Y│ @ people · # channels        │   │
+│  T│ Conversation C0123456789     │e  │
+│  b│                              │   │
+│   │ Enter verify & open conversa…│   │
+│ ╭ │ Open in the current workspace│─╮ │
+│ │ │ Access checked before opening│ │ │
+│ │ │ Esc close · Ctrl+T temporary │ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                F1 help 

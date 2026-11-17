@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio / Thread] ──────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions · Thread replies      │
+│  #design              │  Maya  Nov 14 08:00                                                      │
+│  #shipping         ●  │  Original thread context                                                 │
+│▸ #studio              │                                                                          │
+│  @Maya Chen        ●  │▸ Leo  Nov 14 08:00                                                       │
+│  @Maya, Leo, you      │  Partial replies retained after a failed next page.                      │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │ ╭ Thread reply ────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Page failed · v details · o retry                                                           ? help 

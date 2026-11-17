@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#╭ [Choose conversations] ──────╮───╮
+│ Ch│ / Search conversations       │er…│
+│▸ Y│ @ people · # channels        │   │
+│  T│▸ [✓] #design · channel       │e  │
+│  b│  [+] #off-topic · channel    │   │
+│   │ Enter open #design           │   │
+│ ╭ │ 8 loaded · directory complete│─╮ │
+│ │ │ Tab keep/unkeep · [✓] kept   │ │ │
+│ │ │ Ctrl+L continue · Ctrl+R rel…│ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                F1 help 

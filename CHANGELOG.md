@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.0 — 2026-11-16
+
+- Toggle Kept directly with navigation `K`; retain pending attention and guard recoverable drafts/sends when removing a row.
+
+- Automatically load remaining conversation directory pages while either picker is open, showing progressive search results and incomplete/error states. Fetch up to 200 entries per page and resolve DM names independently so they do not delay channel results. Cancel on closure/account switch; retain explicit continuation after the bounded scan limit.
+- Cache bounded account-specific conversation search metadata across launches, revalidating cached suggestions before inclusion/opening. Paste a Slack channel link or ID into either picker for direct access without a directory scan.
+- Quiet routine refresh status; show stale data only after 30 seconds without a successful refresh, while preserving loading, errors and cached provenance.
+- Improve composer placeholder contrast and remove the theme-dependent focused-row highlight.
+- Show workspace names and usernames in aligned account-picker columns without account IDs.
+
+- Preserve reading anchors through older-page loads, edits before the viewport, resize and name enrichment; choose a visible retained successor when selected content disappears. Keep scroll action targets visible and newest-following explicit.
+- Retain available thread roots within bounded reply windows, stop automatic partial-thread page loops, and recover an expired cursor with one paced timestamp continuation. Keep incomplete/failed pages actionable.
+- Open scrollable refresh/recovery details with `v`, retaining per-timeline freshness and separate recent/page failures after unrelated activity.
+- Replace a registered account’s token with `--login --account WORKSPACE_ID/USER_ID` in another terminal, then navigation `Ctrl+R` to reload in-session. Preserve drafts, failed/uncertain delivery and original in-flight sends; reject another account’s token and retain pacing/backoff. Environment sessions revalidate only the inherited override.
+- Improve first-run and missing-grant diagnostics; retain the internal-app user-token model and existing scopes/formats. No automatic send/reaction retry or disk draft persistence is added.
+- Prepare Apple silicon/macOS 26+ candidate packaging, checksums, macOS CI and a manual Developer ID signing/notarization/stapled-DMG workflow. A local signed/notarized/stapled candidate passed Gatekeeper and mounted CLI checks. Credentialed Actions, browser-downloaded installation and real Keychain/terminal/live acceptance remain pending; no 0.8 release is published.
+
 ## 0.7.0 — 2026-11-15
 
 - Save multiple account credentials in the OS keyring; switch explicitly with `Ctrl+W`. Restore each workspace/user session, thread, selection, scroll, drafts and send recovery. `--account WORKSPACE_ID/USER_ID` chooses the initial account.

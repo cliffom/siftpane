@@ -53,18 +53,47 @@ func (m *Model) pickerView(w, h int) string {
 		suggestions = append(suggestions, m.suggestionRow(cs[i], i == index))
 	}
 	if len(cs) == 0 {
-		suggestions = append(suggestions, " No matches in loaded conversations.")
+		empty := " No matches in loaded conversations."
+		id, direct, err := m.explicitPickerTarget()
+		switch {
+		case direct && err == nil:
+			empty = " Conversation " + id
+		case direct:
+			empty = " Paste a Slack channel link or ID."
+		case m.directoryBusy:
+			empty = " No matches yet · loading directory…"
+		case m.directoryNamesPending():
+			empty = " No matches in resolved names yet."
+		case m.directoryLoaded && m.directoryNext == "":
+			empty = " No matching conversations."
+		}
+		suggestions = append(suggestions, empty)
 	}
 	rows = append(rows, padRows(suggestions, w-frameColumns, available)...)
 	rows = append(rows, accent.Render(m.choiceAction(cs, index)))
 	coverage := fmt.Sprintf(" %d loaded · more pages available", len(m.directory))
-	if !m.directoryLoaded {
+	_, direct, _ := m.explicitPickerTarget()
+	switch {
+	case direct:
+		coverage = " Open in the current workspace"
+	case m.directoryBusy:
+		coverage = fmt.Sprintf(" %d loaded · searching directory…", len(m.directory))
+	case !m.directoryLoaded:
 		coverage = fmt.Sprintf(" %d loaded · coverage incomplete", len(m.directory))
-	} else if m.directoryNext == "" {
+		if len(m.directoryCached) > 0 {
+			coverage = fmt.Sprintf(" %d loaded · cached suggestions", len(m.directory))
+		}
+	case m.directoryNext == "" && m.directoryNamesPending():
+		coverage = fmt.Sprintf(" %d loaded · names incomplete", len(m.directory))
+	case m.directoryNext == "":
 		coverage = fmt.Sprintf(" %d loaded · directory complete", len(m.directory))
 	}
 	rows = append(rows, muted.Render(coverage), muted.Render(m.directoryState()))
-	rows = append(rows, muted.Render(" "+keyLabel(keyDirectoryNext)+" more · "+keyLabel(keyDirectoryReload)+" reload"))
+	controls := " " + keyLabel(keyDirectoryNext) + " continue · " + keyLabel(keyDirectoryReload) + " reload"
+	if direct {
+		controls = " " + keyLabel(keyEscape) + " close · " + keyLabel(keyTemporary) + " temporary"
+	}
+	rows = append(rows, muted.Render(controls))
 	return dialogFrame(title, rows, w, h, lipgloss.RoundedBorder())
 }
 
@@ -80,7 +109,11 @@ func (m *Model) suggestionRow(c core.Conversation, focused bool) string {
 	if focused {
 		prefix = "▸ "
 	}
-	text := prefix + marker + " " + slack.Safe(c.Label()) + " · " + string(c.Kind)
+	label := slack.Safe(c.Label())
+	if m.directoryCached[c.ID] {
+		label = "cached " + label
+	}
+	text := prefix + marker + " " + label + " · " + string(c.Kind)
 	if c.Handle != "" {
 		text += " @" + slack.Safe(c.Handle)
 	}
@@ -91,6 +124,12 @@ func (m *Model) suggestionRow(c core.Conversation, focused bool) string {
 }
 
 func (m *Model) choiceAction(cs []core.Conversation, index int) string {
+	if m.directBusy {
+		return " " + keyLabel(keyEscape) + " cancel lookup"
+	}
+	if _, direct, _ := m.pickerTarget(); direct {
+		return " " + keyLabel(keyCompose) + " verify & open conversation"
+	}
 	if len(cs) == 0 {
 		return " " + keyLabel(keyEscape) + " close · try another name"
 	}
@@ -106,13 +145,28 @@ func (m *Model) choiceAction(cs []core.Conversation, index int) string {
 }
 
 func (m *Model) directoryState() string {
+	_, direct, _ := m.explicitPickerTarget()
 	switch {
+	case m.directBusy:
+		return " Checking conversation access…"
+	case m.directErr != nil:
+		return " Error: " + slack.Safe(m.directErr.Error())
+	case direct:
+		return " Access checked before opening"
 	case m.directoryBusy:
 		return " Loading directory…"
 	case m.directoryErr != nil:
 		return " Error: " + slack.Safe(m.directoryErr.Error())
+	case m.directoryProfileBusy:
+		return " Resolving DM names…"
 	case !m.directoryLoaded:
 		return " Directory not loaded · " + keyLabel(keyDirectoryReload) + " retry"
+	case m.directoryNext != "" && m.directoryPagesLeft == 0:
+		return " Search paused · " + keyLabel(keyDirectoryNext) + " continue"
+	case m.directoryNamesPending():
+		return " Names incomplete · reopen to retry"
+	case m.directoryCacheErr != nil:
+		return " Cache unavailable · live search works"
 	case m.mode == pickerInclude:
 		return " " + keyLabel(keyFocus) + " keep/unkeep · [✓] kept"
 	default:

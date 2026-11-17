@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ [Messages] ───────────┬ Choose conversations · p ────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Choose what belongs here · p                                             │
+│  #design              │                                                                          │
+│  #shipping         ●  │ Your channels. Your people.                                              │
+│  @Maya Chen        ●  │ Your terminal.                                                           │
+│  @Maya, Leo, you      │                                                                          │
+│                       │ p  choose what belongs here                                              │
+│                       │                                                                          │
+│                       │ Only included conversations refresh.                                     │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │                                                                          │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+ Unkept conversation                                                                         ? help 
