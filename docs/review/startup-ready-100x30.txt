@@ -2,7 +2,7 @@
                                                                                                     
 ╭ [Messages] ───────────┬ #studio ─────────────────────────────────────────────────────────────────╮
 │ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
-│▸ #studio              │    Maya Chen  Nov 13 10:24 · continued                                   │
+│▸ #studio              │                                                                          │
 │                       │    Leo Park  Nov 13 10:27                                                │
 │                       │    Here's the checklist: review notes (https://example.com/review)       │
 │                       │                                                                          │

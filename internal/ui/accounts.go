@@ -176,8 +176,11 @@ func (a *Accounts) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.width, a.height = v.Width, v.Height
 		for i := range a.sessions {
 			if m := a.sessions[i].model; m != nil {
-				_, _ = m.Update(v)
+				m.resizeWindow(v)
 			}
+		}
+		if m := a.current(); m != nil {
+			return a, a.wrap(a.active, a.sessions[a.active].epoch, m.fillHistory())
 		}
 		return a, nil
 	case tea.KeyPressMsg:

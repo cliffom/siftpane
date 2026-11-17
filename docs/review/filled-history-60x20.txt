@@ -2,7 +2,7 @@
                                                             
 ╭ [#studio] ───────────────────────────────────────────────╮
 │ Channel                                                  │
-│    Maya  Nov 13 08:40 · continued                        │
+│                                                          │
 │    Maya  Nov 13 08:40                                    │
 │    Older context 20                                      │
 │                                                          │

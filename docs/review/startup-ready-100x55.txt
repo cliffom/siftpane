@@ -2,7 +2,7 @@
                                                                                                     
 ╭ [Messages] ───────────┬ #studio ─────────────────────────────────────────────────────────────────╮
 │ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
-│▸ #studio              │    Leo Park  Nov 13 10:03 · continued                                    │
+│▸ #studio              │                                                                          │
 │                       │                                                                          │
 │                       │    You  Nov 13 10:06                                                     │
 │                       │    The new navigation is ready to try. Small details, fewer              │

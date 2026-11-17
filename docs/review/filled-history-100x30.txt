@@ -2,7 +2,7 @@
                                                                                                     
 ╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
 │ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel                                                                  │
-│▸ #studio              │    Maya  Nov 13 08:40 · continued                                        │
+│▸ #studio              │                                                                          │
 │                       │    Maya  Nov 13 08:40                                                    │
 │                       │    Older context 17                                                      │
 │                       │                                                                          │

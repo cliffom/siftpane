@@ -305,12 +305,7 @@ func (m *Model) Init() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch v := msg.(type) {
 	case tea.WindowSizeMsg:
-		anchor := m.captureReadingAnchor()
-		m.width = v.Width
-		m.height = v.Height
-		m.resize()
-		m.restoreReadingAnchor(anchor)
-		m.preserveVisibleSelection()
+		m.resizeWindow(v)
 		return m, m.fillHistory()
 	case conversationResult:
 		return m.updateConversation(v)
@@ -361,4 +356,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, c
 	}
 	return m, nil
+}
+
+// Layout updates are local-only so inactive account sessions can resize safely.
+func (m *Model) resizeWindow(size tea.WindowSizeMsg) {
+	anchor := m.captureReadingAnchor()
+	m.width, m.height = size.Width, size.Height
+	m.resize()
+	m.restoreReadingAnchor(anchor)
+	m.preserveVisibleSelection()
 }
