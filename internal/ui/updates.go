@@ -102,9 +102,7 @@ func (m *Model) mergeDirectoryConversation(c core.Conversation) core.Conversatio
 		if old.ID != c.ID {
 			continue
 		}
-		if unresolvedDirectoryName(c) && old.Kind == core.ConversationDM && (old.User == "" || old.User == c.User) && old.Name != "" && old.Name != old.ID && old.Name != old.User && old.Name != c.User {
-			c.Name, c.Handle = old.Name, old.Handle
-		}
+		c = withKnownDMName(c, old)
 		m.directory[i] = c
 		return c
 	}
