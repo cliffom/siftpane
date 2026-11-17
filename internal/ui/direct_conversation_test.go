@@ -179,3 +179,23 @@ func TestCachedLookupMismatchDoesNotTrustHint(t *testing.T) {
 		t.Fatal("failed cached temporary lookup changed inclusion")
 	}
 }
+
+func TestBareIDActionCancelsDiscoveryOnlyOnEnter(t *testing.T) {
+	m, svc := directFixture(t)
+	m.cancelDirectory()
+	m.directoryLoaded = false
+	m.directoryNext = ""
+	m.continueDirectory()
+	m.Update(tea.PasteMsg{Content: directTestID})
+	if !m.directoryBusy || m.directBusy || len(svc.calls) != 0 {
+		t.Fatal("bare shorthand stopped discovery before explicit action")
+	}
+	cmd := m.pickerKey(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil || !m.directBusy || m.directoryBusy {
+		t.Fatal("Enter did not switch from discovery to lookup")
+	}
+	m.Update(cmd())
+	if m.active != directTestID || len(svc.calls) != 1 {
+		t.Fatal("bare ID lookup failed")
+	}
+}

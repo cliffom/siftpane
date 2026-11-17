@@ -19,7 +19,7 @@ type directoryProfileResult struct {
 // Directory pages never wait for users.info. Names arrive independently through
 // one bounded, cancelable lookup stream while the conversation picker is open.
 func (m *Model) directoryProfileCmd() tea.Cmd {
-	if _, recognized, _ := m.pickerTarget(); recognized {
+	if _, recognized, _ := m.explicitPickerTarget(); recognized {
 		return nil
 	}
 	svc, ok := m.service.(profileService)

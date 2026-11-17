@@ -88,7 +88,7 @@ func (m *Model) pickerKey(v tea.KeyPressMsg) tea.Cmd {
 }
 
 func (m *Model) pickerDirectoryKey(k string) tea.Cmd {
-	if _, direct, _ := m.pickerTarget(); direct || m.directoryBusy {
+	if _, direct, _ := m.explicitPickerTarget(); direct || m.directoryBusy {
 		return nil
 	}
 	if k == keyDirectoryReload {
@@ -131,7 +131,7 @@ func (m *Model) openChoice(cs []core.Conversation) tea.Cmd {
 // continueDirectory expands search coverage only while its picker is open.
 // A page budget and cursor history bound automatic work even for bad pagination.
 func (m *Model) continueDirectory() tea.Cmd {
-	if _, recognized, _ := m.pickerTarget(); recognized {
+	if _, recognized, _ := m.explicitPickerTarget(); recognized {
 		return nil
 	}
 	if m.mode == pickerClosed || m.directoryBusy || m.stopped || m.directoryErr != nil || m.directoryPagesLeft == 0 {
@@ -210,7 +210,7 @@ func (m *Model) updatePickerInput(msg tea.Msg) tea.Cmd {
 		if m.directBusy {
 			m.cancelDirectory()
 		}
-		if _, recognized, _ := m.pickerTarget(); recognized {
+		if _, recognized, _ := m.explicitPickerTarget(); recognized {
 			m.cancelDirectory()
 			return cmd
 		}

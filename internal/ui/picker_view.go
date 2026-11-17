@@ -54,7 +54,7 @@ func (m *Model) pickerView(w, h int) string {
 	}
 	if len(cs) == 0 {
 		empty := " No matches in loaded conversations."
-		id, direct, err := m.pickerTarget()
+		id, direct, err := m.explicitPickerTarget()
 		switch {
 		case direct && err == nil:
 			empty = " Conversation " + id
@@ -72,7 +72,7 @@ func (m *Model) pickerView(w, h int) string {
 	rows = append(rows, padRows(suggestions, w-frameColumns, available)...)
 	rows = append(rows, accent.Render(m.choiceAction(cs, index)))
 	coverage := fmt.Sprintf(" %d loaded · more pages available", len(m.directory))
-	_, direct, _ := m.pickerTarget()
+	_, direct, _ := m.explicitPickerTarget()
 	switch {
 	case direct:
 		coverage = " Open in the current workspace"
@@ -145,7 +145,7 @@ func (m *Model) choiceAction(cs []core.Conversation, index int) string {
 }
 
 func (m *Model) directoryState() string {
-	_, direct, _ := m.pickerTarget()
+	_, direct, _ := m.explicitPickerTarget()
 	switch {
 	case m.directBusy:
 		return " Checking conversation access…"

@@ -193,3 +193,14 @@ func (m *Model) pickerTarget() (string, bool, error) {
 	}
 	return directTarget(q, m.identity.Workspace)
 }
+
+// explicitPickerTarget separates pasted links/id: inputs from ambiguous names.
+// Bare ID shorthand remains available on an explicit action, while discovery
+// continues so an unloaded name can take precedence when its page arrives.
+func (m *Model) explicitPickerTarget() (string, bool, error) {
+	q := strings.TrimSpace(m.picker.Value())
+	if bareConversationID(q) {
+		return "", false, nil
+	}
+	return directTarget(q, m.identity.Workspace)
+}

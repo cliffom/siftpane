@@ -12,6 +12,11 @@ import (
 	"github.com/cliffom/siftpane/internal/core"
 )
 
+const (
+	ambiguousSearchQuery          = "CLOUD2025"
+	ambiguousSearchConversationID = "Cname"
+)
+
 func directorySearchFixture(t *testing.T) (*Model, *searchService, func() directoryResult) {
 	t.Helper()
 	m := fixture(t)
@@ -131,4 +136,42 @@ func TestDirectorySearchBoundsAndCursorCycle(t *testing.T) {
 			t.Fatal("cursor cycle looped or lost useful partial results")
 		}
 	})
+}
+
+func TestDirectorySearchFindsColdUppercaseName(t *testing.T) {
+	m, s, first := directorySearchFixture(t)
+	m.Update(tea.PasteMsg{Content: ambiguousSearchQuery})
+	if !m.directoryBusy {
+		t.Fatal("ambiguous name canceled pending directory page")
+	}
+	s.page = core.DirectoryPage{Next: searchPageCursor}
+	_, next := m.Update(first())
+	if next == nil {
+		t.Fatal("ambiguous name stopped automatic paging")
+	}
+	s.page = core.DirectoryPage{Conversations: []core.Conversation{{ID: ambiguousSearchConversationID, Name: "cloud2025", Kind: core.ConversationChannel}}}
+	m.Update(next())
+	if len(m.choices()) != 1 {
+		t.Fatal("cold uppercase name was not discovered")
+	}
+	m.pickerKey(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if m.directBusy || m.active != ambiguousSearchConversationID || m.mode != pickerClosed {
+		t.Fatal("discovered name did not take precedence over ID shorthand")
+	}
+}
+
+func TestAmbiguousSearchAllowsExplicitContinuation(t *testing.T) {
+	for _, code := range []rune{'l', 'r'} {
+		t.Run(string(code), func(t *testing.T) {
+			m, _, _ := directorySearchFixture(t)
+			m.cancelDirectory()
+			m.directoryLoaded = true
+			m.directoryNext = searchPageCursor
+			m.directoryPagesLeft = 0
+			m.picker.SetValue(ambiguousSearchQuery)
+			if cmd := m.pickerKey(tea.KeyPressMsg{Code: code, Mod: tea.ModCtrl}); cmd == nil || !m.directoryBusy {
+				t.Fatal("ambiguous query blocked directory continuation/reload")
+			}
+		})
+	}
 }

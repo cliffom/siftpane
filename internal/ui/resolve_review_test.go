@@ -39,11 +39,11 @@ func TestReviewRecoverySurvivesOrdinaryKeys(t *testing.T) {
 }
 
 func TestReviewUppercaseNamesRemainSearches(t *testing.T) {
-	for _, query := range []string{"DESIGN", "GENERAL", "DISCUSSION", "CLOUD2025"} {
+	for _, query := range []string{"DESIGN", "GENERAL", "DISCUSSION", ambiguousSearchQuery} {
 		t.Run(query, func(t *testing.T) {
 			m, svc := directFixture(t)
 			m.composer.Reset()
-			c := core.Conversation{ID: "Cname", Name: strings.ToLower(query), Kind: core.ConversationChannel}
+			c := core.Conversation{ID: ambiguousSearchConversationID, Name: strings.ToLower(query), Kind: core.ConversationChannel}
 			m.directory = []core.Conversation{c}
 			m.picker.SetValue(query)
 			m.pickerKey(tea.KeyPressMsg{Code: tea.KeyEnter})
