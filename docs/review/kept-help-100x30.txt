@@ -1,0 +1,30 @@
+ siftpane                                                                   Fieldwork · demo · @you 
+                                                                                                    
+╭ Messages ─────────────┬ [#studio] ───────────────────────────────────────────────────────────────╮
+│ KEPT ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌│ Channel · Daily collaboration, fewer interruptions                       │
+│  #design              │  Leo Park  Nov 13 10:27                                                  │
+│  #shipping         ●  │  Here's the checklist: review notes (https://example.com/review)         │
+│▸ #studio              │                                                                          │
+│  @Maya Chen ╭ [Keyboard guide] ────────────────────────────────────────────────────╮             │
+│  @Maya, Leo,│ Ctrl+T  temporarily add & open a picker result                       │             │
+│             │ K  keep/unkeep selected conversation                                 │             │
+│             │ d  dismiss observed attention (recover drafts/sends first)           │             │
+│             │ n  next attention, opening its exact trigger                         │             │
+│             │ M  enable/disable direct mentions; confirm enabling with a second    │             │
+│             │ press                                                                │             │
+│             │ B / H  independent @channel / @here search; press twice to enable    │             │
+│             │ f  locally follow/unfollow opened thread; future replies from others │             │
+│             │ Ctrl+B  toggle disk history cache; press twice to store content      │             │
+│             │ Ctrl+X  clear account disk history; drafts retained                  │             │
+│             │ Ctrl+G twice  acknowledge known catch-up gaps; does not recover      │             │
+│             │ missed history                                                       │             │
+│             │ Mentions search accessible unkept messages with search:read. Seven-  │e input.     │
+│             │ 45–57/72 ↑/↓ · Esc close                                             │             │
+│             ╰──────────────────────────────────────────────────────────────────────╯             │
+│                       │ ╭ Message ─────────────────────────────────────────────────────────────╮ │
+│                       │ │ › Write a message…                                                   │ │
+│                       │ │                                                                      │ │
+│                       │ │                                                                      │ │
+│                       │ ╰──────────────────────────────────────────────────────────────────────╯ │
+╰───────────────────────┴──────────────────────────────────────────────────────────────────────────╯
+                                                                                             ? help 

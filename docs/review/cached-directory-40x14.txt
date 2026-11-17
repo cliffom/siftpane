@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [C╭ [Search conversations] ──────╮───╮
+│ Ch│ / #cross-pod                 │   │
+│▸ Y│ @ people · # channels        │   │
+│  T│▸ [+] cached #cross-pod · cha…│e  │
+│  b│                              │   │
+│   │ Enter include & open #cross-…│   │
+│ ╭ │ 1 loaded · searching directo…│─╮ │
+│ │ │ Loading directory…           │ │ │
+│ │ │ Ctrl+L continue · Ctrl+R rel…│ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                F1 help 

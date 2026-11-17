@@ -47,7 +47,7 @@ func TestOlderPagePreservesCachedRecentFailure(t *testing.T) {
 			}
 			svc.page = core.Page{Messages: []core.Message{{TS: attentionTestTS, Text: "live replacement"}}}
 			cmd := m.fetch(cid, false)
-			if !strings.Contains(m.activityStatus(), "· refreshing / R refresh") {
+			if !strings.Contains(m.activityStatus(), "· R refresh") {
 				t.Fatal("explicit retry still shows old failure")
 			}
 			runAttentionReviewCommand(t, m, cmd)
@@ -74,7 +74,7 @@ func TestAccessPurgeRejectsLateConversationAndThreadReads(t *testing.T) {
 			m.composer.SetValue(mainDraft)
 			m.drafts[threadKey] = "retained reply draft"
 			m.deliveries[threadKey] = &core.Delivery{State: core.DeliveryPending}
-			accessErr := &slack.APIError{Code: "channel_not_found"}
+			accessErr := &slack.APIError{Code: missingConversationCode}
 			switch source {
 			case "metadata":
 				m.Update(conversationResult{ID: cid, Generation: generation, Err: accessErr})

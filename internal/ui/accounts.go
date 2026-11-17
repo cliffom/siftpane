@@ -2,12 +2,12 @@ package ui
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/cliffom/siftpane/internal/core"
 	"github.com/cliffom/siftpane/internal/store"
@@ -103,6 +103,7 @@ func (a *Accounts) deactivate() {
 	s := &a.sessions[a.active]
 	m := s.model
 	m.rememberDraft()
+	m.cancelDirectory()
 	s.cancel()
 	s.epoch++
 	m.cancelProfileLookup()
@@ -240,6 +241,7 @@ func (a *Accounts) key(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		}
 		m.cancelConfirmations()
 		m.rememberDraft()
+		m.cancelDirectory()
 		a.choosing, a.choice = true, a.active
 		return a, nil
 	}
@@ -286,13 +288,21 @@ func (a *Accounts) View() tea.View {
 	rows := []string{" " + keyLabel(keyCompose) + " switch · " + keyLabel(keyEscape) + " close", " Inactive accounts pause reads", ""}
 	visible := max(1, h-frameRows-len(rows))
 	start := max(0, a.choice-visible+1)
+	const separator = " · "
+	markerColumns := ansi.StringWidth("▸ ")
+	nameColumns := w - frameColumns - markerColumns - ansi.StringWidth(separator)
+	workspaceColumns := 0
+	for _, session := range a.sessions {
+		workspaceColumns = max(workspaceColumns, ansi.StringWidth(accountText(session.account.Identity.WorkspaceName)))
+	}
+	workspaceColumns = min(workspaceColumns, nameColumns/accountNameColumns)
 	for i := start; i < len(a.sessions) && i < start+visible; i++ {
 		id := a.sessions[i].account.Identity
 		marker := "  "
 		if i == a.choice {
 			marker = "▸ "
 		}
-		label := fmt.Sprintf("%s%s/%s · @%s · %s", marker, accountText(id.Workspace), accountText(id.User), accountText(id.Username), accountText(id.WorkspaceName))
+		label := marker + fit(accountText(id.WorkspaceName), workspaceColumns) + separator + "@" + accountText(id.Username)
 		rows = append(rows, fit(label, w-frameColumns))
 	}
 	content := a.current().modalOverlay(v.Content, dialogFrame("Workspaces", rows, w, h, lipgloss.RoundedBorder()), a.width, a.height)
@@ -310,7 +320,7 @@ func accountWriteResult(msg tea.Msg) bool {
 
 func accountReadResult(msg tea.Msg) bool {
 	switch msg.(type) {
-	case historyResult, conversationResult, directoryResult, mentionResult, followedResult, profileResult:
+	case historyResult, conversationResult, directoryResult, directoryProfileResult, directConversationResult, mentionResult, followedResult, profileResult:
 		return true
 	}
 	return false

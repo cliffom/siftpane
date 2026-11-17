@@ -109,6 +109,7 @@ func (m *Model) trimPersisted() {
 }
 
 func (m *Model) purgeConversationCache(cid string, err error) {
+	m.removeDirectory(cid)
 	m.invalidateConversationReads(cid)
 	m.cacheEpoch++
 	delete(m.persisted, cid)
@@ -131,6 +132,7 @@ func (m *Model) purgeConversationCache(cid string, err error) {
 
 func (m *Model) stopReads() {
 	m.stopped = true
+	m.cancelDirectory()
 	m.discoveryGeneration++
 	m.finishDiscovery()
 	m.cancelFollowed()

@@ -9,11 +9,14 @@ const statusTimeFormat = "15:04" // Compact local check time shared by source st
 // activityStatus derives progress from current state, so unrelated background
 // completions cannot replace the selected timeline's loading indicator.
 func (m *Model) activityStatus() string {
-	if m.stopped || m.statusKind == statusAction {
+	if m.statusKind == statusAction {
 		return m.status
 	}
+	if m.stopped {
+		return m.credentialRecovery()
+	}
 	if d := m.deliveries[m.key()]; d != nil && (d.State == core.DeliveryPending || d.State == core.DeliveryFailed) {
-		return m.status
+		return deliveryStatus(d)
 	}
 	if m.active != "" {
 		t := m.cache[m.key()]
@@ -23,7 +26,7 @@ func (m *Model) activityStatus() string {
 		case t.Cached && (t.Err != nil || t.CachedRefreshErr != nil):
 			return "Cached refresh failed · " + keyLabel(keyRefresh) + " retry"
 		case t.Cached:
-			return "Cached " + t.Saved.Local().Format(messageTimeFormat) + " · refreshing / R refresh"
+			return "Cached " + t.Saved.Local().Format(messageTimeFormat) + " · R refresh"
 		case t.RecentErr != nil && !t.Loaded:
 			return t.RecentErr.Error() + " · " + keyLabel(keyRefreshDetails) + " details"
 		case t.RecentErr != nil:
@@ -34,8 +37,8 @@ func (m *Model) activityStatus() string {
 			return "Partial replies · o next page · " + keyLabel(keyRefreshDetails) + " details"
 		case t.Err != nil:
 			return t.Err.Error() + " · " + keyLabel(keyRefresh) + " retry / refresh"
-		case t.Busy:
-			return "Refreshing messages…"
+		case !t.Checked.IsZero() && m.statusNow.Sub(t.Checked) > staleAfter:
+			return "Data stale · R refresh"
 		}
 	}
 	if len(m.metadataBusy) > 0 {
@@ -51,6 +54,28 @@ func (m *Model) activityStatus() string {
 		return m.discoveryStatus()
 	}
 	return m.status
+}
+
+func deliveryStatus(d *core.Delivery) string {
+	if d.State == core.DeliveryPending {
+		return "Sending… draft retained"
+	}
+	if d.Uncertain {
+		return "Delivery unknown; check Slack; " + keyLabel(keyRetry) + " retry"
+	}
+	text := "Send failed"
+	if d.Err != nil {
+		text += ": " + d.Err.Error()
+	}
+	return text + " · " + keyLabel(keyRetry) + " retry · " + keyLabel(keyEditFailed) + " edit"
+}
+
+func (m *Model) hasPersistentRecovery() bool {
+	if m.stopped {
+		return true
+	}
+	d := m.deliveries[m.key()]
+	return d != nil && (d.State == core.DeliveryPending || d.State == core.DeliveryFailed)
 }
 
 func (m *Model) setStatus(text string, kind statusKind) {

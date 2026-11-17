@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -14,18 +15,24 @@ func tick() tea.Cmd {
 }
 
 func (m *Model) directoryCmd(cursor string) tea.Cmd {
-	if m.directoryBusy {
+	if m.directoryBusy || m.stopped {
 		return nil
 	}
 	m.directoryBusy = true
 	m.directoryErr = nil
-	svc, ctx := m.service, m.ctx
+	if m.mode != pickerClosed && m.directoryPagesLeft > 0 {
+		m.directoryPagesLeft--
+	}
+	ctx, cancel := context.WithCancel(m.ctx)
+	m.directoryCancel = cancel
+	svc, generation := m.service, m.directoryGeneration
 	return func() tea.Msg {
+		defer cancel()
 		if err := ctx.Err(); err != nil {
-			return directoryResult{Err: err}
+			return directoryResult{Cursor: cursor, Generation: generation, Err: err}
 		}
 		p, err := svc.Directory(ctx, cursor)
-		return directoryResult{Page: p, Err: err}
+		return directoryResult{Page: p, Cursor: cursor, Generation: generation, Err: err}
 	}
 }
 

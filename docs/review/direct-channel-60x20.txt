@@ -1,0 +1,20 @@
+ siftpane                           Fieldwork · demo · @you 
+                                                            
+╭ [#studio] ───────────────────────────────────────────────╮
+│ Ch╭ [Search conversations] ──────────────────────────╮   │
+│  M│ / https://sample.slack.com/archives/C0123456789  │   │
+│  I│ @ people · # channels                            │   │
+│   │ Conversation C0123456789                         │   │
+│  L│                                                  │   │
+│  T│                                                  │   │
+│   │                                                  │   │
+│▸ Y│                                                  │   │
+│  T│                                                  │und│
+│  t│ Enter verify & open conversation                 │   │
+│   │ Open in the current workspace                    │   │
+│ ╭ │ Access checked before opening                    │─╮ │
+│ │ │ Esc close · Ctrl+T temporary                     │ │ │
+│ │ ╰──────────────────────────────────────────────────╯ │ │
+│ ╰──────────────────────────────────────────────────────╯ │
+╰──────────────────────────────────────────────────────────╯
+                                                    F1 help 

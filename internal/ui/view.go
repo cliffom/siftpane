@@ -79,7 +79,7 @@ func (m *Model) View() tea.View {
 	status := fit(muted.Render(statusContent), statusColumns) + muted.Render(hint)
 	// Action feedback gets the full row when the help entry would clip it.
 	if m.quitConfirm || m.persistErr != "" || m.metadataErr != "" || m.profileCacheErr != "" || m.messageCacheErr != "" ||
-		(m.statusKind == statusAction && ansi.StringWidth(statusContent) > statusColumns) {
+		((m.statusKind == statusAction || m.hasPersistentRecovery()) && ansi.StringWidth(statusContent) > statusColumns) {
 		status = fit(muted.Render(statusContent), w)
 	}
 	content := strings.Join([]string{header, strings.Repeat(" ", w), body, status}, "\n")

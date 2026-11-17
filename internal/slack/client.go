@@ -28,7 +28,7 @@ const (
 	responseByteLimit  = 4 << 20 // Bound decoded response input to 4 MiB.
 	errorCodeByteLimit = 80
 	authorCacheEntries = 512
-	directoryPageItems = 30
+	directoryPageItems = 200 // Slack recommends at most 200 results per directory page.
 	historyPageItems   = 50
 )
 
@@ -281,13 +281,15 @@ func (c *Client) Directory(ctx context.Context, cursor string) (core.DirectoryPa
 		}
 		if v.IM {
 			kind = core.ConversationDM
-			profile, _ := c.Profile(ctx, v.User)
+			c.mu.Lock()
+			profile := c.names[v.User]
+			c.mu.Unlock()
 			name, handle = profile.Name, profile.Handle
 			if name == "" {
 				name = v.User
 			}
 		}
-		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Handle: handle, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
+		p.Conversations = append(p.Conversations, core.Conversation{ID: v.ID, Name: name, Handle: handle, User: v.User, Kind: kind, Topic: v.Topic.Value, Purpose: v.Purpose.Value, Members: v.Members})
 	}
 	return p, nil
 }

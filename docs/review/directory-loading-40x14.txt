@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [C╭ [Search conversations] ──────╮───╮
+│ Ch│ / @leo                       │   │
+│▸ Y│ @ people · # channels        │   │
+│  T│ No matches yet · loading dir…│e  │
+│  b│                              │   │
+│   │ Esc close · try another name │   │
+│ ╭ │ 0 loaded · searching directo…│─╮ │
+│ │ │ Loading directory…           │ │ │
+│ │ │ Ctrl+L continue · Ctrl+R rel…│ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                F1 help 

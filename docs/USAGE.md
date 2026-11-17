@@ -17,7 +17,7 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Navigate | `/` | Open conversation search |
 | Navigate | `p` | Searchable Kept chooser |
 | Picker | `Ctrl+T` | Temporarily add and open without keeping |
-| Navigate | `K` | Keep active conversation; retain attention |
+| Navigate | `K` | Keep/unkeep selected conversation; retain attention |
 | Navigate | `d` | Dismiss observed attention after draft/send recovery |
 | Navigate | `n` | Open next attention trigger |
 | Navigate | `M` | Enable mentions with a second consecutive `M`; disable an enabled source |
@@ -30,7 +30,7 @@ Navigation and composing are separate modes. The app name and right-aligned work
 | Search | `Tab` | Complete highlighted name; do not include or open |
 | Kept chooser (`p`) | `Tab` | Keep/unkeep locally |
 | Picker | `Enter` | Include and open |
-| Picker | `Ctrl+L` | Load next directory page |
+| Picker | `Ctrl+L` | Continue paused directory loading / retry |
 | Picker | `Ctrl+R` | Reload first directory page |
 | Picker | `Esc` | Close |
 | Navigate | `t` | Open selected message's thread |
@@ -52,17 +52,21 @@ Unsent drafts survive conversation and thread switches and removal/re-inclusion 
 
 ## Search
 
-`Ctrl+K` opens a centered modal over the dimmed main screen from navigation or composing. `/` opens the same search from navigation. Use `@` for existing DMs/group DMs, `#` for accessible public/private channels, or no prefix for both. Matching ignores case and uses available channel names, display names, and DM handles. Search covers loaded conversation metadata, not the entire workspace user directory; it does not create DMs or join channels.
+`Ctrl+K` opens a centered modal over the dimmed main screen from navigation or composing. `/` opens the same search from navigation. Use `@` for existing DMs/group DMs, `#` for accessible public/private channels, or no prefix for both. Matching ignores case and uses available channel names, display names, and DM handles. Opening the picker automatically loads the remaining accessible conversation directory, with progressively appearing matches. Search does not cover the entire workspace user directory; it does not create DMs or join channels.
+
+Cached directory suggestions are available immediately on later launches and are marked `cached`; selecting one verifies current access before inclusion/opening. Removing an existing Kept preference stays local and requires no lookup. They are hints, not complete or current directory coverage.
+
+Paste a Slack channel link or a conversation ID (such as `C0123456789`) into either picker and press `Enter` to verify and open it directly, without waiting for directory loading. Use `id:CABCDEFGHIJ` for an all-letter or otherwise ambiguous ID; matching names take precedence over shorthand IDs. `Ctrl+T` adds it temporarily, and chooser `Tab` verifies before keeping; unkeeping an existing preference needs no request. Links that include a workspace ID must match the active account; switch with `Ctrl+W` first when needed. Workspace-hosted channel/message links are resolved using the active account. Message links open their conversation, not a particular message. No pasted URL is followed. Errors retain the input and draft; `Esc` cancels the lookup.
 
 Suggestions update locally as you type. `↑/↓` or `Ctrl+P/N` highlights a result, `Tab` completes it, and `Enter` opens it. `[✓]` marks a Kept result; `[!]` marks an attention-only result; `[+]` marks an excluded result whose action reads **Enter include & open**. Searching, highlighting, and completion never start refresh for an excluded conversation. Only explicit `Enter` includes and opens it, subject to the existing inclusion limit. The separate `p` picker uses `Tab` to keep/unkeep; `Ctrl+T` in either picker temporarily adds and opens the highlighted result. An existing attention result opens without being automatically kept.
 
 `Esc` dismisses search without modifying inclusion or sending text. It restores the prior navigation/composing focus, conversation/thread, and draft. Selecting a result retains the prior draft and opens the new conversation in navigation mode.
 
-The modal reports directory coverage, loading, and errors. The initial metadata page loads at startup; `Ctrl+L` explicitly loads the next page, and `Ctrl+R` reloads the first page or retries an initial failure. Typing/completion makes no network requests. Existing suggestions remain available after a page failure; a failed next-page request retains its cursor for an explicit retry. Background refresh cannot overwrite the modal's directory error. Use the [terminal fallback](TERMINALS.md#command-k) if `Cmd+K` is intercepted.
+The modal reports directory coverage, loading, and errors. The initial metadata page loads at startup; opening either picker automatically continues the remaining pages, one paced request at a time. Closing the picker or switching accounts cancels loading. A scan pauses after 100 additional pages; `Ctrl+L` continues or retries after an error, and `Ctrl+R` reloads from the first page. A repeated cursor stops the scan with an actionable error. Typing/completion filters arriving metadata; it does not restart directory pagination. DM names resolve independently while pages continue loading, so channel results do not wait on user lookups. `#` queries skip new DM name lookups. Names may initially appear as IDs; incomplete name coverage remains visible, and reopening retries unresolved names. Existing suggestions remain available after a page failure; a failed next-page request retains its cursor for an explicit retry. Background refresh cannot overwrite the modal's directory error. Use the [terminal fallback](TERMINALS.md#command-k) if `Cmd+K` is intercepted.
 
 ## Help and local markers
 
-Help opens over dimmed conversation context. Its single-column guide wraps to the terminal width; scroll to see all shortcuts and marker explanations. Paste is ignored while help is open. Closing restores the prior draft, focus and picker. Use `F1` while composing; `?` still inserts a question mark. The footer keeps a minimal help entry beside status rather than repeating hotkeys. Its bottom-left status bar shows message loading/refresh progress or saved-conversation restoration counts, then returns to the completed status. The message area stays clear while loading; failures retain actionable recovery text.
+Help opens over dimmed conversation context. Its single-column guide wraps to the terminal width; scroll to see all shortcuts and marker explanations. Paste is ignored while help is open. Closing restores the prior draft, focus and picker. Use `F1` while composing; `?` still inserts a question mark. The footer keeps a minimal help entry beside status rather than repeating hotkeys. Its bottom-left status bar shows initial message loading or saved-conversation restoration counts. Routine refreshes are silent; data older than 30 seconds since the last successful refresh shows a stale indicator until a successful refresh. The message area stays clear while loading; failures retain actionable recovery text.
 
 Sidebar trailing slots show `●` for locally observed unread activity and `✎` for a retained conversation draft. Long names truncate before these slots. These markers do not imply Slack-synchronized read state or persisted drafts.
 
@@ -70,7 +74,7 @@ Sidebar trailing slots show `●` for locally observed unread activity and `✎`
 
 Existing included conversations migrate to Kept. Explicit temporary additions and optional direct mentions appear in Needs Attention, with a reason beside each name. Repeated triggers group into one conversation row; a Kept conversation needing attention appears once. `n` opens the next attention entry, including the triggering reply's thread. Switching, reading, local marking read and replying never dismiss attention.
 
-Use `K` to keep an active conversation and `d` to dismiss its observed triggers. A Kept conversation remains available after dismissal. An unkept entry is removed locally, without changing Slack membership/read state or sending anything. Dismissal refuses any retained draft or unresolved send across all that conversation's threads. Return to the affected target, inspect Slack for uncertain delivery, use existing retry/edit recovery, and explicitly clear or send the draft before dismissal. A temporary result can be reopened with a new `Ctrl+T` action after dismissal.
+Use `K` from navigation to keep or unkeep the selected conversation directly; the `p` chooser also manages Kept with `Tab`. Unkeeping preserves pending attention and removes local follows. If removing the row would hide a draft or unresolved send, recover it first. Use `d` separately to dismiss observed attention triggers. A Kept conversation remains available after dismissal. An unkept entry is removed locally, without changing Slack membership/read state or sending anything. Dismissal refuses any retained draft or unresolved send across all that conversation's threads. Return to the affected target, inspect Slack for uncertain delivery, use existing retry/edit recovery, and explicitly clear or send the draft before dismissal. A temporary result can be reopened with a new `Ctrl+T` action after dismissal.
 
 `M` twice opts into direct personal mentions from accessible unkept conversations using `search:read`; an intervening key cancels confirmation. The source starts disabled and its preference persists per account. One `M` disables it without removing entries. `R` retries discovery alongside current history. The footer shows checking, failure/retry, last successful check with limited coverage, or a catch-up gap. An empty list does not establish successful discovery. See [search limitations](SLACK.md#direct-mentions-and-coverage) before relying on it.
 
@@ -84,7 +88,7 @@ Open a thread with `t`, then press `f` to follow future replies from others loca
 
 Automatic sources share conversation/message identities. Duplicate discovery never adds another row or revives a handled message. A duplicate pending message uses the strongest label (mention, channel, here, reply); `+N` counts other distinct pending triggers in that conversation. Reading and replying still never dismiss. Local follow scans create attention, without switching selection, focus or drafts or loading an unkept conversation timeline.
 
-`Ctrl+B` twice enables local Slack content storage; `Ctrl+B` once disables it. `Ctrl+X` clears disk history while leaving the option enabled for future successful normal fetches. Defaults, bounds, account isolation and cleanup are in [configuration](CONFIGURATION.md#optional-recent-message-cache). Cached pages render immediately with cached/refreshing status, retain readable content after network failure, then reconcile with live results. They are display hints rather than proof of freshness/current access. Drafts, failed/pending sends and thread reply bodies are never restored from disk.
+`Ctrl+B` twice enables local Slack content storage; `Ctrl+B` once disables it. `Ctrl+X` clears disk history while leaving the option enabled for future successful normal fetches. Defaults, bounds, account isolation and cleanup are in [configuration](CONFIGURATION.md#optional-recent-message-cache). Cached pages render immediately with cached provenance, retain readable content after network failure, then reconcile with live results. They are display hints rather than proof of freshness/current access. Drafts, failed/pending sends and thread reply bodies are never restored from disk.
 
 
 ## Multiple workspaces and quick participation

@@ -46,7 +46,7 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 | `O` | Open the selected message in Slack |
 | `p` | Choose conversations; `Tab` keeps or unkeeps an item |
 | Picker `Ctrl+T` | Temporarily add and open |
-| `K` / `d` / `n` | Keep / dismiss attention / next attention |
+| `K` / `d` / `n` | Keep/unkeep / dismiss attention / next attention |
 | `M` twice | Enable optional direct mentions; one `M` disables |
 | `B` / `H` twice | Enable independent channel/here broadcast search |
 | Opened thread `f` | Follow/unfollow future replies locally |
@@ -62,7 +62,7 @@ Read-only live mention discovery and exact thread opening have been exercised, a
 | `?` / `F1` | Open scrollable keyboard help (`F1` also works while composing) |
 | `q` | Quit; warns if you have unsent text |
 
-Search opens over a dimmed main view. `Enter` explicitly includes and opens an excluded result; typing or completing a name changes no inclusion. Supported terminals can also deliver `Cmd+K`; see [terminal compatibility](docs/TERMINALS.md#command-k).
+Search opens over a dimmed main view. Paste a Slack channel link or conversation ID and press `Enter` to open it directly. `Enter` explicitly includes and opens an excluded result; typing or completing a name changes no inclusion. Supported terminals can also deliver `Cmd+K`; see [terminal compatibility](docs/TERMINALS.md#command-k).
 
 Drafts stay with their conversation or thread while you switch, but remain in memory and do not survive exit. Failed sends keep their text. See the [full keyboard and retry guide](docs/USAGE.md).
 

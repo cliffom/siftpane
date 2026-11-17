@@ -20,6 +20,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	if t == nil {
 		return m, nil
 	}
+	m.statusNow = time.Now()
 	t.Busy = false
 	t.Err = v.Err
 	t.recordFreshness(v)
@@ -75,7 +76,7 @@ func (m *Model) updateHistory(v historyResult) (tea.Model, tea.Cmd) {
 	}
 
 	if d := m.deliveries[m.key()]; !m.stopped && m.statusKind != statusAction && (d == nil || d.State == core.DeliverySent) {
-		m.setStatus("Refreshed", statusRoutine)
+		m.setStatus("", statusRoutine)
 	}
 	return m, m.profileCmd()
 }

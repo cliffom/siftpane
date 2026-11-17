@@ -1,5 +1,5 @@
- siftpane                           Fieldwork · demo · @you
-
+ siftpane                           Fieldwork · demo · @you 
+                                                            
 ╭ [#studio] ───────────────────────────────────────────────╮
 │ Ch╭ [Search conversations] ──────────────────────────╮   │
 │  M│ / @leo                                           │   │
@@ -13,8 +13,8 @@
 │  t│ Enter include & open @Leo Park                   │   │
 │   │ 8 loaded · directory complete                    │   │
 │ ╭ │ Ctrl+T temporary · Tab complete                  │─╮ │
-│ │ │ Ctrl+L more · Ctrl+R reload                      │ │ │
+│ │ │ Ctrl+L continue · Ctrl+R reload                  │ │ │
 │ │ ╰──────────────────────────────────────────────────╯ │ │
 │ ╰──────────────────────────────────────────────────────╯ │
 ╰──────────────────────────────────────────────────────────╯
- Refreshed                                          F1 help
+                                                    F1 help 

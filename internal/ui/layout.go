@@ -41,6 +41,7 @@ const (
 	scrollPageDivisor      = 3
 	minScrollRows          = 3
 	modalColumns           = 72
+	accountNameColumns     = 2 // Workspace and username share selector name space.
 	modalRows              = 16
 	modalMarginColumns     = 4
 	modalMarginRows        = 3

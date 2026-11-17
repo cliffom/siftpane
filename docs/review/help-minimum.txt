@@ -8,7 +8,7 @@
 │   │ Tab  switch sidebar /        │   │
 │ ╭ │ messages                     │─╮ │
 │ │ │ j/k or ↑/↓  move / select    │ │ │
-│ │ │ 1–7/122 ↑/↓ · Esc close      │ │ │
+│ │ │ 1–7/127 ↑/↓ · Esc close      │ │ │
 │ ╰─╰──────────────────────────────╯─╯ │
 ╰──────────────────────────────────────╯
- Refreshed                       ? help 
+                                 ? help 

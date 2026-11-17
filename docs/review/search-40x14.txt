@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#╭ [Search conversations] ──────╮───╮
+│ Ch│ / @leo                       │er…│
+│▸ Y│ @ people · # channels        │   │
+│  T│▸ [+] @Leo Park · dm @leo.park│e  │
+│  b│  [✓] @Maya, Leo, you · group │   │
+│   │ Enter include & open @Leo Pa…│   │
+│ ╭ │ 8 loaded · directory complete│─╮ │
+│ │ │ Ctrl+T temporary · Tab compl…│ │ │
+│ │ │ Ctrl+L continue · Ctrl+R rel…│ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                F1 help 

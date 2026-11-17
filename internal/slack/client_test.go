@@ -55,7 +55,7 @@ func TestDirectoryPassesCursorAndEmptyPage(t *testing.T) {
 			t.Errorf(parseRequestFailure, err)
 			return
 		}
-		if r.Form.Get("limit") != "30" || r.Form.Get(paramCursor) != "next" || r.Form.Get("types") != "public_channel,private_channel,im,mpim" {
+		if r.Form.Get("limit") != "200" || r.Form.Get(paramCursor) != "next" || r.Form.Get("types") != "public_channel,private_channel,im,mpim" {
 			t.Error(r.Form)
 		}
 		writeResponse(t, w, `{"ok":true,"channels":[],"response_metadata":{"next_cursor":"still-more"}}`)
@@ -218,9 +218,16 @@ func TestSearchMetadataRetainsDisplayNameAndHandle(t *testing.T) {
 	if err != nil || len(page.Conversations) != 1 {
 		t.Fatal(page, err)
 	}
+	if userCalls.Load() != 0 || page.Conversations[0].User != "U_SEARCH" || page.Conversations[0].Name != "U_SEARCH" {
+		t.Fatal("directory waited for a user lookup", page, userCalls.Load())
+	}
 	conversation, err := c.Conversation(context.Background(), "D_SEARCH")
 	if err != nil || conversation.Name != "Maya at work" || conversation.Handle != "mchen" || conversation.Kind != core.ConversationDM || userCalls.Load() != 1 {
 		t.Fatal("display name/handle lost or lookup was not cached", conversation, err, userCalls.Load())
+	}
+	page, err = c.Directory(context.Background(), "")
+	if err != nil {
+		t.Fatal(err)
 	}
 	for _, query := range []string{"@MCHEN", "@maya AT WORK"} {
 		if got := core.Filter(page.Conversations, query, nil, false); len(got) != 1 || got[0].ID != conversation.ID {

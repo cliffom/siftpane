@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
@@ -35,24 +36,25 @@ func TestHistoryLoadingUsesStatusBar(t *testing.T) {
 		m.fetch(m.key(), false)
 		assertStatusBar(t, m, expectedHistoryLoading)
 		m.Update(historyResult{Key: m.key(), Generation: m.generations[m.active], Page: core.Page{}})
-		assertStatusBar(t, m, "Refreshed")
+		assertStatusBar(t, m, "")
 		if !strings.Contains(strings.Join(m.history(60, 12), "\n"), "No messages yet") {
 			t.Fatal("empty result indistinguishable from loading")
 		}
 		m.fetch(m.key(), false)
-		assertStatusBar(t, m, "Refreshing messages…")
+		assertStatusBar(t, m, "")
 	}
 }
 
 func TestStatusProgressFollowsSelectionAndThread(t *testing.T) {
+	const readyStatus = "Ready"
 	m := fixture(t)
 	m.cache[m.key()] = &timeline{Busy: true}
 	m.thread = "123.456"
 	m.cache[m.key()] = &timeline{Loaded: true}
-	m.status = "Ready"
-	assertStatusBar(t, m, "Ready")
+	m.status = readyStatus
+	assertStatusBar(t, m, readyStatus)
 	m.cache[m.key()].Busy = true
-	assertStatusBar(t, m, "Refreshing messages…")
+	assertStatusBar(t, m, readyStatus)
 	m.thread = ""
 	assertStatusBar(t, m, expectedHistoryLoading)
 	m.active = ""
@@ -71,8 +73,11 @@ func TestProgressDoesNotHideRecovery(t *testing.T) {
 	m.cache[m.key()] = &timeline{Busy: true}
 	for _, state := range []core.DeliveryState{core.DeliveryPending, core.DeliveryFailed} {
 		m.deliveries[m.key()] = &core.Delivery{State: state}
-		m.status = "Delivery needs attention"
-		assertStatusBar(t, m, m.status)
+		if state == core.DeliveryPending {
+			assertStatusBar(t, m, "Sending")
+		} else {
+			assertStatusBar(t, m, "Send failed")
+		}
 	}
 	delete(m.deliveries, m.key())
 	m.persistErr = "disk unavailable"
@@ -117,7 +122,7 @@ func TestActionWarningsOverrideTimelineProgress(t *testing.T) {
 			assertStatusBar(t, m, "Marked read locally")
 			// Another navigation key restores timeline progress/error priority.
 			m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
-			if m.statusKind != statusRoutine || m.activityStatus() == m.status {
+			if m.statusKind != statusRoutine || strings.Contains(m.activityStatus(), "Marked read locally") {
 				t.Fatal("action priority outlived the next explicit key")
 			}
 		})
@@ -148,5 +153,34 @@ func TestQuitRecoveryInstructionFitsMinimumViewport(t *testing.T) {
 				t.Fatal("status bar changed viewport width")
 			}
 		}
+	}
+}
+
+func TestFreshnessStatusIsQuietUntilStale(t *testing.T) {
+	m := fixture(t)
+	line := m.line(m.key())
+	checked := time.Now().UTC()
+	line.Checked = checked
+	m.status = ""
+	for _, busy := range []bool{false, true} {
+		line.Busy = busy
+		for _, age := range []time.Duration{0, staleAfter, staleAfter + time.Nanosecond} {
+			m.statusNow = checked.Add(age)
+			got := m.activityStatus()
+			if age <= staleAfter && got != "" {
+				t.Fatal("fresh timeline produced noise", busy, age, got)
+			}
+			if age > staleAfter && !strings.Contains(got, "Data stale") {
+				t.Fatal("stale timeline was silent", busy, age, got)
+			}
+		}
+	}
+	line.RecentErr = errors.New("read failed")
+	if !strings.Contains(m.activityStatus(), "Refresh failed") {
+		t.Fatal("stale status hid error")
+	}
+	m.Update(historyResult{Key: m.key(), Generation: m.generations[m.active], Page: core.Page{}})
+	if got := m.activityStatus(); got != "" {
+		t.Fatal("successful refresh did not clear stale warning", got)
 	}
 }

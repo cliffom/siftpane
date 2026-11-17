@@ -52,7 +52,9 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	// The next explicit key dismisses transient action priority; handlers can
 	// publish fresh feedback without losing the underlying delivery text.
-	m.statusKind = statusRoutine
+	if m.statusKind == statusAction {
+		m.setStatus("", statusRoutine)
+	}
 	if k == keyHelpGlobal {
 		m.quitConfirm = false
 		m.retryConfirm = false
@@ -97,7 +99,7 @@ func (m *Model) updateKey(v tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	// Participation shortcuts are ordinary text in either input widget. Only
 	// navigation ignores repeats, so held keys cannot repeat remote actions.
-	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack) {
+	if v.Key().IsRepeat && (quickReaction(k) != "" || k == keyOpenSlack || k == keyKeep) {
 		return m, nil
 	}
 	return m.navigateKey(k)
@@ -114,7 +116,7 @@ func (m *Model) navigateKey(k string) (tea.Model, tea.Cmd) {
 	case keyAcknowledgeGap:
 		m.acknowledgeGap()
 	case keyKeep:
-		m.keepActive()
+		m.toggleActiveKept()
 	case keyDismiss:
 		return m, m.dismissActive()
 	case keyAttention:
@@ -300,7 +302,7 @@ func (m *Model) cancelConfirmations() {
 // Resume the virtual cursor after a modal or account epoch consumed its timer.
 func (m *Model) resumeInput() tea.Cmd {
 	if m.mode != pickerClosed {
-		return m.picker.Focus()
+		return tea.Batch(m.picker.Focus(), m.continueDirectory(), m.directoryProfileCmd())
 	}
 	if m.focus == focusCompose {
 		return m.composer.Focus()

@@ -104,7 +104,7 @@ func TestTemporaryKeepDismissAndDraftProtection(t *testing.T) {
 	}
 	delete(m.deliveries, m.active+"/thread")
 	cid := m.active
-	m.keepActive()
+	m.toggleActiveKept()
 	m.dismissActive()
 	if !m.attention.Kept[cid] || !m.included[cid] || len(m.attention.Pending[cid]) != 0 || m.active != cid {
 		t.Fatal("kept dismissal removed conversation")

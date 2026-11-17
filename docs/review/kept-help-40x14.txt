@@ -1,0 +1,14 @@
+ siftpane       Fieldwork · demo · @you 
+                                        
+╭ [#╭ [Keyboard guide] ────────────╮───╮
+│ Ch│ open a picker result         │er…│
+│▸ Y│ K  keep/unkeep selected      │   │
+│  T│ conversation                 │e  │
+│  b│ d  dismiss observed          │   │
+│   │ attention (recover           │   │
+│ ╭ │ drafts/sends first)          │─╮ │
+│ │ │ n  next attention, opening   │ │ │
+│ │ │ 74–80/127 ↑/↓ · Esc close    │ │ │
+│ ╰─╰──────────────────────────────╯─╯ │
+╰──────────────────────────────────────╯
+                                 ? help 
