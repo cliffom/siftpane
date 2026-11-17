@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0 — Unreleased
+## 0.9.0 — 2026-11-17
 
 - Prioritize selected-view reads ahead of queued background reads without bypassing per-method pacing or server backoff. Reuse fresh account-isolated directory observations to defer inactive metadata validation until opening, and avoid repeating healthy inactive metadata requests on account switch-back.
 - Return saved DM metadata without waiting for profile lookups. Enrich participant names independently and preserve known cached names/handles through direct verification failures.
