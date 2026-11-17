@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.0 — Unreleased
+## 0.8.0 — 2026-11-16
 
 - Toggle Kept directly with navigation `K`; retain pending attention and guard recoverable drafts/sends when removing a row.
 

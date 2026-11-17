@@ -6,7 +6,7 @@ A focused Slack client for your terminal. Choose the channels, DMs, and group DM
 
 ## Try it
 
-The 0.8 download target is **Apple silicon, macOS 26+**, with Developer ID signing/notarization support. Release downloads are not published yet; see [installation and upgrades](docs/INSTALLATION.md).
+The 0.8 download target is **Apple silicon, macOS 26+**, with Developer ID signing/notarization support. Download the signed, notarized disk image from the [0.8.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.8.0); see [installation and upgrades](docs/INSTALLATION.md).
 
 For source builds, use Go **1.26.7 or newer**. From this checkout:
 

@@ -20,3 +20,7 @@ Keep unobserved live cursor expiry, live rate limiting and search/indexing limit
 
 
 Local signing receipt, exact source revision, submission ID and checksum are in [the verification record](VERIFICATION.md#local-signed-and-notarized-080-candidate). That candidate is retained locally and unpublished. Credentialed CI, actual browser-download acceptance and the remaining Slack/Keychain/host cases above are separate gates.
+
+## Operator release acceptance — 2026-11-16
+
+The operator confirmed verification and explicitly authorized release of PR #34 after review of head `b657eee374b433de4f633c7ae62bfdd1b5a021bf`. This is operator acceptance of the daily-use changes, separate from assistant-run offline checks. The table above preserves the earlier case-by-case evidence status; the confirmation did not supply individual timings, host combinations or live cursor/rate-limit observations. No additional platform coverage is inferred. The release workflow must still validate signed artifacts from the exact merge commit before publication; its run and artifact receipt are reported with the release.

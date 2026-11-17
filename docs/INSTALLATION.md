@@ -1,10 +1,10 @@
 # Install and upgrade
 
-The 0.8 download target is **Apple silicon (arm64), macOS 26 or later**. Intel macOS, Linux and Windows are outside the supported download matrix. Source builds remain possible but do not establish platform support. The 0.8 binary and signing workflows are prepared; no 0.8 signed download is published yet.
+The 0.8 download target is **Apple silicon (arm64), macOS 26 or later**. Intel macOS, Linux and Windows are outside the supported download matrix. Source builds remain possible but do not establish platform support. The [0.8.0 release](https://github.com/cliffom/siftpane/releases/tag/v0.8.0) provides the signed, notarized disk image and checksum.
 
 ## Download installation
 
-After an authorized 0.8 release publishes its artifacts, download the matching `siftpane-VERSION-macos-arm64.dmg` and `siftpane-VERSION-macos-arm64.SHA256SUMS` from that release. In the download directory:
+Download the matching `siftpane-VERSION-macos-arm64.dmg` and `siftpane-VERSION-macos-arm64.SHA256SUMS` from that release. In the download directory:
 
 ```sh
 shasum -a 256 -c siftpane-VERSION-macos-arm64.SHA256SUMS
